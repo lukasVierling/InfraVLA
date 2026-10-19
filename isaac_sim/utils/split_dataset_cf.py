@@ -110,7 +110,7 @@ def latest_reached_dir_by_name(name: str, index: dict[str, list[Path]]) -> Path 
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--out", required=True, help="output subdir under runs/data/splits/")
-    ap.add_argument("--manifest", default="isaac_sim/configs/experiment/datagen_2x3_cf_manifest.json")
+    ap.add_argument("--manifest", default="isaac_sim/configs/experiment/datagen_2x3_cfv4_manifest.json")
     ap.add_argument("--runs-root", default="runs/data_gen/warehouse_2x3_cf_2026-07-01")
     ap.add_argument("--train-bases", default="600:790", help="train BASE range, half-open")
     ap.add_argument("--val-bases",   default="790:809", help="val BASE range, half-open")

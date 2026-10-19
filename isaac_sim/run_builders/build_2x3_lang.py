@@ -471,7 +471,7 @@ def _emit_experiments(scene_names: list, parts: int, runs_root: str,
 
 def main() -> int:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--config", default=str(_NSC / "configs" / "datagen_2x3_lang.yaml"))
+    ap.add_argument("--config", default=str(_NSC / "configs" / "datagen_2x3_langv2.yaml"))
     ap.add_argument("--date", default="0000-00-00",
                     help="stamp for runs_root (no Date.now in scripts)")
     ap.add_argument("--tag", default="lang",
