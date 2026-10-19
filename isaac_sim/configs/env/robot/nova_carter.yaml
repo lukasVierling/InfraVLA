@@ -1,0 +1,91 @@
+# @package env.robot
+# ============================================================================
+# Robot: NVIDIA Nova Carter (Isaac Sim's current default mobile base)
+# ============================================================================
+#
+# Mirror layout of carter.yaml — every field consumed by Robot() in robot.py
+# and the camera/scouting interpolations lives at the same key. Swap-in is
+# `python eval_policy.py env/robot=nova_carter` (assuming a camera_set whose
+# cameras live under the robot prim, which they do via ${env.robot.*}).
+#
+# Nova Carter is differential-drive (2 driven rear wheels + 2 passive front
+# casters). The DifferentialController and WheeledRobot path is identical to
+# Carter v1 — only the USD, wheel DOF names, and geometry differ.
+#
+# CAVEAT — the trained OmniVLA policy was finetuned on Carter v1 dynamics
+# AND on Carter v1's camera intrinsics/mount. Running on Nova Carter is a
+# distribution shift on (a) realised twist-response, (b) front-camera FOV /
+# mount height. Expect degradation until either you re-finetune on Nova
+# Carter rollouts, or you crop/down-FOV the Nova Carter front cam to
+# approximate Carter v1's apparent view. See work-log for the swap.
+# ============================================================================
+
+robot_name: "NovaCarter"
+controller: "Differential"
+
+# Stage path the robot is instantiated under. Used by camera auto-discovery
+# (parent_prefix) and scouting (obstacle exclude list) via interpolation.
+prim_path: "/World/NovaCarter"
+
+# USD asset path, RELATIVE to assets_root. Path is the Isaac Sim 5.x default
+# location; verify with `omniverse://localhost/NVIDIA/Assets/Isaac/.../NovaCarter/`
+# in the Nucleus browser if asset-root install layout differs.
+usd_rel: "/Isaac/Robots/NVIDIA/NovaCarter/nova_carter.usd"
+
+# Drive-wheel DOF names. VERIFY at first boot via the dof_names print in the
+# env (server logs them at world.reset() time). The Isaac Sim 5.x Nova Carter
+# typically exposes `joint_wheel_left` / `joint_wheel_right` for the driven
+# rear wheels; if the USD changes naming, update here.
+wheel_dof_names: ["joint_wheel_left", "joint_wheel_right"]
+
+# Nova Carter physical geometry (from NVIDIA's spec sheet — re-measure from
+# the USD if you ever doubt these):
+#   wheel radius ~ 0.14 m
+#   track width (between drive wheels) ~ 0.413 m
+wheel_radius: 0.14
+wheel_base: 0.413
+
+# Chassis half-extent + safety buffer for A* obstacle inflation. Nova Carter
+# chassis is ~0.415 m × 0.645 m (W × L) → max half-extent on the long axis
+# ~0.32 m. 0.4 m here adds a small buffer to cover the sensor mast that sits
+# above the chassis but extends laterally a touch, plus control slack.
+# Coincidentally matches Carter v1's 0.4 m — Nova Carter is smaller chassis-
+# wise but the sensor mast eats most of the slack. Lower to 0.35 if A*
+# refuses tight aisles.
+# Single source of truth — env/astar/default.yaml interpolates this.
+inflation_m: 0.35 #nova carter is 42cm wide and 65cm long
+
+# Camera prim-discovery hints. Nova Carter ships 12 camera prims (verified by
+# camera.py auto-discover print on 2026-05-25):
+#   /World/NovaCarter/chassis_link/sensors/
+#     front_hawk/{left,right}/camera_{left,right}   # narrow-FOV RGB stereo
+#     back_hawk/{left,right}/camera_{left,right}
+#     left_hawk/{left,right}/camera_{left,right}
+#     right_hawk/{left,right}/camera_{left,right}
+#     {front,back,left,right}_owl/camera            # fish-eye wide-angle RGB
+#
+# Policy view: use a single Hawk eye (narrow FOV, closer to Carter v1's
+# training distribution). Owls are fish-eye and would feed the VLA OOD
+# imagery. `front_hawk/left` is the unique substring that picks the left eye
+# of the front-facing Hawk; uniqueness verified against the list above.
+#
+# CAVEAT: even the Hawk has ~120° HFOV vs Carter v1's ~70° — still a
+# meaningful distribution shift on the policy's vision tower. Expect the
+# trained policy to see noticeably more peripheral content than during
+# training. If degradation is severe, you can crop the captured frame down
+# to a narrower FOV in camera.py before returning, or set prim_path
+# explicitly here to a different mono cam if one becomes available.
+cameras:
+  front_hints: ["front_hawk/left"]
+  # Nova Carter has NO built-in third-person chase camera (Carter v1 had one
+  # baked into its USD; Nova Carter does not). These hints will fail the
+  # auto-discover and raise a clear error. To run Nova Carter, use a camera
+  # set that doesn't include a chase cam — `env/camera_set=default` is the
+  # front-only set. `with_chase` and `with_cctv` both include a chase and
+  # will error at startup until you either (a) drop the chase from the set,
+  # or (b) build a synthetic chase prim (CCTV-style with translate offset
+  # from the robot prim — see env/camera/cctv_topdown.yaml for the pattern).
+  chase_hints: ["chase_does_not_exist_on_nova_carter"]
+
+initial_pos: null
+initial_ori: null

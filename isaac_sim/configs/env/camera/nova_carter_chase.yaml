@@ -1,0 +1,96 @@
+# ============================================================================
+# Camera: synthetic BEHIND-THE-SHOULDER chase view for Nova Carter
+# ============================================================================
+#
+# Nova Carter has 12 onboard cameras but ZERO externally-mounted prims, so
+# there's nothing to "discover" for a chase view. This config creates a
+# brand-new camera prim parented under /World/NovaCarter/chassis_link, so
+# the camera follows the robot's pose for free. Inherits the chassis pose;
+# the translate below is in chassis_link's LOCAL frame.
+#
+# Framing: camera sits 3 m behind and 1.5 m above the chassis origin,
+# looking forward (+X chassis) and ~26.6° down at the robot, with world +Z
+# rendered as "up in the image". This is the canonical racing-game /
+# Carter-v1 third-person chase view. Earlier this yaml used a top-down
+# view (camera at +Z=8, no rotation); switched after the smoke test
+# revealed top-down was too disorienting for human review of trajectories.
+#
+# Why these specific Euler values
+# -------------------------------
+# USD's AddRotateXYZOp (camera.py:96) composes the rotation as
+# R = R_Z(rz) · R_Y(ry) · R_X(rx) when applied to a column vector. This
+# was confirmed empirically — an earlier attempt used the opposite order
+# and produced a sideways-looking camera. Default USD camera orientation:
+# look along local -Z, +Y up. We want to map that to: look along +X
+# chassis tilted 26.57° down, with world +Z as "up in the image".
+#
+#   cam_pos_chassis   = (-3, 0, 1.5)
+#   look_dir_chassis  = normalize((0,0,0) - cam_pos) = (0.894, 0, -0.447)
+#   up_image_chassis  = (chassis +Z)  projected ⊥ look = (0.447, 0, 0.894)
+#   right_image_chass = up × (-look)                    = (0,    -1, 0   )
+#
+# Target rotation matrix has columns [right | up | -look]:
+#   [[  0,     0.4472, -0.8944 ],
+#    [ -1,     0,       0      ],
+#    [  0,     0.8944,  0.4472 ]]
+#
+# Solving R_Z(rz) · R_Y(ry) · R_X(rx) = target:
+#   sin(ry) = -M[2,0] = 0                → ry = 0°
+#   cos(rz)·cos(ry) = M[0,0] = 0,  sin(rz)·cos(ry) = M[1,0] = -1
+#                                        → rz = -90°
+#   cos(ry)·sin(rx) = M[2,1] = 0.8944,  cos(ry)·cos(rx) = M[2,2] = 0.4472
+#                                        → rx = arctan(0.8944/0.4472) = +63.43°
+# Hence (rx, ry, rz) = (+63.43°, 0°, -90°).
+#
+# Tuning
+# ------
+# If you change the (x, z) offset, recompute rx from arctan(z / |x|) and
+# KEEP IT POSITIVE — negative rx would tilt the camera UP, not down. rz=-90°
+# is the basis swap from "camera +Y is parent +Y" to "camera +Y is parent +Z"
+# along the look direction; it stays put as long as the camera is directly
+# behind the robot (no Y offset). ry stays 0° while the camera sits on the
+# chassis X-Z midplane.
+# ============================================================================
+
+name: chase_cam
+
+# Builder creates a new Camera prim at this path. Parented under the
+# robot's chassis link, so the camera automatically follows the robot as
+# physics moves the chassis. No auto-discovery (the prim doesn't exist
+# until we create it here).
+#
+# NOTE: this hardcodes /World/NovaCarter/chassis_link rather than reading
+# from ${env.robot.prim_path} + a "chassis_subpath" config field. Reason:
+# Carter v1 doesn't have the same "chassis_link" sub-hierarchy, so the
+# right structural fix is a per-robot `chassis_prim_path` field on the
+# robot yaml — punted as a follow-up since this YAML is Nova-Carter-only.
+prim_path: "/World/NovaCarter/chassis_link/synthetic_chase_cam"
+auto_discover: null
+
+# True => "place this camera ourselves" (CCTV-style branch in camera.py).
+# The translate + rotate ops below are applied LOCAL to the prim's parent,
+# which here is /World/NovaCarter/chassis_link — values are in chassis
+# frame, not world frame (the field names "world_*" are a misnomer
+# preserved for code-path parity with cctv_topdown where parent IS /World).
+translation_required: true
+
+resolution: [1280, 720]
+frequency: 10                       # visualization-only; matches CCTV cadence
+
+logging: true
+
+# Wider lens so the surrounding scene fits in frame from this chase
+# distance. Same values as cctv_topdown.yaml for visual-style consistency.
+intrinsics:
+  focal_length_mm: 18.14756
+  horizontal_aperture_mm: 20.955
+  vertical_aperture_mm: 15.2908
+
+# Chassis-frame offset + Euler. See header for derivation + USD convention.
+# Position scaled out from (-3, 0, 1.5) → (-5, 0, 2.5): SAME pitch (rx kept
+# at arctan(2.5/5) = 26.57°), more scene context around the robot. If you
+# want even wider, scale x and z together to preserve the look-at-origin
+# geometry — anything else changes rx.
+extrinsics:
+  world_translate_m: [-5.0, 0.0, 2.5]
+  world_rotate_euler_deg: [63.43, 0.0, -90.0]

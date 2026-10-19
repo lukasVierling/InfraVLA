@@ -1,0 +1,24 @@
+# Task: topological-graph goal (modality = {"image"} -> mode 6).
+# Paper's ">3 m" case from root.tex:301 — the graph is produced by
+# isaac_sim/scouting/oracle_scout at server startup.
+
+name: image_graph
+modality: ["image"]
+
+lang_instruction: ""
+
+goal_image_path: null
+goal_graph_path: "isaac_sim/scouting/goal_graphs/goal_graph.json"
+
+# Consumed by IsaacSimEnv.record_image_graph when bootstrapping the graph.
+goal_graph_node_spacing_freq: 1.0
+goal_graph_camera_name: front_cam
+goal_graph_sampling_mode: static_arclength
+
+goal_xy: null
+goal_heading_deg: 0.0
+
+# Timeout cap. Lowered 200 -> 100 on 2026-05-30 (see task/pose.yaml for the
+# step-distribution rationale): successes finished in <=61 steps.
+max_steps: 100
+success_dist: 0.3

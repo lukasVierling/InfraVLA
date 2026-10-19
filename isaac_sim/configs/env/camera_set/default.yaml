@@ -1,0 +1,19 @@
+# @package env.cameras
+# ============================================================================
+# Camera-set selector: front cam only (the policy's view)
+# ============================================================================
+#
+# A camera_set yaml's job is to compose a DICT of camera configs that the
+# IsaacSimEnv builder iterates. The defaults list below packages the chosen
+# /env/camera/* yamls under env.cameras.<key>.
+#
+# Result in the merged config:
+#   env.cameras.front_cam = <contents of env/camera/carter_front.yaml>
+#
+# To use:  env/camera_set=default                    (this file)
+# To swap: env/camera_set=with_chase                 (front + chase)
+#          env/camera_set=with_cctv                  (front + chase + cctv)
+# ============================================================================
+
+defaults:
+  - /env/camera@front_cam: carter_front

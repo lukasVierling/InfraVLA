@@ -1,0 +1,25 @@
+# ============================================================================
+# Recorder — data-generation runs
+# ============================================================================
+#
+# Consumed by DataGenRecorder(run_cfg, run_name) in recorder.py.
+#
+# Differs from recorder/default.yaml in two ways:
+#   1. Separate runs_root so oracle rollouts don't get mixed in with VLA eval
+#      runs when sweeping experiments.
+#   2. Adds goal_graph_cam_name so the recorder knows which camera in
+#      observations["images"] becomes the GoalGraph node image (frames/NNN.png).
+#
+# Per-camera logging is OPT-IN inside each camera config (env/camera/*.yaml
+# has a `logging:` boolean) — same convention as recorder/default.yaml.
+# ============================================================================
+
+# Root directory under which every data-gen run gets its own subdir.
+# Kept distinct from ${oc.env:INFRAVLA_ROOT}/runs/eval so the two run types
+# stay separable in `ls` and don't get accidentally co-mingled by sweeps.
+runs_root: "${oc.env:INFRAVLA_ROOT}/runs/data/sweeps/data_gen"
+
+# Note: goal_graph_cam_name USED to live here. It now reads from
+# run_cfg.task.goal_graph_camera_name — the task config is the single source
+# of truth for "which camera carries graph node images" (it's a task-level
+# concept, not a recorder-level one). See task/image_graph.yaml.

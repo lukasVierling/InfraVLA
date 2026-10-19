@@ -1,0 +1,420 @@
+{
+  "per_variant": [
+    {
+      "kind": "box",
+      "variant_index": 0,
+      "usd_path": "/Isaac/Environments/Simple_Warehouse/Props/SM_CardBoxA_01.usd",
+      "catalog_footprint_radius": 0.44,
+      "aabb_xy": {
+        "min_x": -0.3499999921768904,
+        "max_x": 0.3499999921768904,
+        "min_y": -0.24999999441206455,
+        "max_y": 0.24999999441206455,
+        "half_w": 0.3499999921768904,
+        "half_d": 0.24999999441206455
+      },
+      "measured_footprint_radius": 0.43011625373828366,
+      "delta_m": -0.009883746261716342,
+      "delta_pct": -2.2463059685718956
+    },
+    {
+      "kind": "box",
+      "variant_index": 1,
+      "usd_path": "/Isaac/Environments/Simple_Warehouse/Props/SM_CardBoxA_02.usd",
+      "catalog_footprint_radius": 0.51,
+      "aabb_xy": {
+        "min_x": -0.4085012726075661,
+        "max_x": 0.3885241612376831,
+        "min_y": -0.3275207446324657,
+        "max_y": 0.3089883353787286,
+        "half_w": 0.3985127169226246,
+        "half_d": 0.31825454000559716
+      },
+      "measured_footprint_radius": 0.5099983703731084,
+      "delta_m": -1.6296268916526913e-06,
+      "delta_pct": -0.00031953468463778256
+    },
+    {
+      "kind": "box",
+      "variant_index": 2,
+      "usd_path": "/Isaac/Environments/Simple_Warehouse/Props/SM_CardBoxD_01.usd",
+      "catalog_footprint_radius": 0.23,
+      "aabb_xy": {
+        "min_x": -0.18999999575316906,
+        "max_x": 0.18999999575316906,
+        "min_y": -0.12499999720603228,
+        "max_y": 0.12499999720603228,
+        "half_w": 0.18999999575316906,
+        "half_d": 0.12499999720603228
+      },
+      "measured_footprint_radius": 0.2274313032273973,
+      "delta_m": -0.0025686967726027132,
+      "delta_pct": -1.11682468374031
+    },
+    {
+      "kind": "box",
+      "variant_index": 3,
+      "usd_path": "/Isaac/Environments/Simple_Warehouse/Props/SM_CardBoxD_02.usd",
+      "catalog_footprint_radius": 0.23,
+      "aabb_xy": {
+        "min_x": -0.18999999575316906,
+        "max_x": 0.18999999575316906,
+        "min_y": -0.12499999720603228,
+        "max_y": 0.12499999720603228,
+        "half_w": 0.18999999575316906,
+        "half_d": 0.12499999720603228
+      },
+      "measured_footprint_radius": 0.2274313032273973,
+      "delta_m": -0.0025686967726027132,
+      "delta_pct": -1.11682468374031
+    },
+    {
+      "kind": "box",
+      "variant_index": 4,
+      "usd_path": "/Isaac/Environments/Simple_Warehouse/Props/SM_CardBoxD_03.usd",
+      "catalog_footprint_radius": 0.24,
+      "aabb_xy": {
+        "min_x": -0.20624606625185748,
+        "max_x": 0.18999999575316906,
+        "min_y": -0.13027663893379327,
+        "max_y": 0.12752288533323508,
+        "half_w": 0.19812303100251327,
+        "half_d": 0.12889976213351417
+      },
+      "measured_footprint_radius": 0.23636388068336364,
+      "delta_m": -0.0036361193166363492,
+      "delta_pct": -1.5150497152651456
+    },
+    {
+      "kind": "pallet",
+      "variant_index": 0,
+      "usd_path": "/Isaac/Environments/Simple_Warehouse/Props/SM_PaletteA_01.usd",
+      "catalog_footprint_radius": 0.79,
+      "aabb_xy": {
+        "min_x": -0.6050765093026342,
+        "max_x": 0.6081584413016188,
+        "min_y": -0.4999999888241291,
+        "max_y": 0.5028731424464326,
+        "half_w": 0.6066174753021265,
+        "half_d": 0.5014365656352808
+      },
+      "measured_footprint_radius": 0.7870345549580599,
+      "delta_m": -0.0029654450419401845,
+      "delta_pct": -0.3753727901190107
+    },
+    {
+      "kind": "pallet",
+      "variant_index": 1,
+      "usd_path": "/Isaac/Environments/Simple_Warehouse/Props/SM_PaletteA_02.usd",
+      "catalog_footprint_radius": 0.73,
+      "aabb_xy": {
+        "min_x": -0.605802980233662,
+        "max_x": 0.6108425385316636,
+        "min_y": -0.40054549275609475,
+        "max_y": 0.4049133210276068,
+        "half_w": 0.6083227593826628,
+        "half_d": 0.40272940689185077
+      },
+      "measured_footprint_radius": 0.7295529828315411,
+      "delta_m": -0.000447017168458852,
+      "delta_pct": -0.06123522855600712
+    },
+    {
+      "kind": "pallet",
+      "variant_index": 2,
+      "usd_path": "/Isaac/Props/Pallet/pallet.usd",
+      "catalog_footprint_radius": 0.73,
+      "aabb_xy": {
+        "min_x": -0.6050764711556624,
+        "max_x": 0.6081584413016188,
+        "min_y": -0.3999999910593033,
+        "max_y": 0.4022984834395687,
+        "half_w": 0.6066174562286406,
+        "half_d": 0.40114923724943596
+      },
+      "measured_footprint_radius": 0.7272588595177861,
+      "delta_m": -0.002741140482213855,
+      "delta_pct": -0.3754986961936788
+    },
+    {
+      "kind": "crate",
+      "variant_index": 0,
+      "usd_path": "/Isaac/Environments/Simple_Warehouse/Props/SM_CratePlastic_A_01.usd",
+      "catalog_footprint_radius": 0.4,
+      "aabb_xy": {
+        "min_x": -0.3081835868615599,
+        "max_x": 0.3081837394494471,
+        "min_y": -0.24007361829116292,
+        "max_y": 0.2593274821491356,
+        "half_w": 0.3081836631555035,
+        "half_d": 0.24970055022014925
+      },
+      "measured_footprint_radius": 0.39664535168862136,
+      "delta_m": -0.0033546483113786607,
+      "delta_pct": -0.8386620778446652
+    },
+    {
+      "kind": "crate",
+      "variant_index": 1,
+      "usd_path": "/Isaac/Environments/Simple_Warehouse/Props/SM_CratePlastic_B_01.usd",
+      "catalog_footprint_radius": 0.35,
+      "aabb_xy": {
+        "min_x": -0.21838744629053508,
+        "max_x": 0.21838744629053508,
+        "min_y": -0.2673645531975204,
+        "max_y": 0.2625646913968467,
+        "half_w": 0.21838744629053508,
+        "half_d": 0.26496462229718354
+      },
+      "measured_footprint_radius": 0.3433647153776731,
+      "delta_m": -0.006635284622326876,
+      "delta_pct": -1.8957956063791075
+    },
+    {
+      "kind": "crate",
+      "variant_index": 2,
+      "usd_path": "/Isaac/Environments/Simple_Warehouse/Props/SM_CratePlastic_C_01.usd",
+      "catalog_footprint_radius": 0.46,
+      "aabb_xy": {
+        "min_x": -0.2521672764681142,
+        "max_x": 0.2521672764681142,
+        "min_y": -0.34582328023411435,
+        "max_y": 0.4211982251435913,
+        "half_w": 0.2521672764681142,
+        "half_d": 0.3835107526888528
+      },
+      "measured_footprint_radius": 0.4589867457229204,
+      "delta_m": -0.0010132542770796005,
+      "delta_pct": -0.22027266893034791
+    },
+    {
+      "kind": "barrel",
+      "variant_index": 0,
+      "usd_path": "/Isaac/Environments/Simple_Warehouse/Props/SM_BarelPlastic_A_01.usd",
+      "catalog_footprint_radius": 0.47,
+      "aabb_xy": {
+        "min_x": -0.29999993607401976,
+        "max_x": 0.29999993607401976,
+        "min_y": -0.3540411297818764,
+        "max_y": 0.3540411297818764,
+        "half_w": 0.29999993607401976,
+        "half_d": 0.3540411297818764
+      },
+      "measured_footprint_radius": 0.4640528883884287,
+      "delta_m": -0.0059471116115712985,
+      "delta_pct": -1.2653428960789999
+    },
+    {
+      "kind": "barrel",
+      "variant_index": 1,
+      "usd_path": "/Isaac/Environments/Simple_Warehouse/Props/SM_BarelPlastic_B_01.usd",
+      "catalog_footprint_radius": 0.47,
+      "aabb_xy": {
+        "min_x": -0.29999993607401976,
+        "max_x": 0.29999993607401976,
+        "min_y": -0.3540411297818764,
+        "max_y": 0.3540411297818764,
+        "half_w": 0.29999993607401976,
+        "half_d": 0.3540411297818764
+      },
+      "measured_footprint_radius": 0.4640528883884287,
+      "delta_m": -0.0059471116115712985,
+      "delta_pct": -1.2653428960789999
+    },
+    {
+      "kind": "barrel",
+      "variant_index": 2,
+      "usd_path": "/Isaac/Environments/Simple_Warehouse/Props/SM_BarelPlastic_C_01.usd",
+      "catalog_footprint_radius": 0.3,
+      "aabb_xy": {
+        "min_x": -0.21062602526040308,
+        "max_x": 0.21062606340737489,
+        "min_y": -0.21062602526040308,
+        "max_y": 0.21062602526040308,
+        "half_w": 0.21062604433388898,
+        "half_d": 0.21062602526040308
+      },
+      "measured_footprint_radius": 0.2978701949989917,
+      "delta_m": -0.002129805001008289,
+      "delta_pct": -0.7099350003360965
+    },
+    {
+      "kind": "barrel",
+      "variant_index": 3,
+      "usd_path": "/Isaac/Environments/Simple_Warehouse/Props/SM_BarelPlastic_D_01.usd",
+      "catalog_footprint_radius": 0.21,
+      "aabb_xy": {
+        "min_x": -0.14693816810239468,
+        "max_x": 0.14693816810239468,
+        "min_y": -0.14693838744748255,
+        "max_y": 0.1469379487573068,
+        "half_w": 0.14693816810239468,
+        "half_d": 0.14693816810239468
+      },
+      "measured_footprint_radius": 0.20780195016066427,
+      "delta_m": -0.0021980498393357195,
+      "delta_pct": -1.046690399683676
+    },
+    {
+      "kind": "cart",
+      "variant_index": 0,
+      "usd_path": "/Isaac/Environments/Simple_Warehouse/Props/SM_PushcartA_02.usd",
+      "catalog_footprint_radius": 0.95,
+      "aabb_xy": {
+        "min_x": -0.46785014060474595,
+        "max_x": 0.46785014060474595,
+        "min_y": -0.8240565306531664,
+        "max_y": 0.8240565306531664,
+        "half_w": 0.46785014060474595,
+        "half_d": 0.8240565306531664
+      },
+      "measured_footprint_radius": 0.9476037778396694,
+      "delta_m": -0.00239622216033053,
+      "delta_pct": -0.25223391161374004
+    },
+    {
+      "kind": "forklift",
+      "variant_index": 0,
+      "usd_path": "/Isaac/Props/Forklift/forklift.usd",
+      "catalog_footprint_radius": 1.85,
+      "aabb_xy": {
+        "min_x": -0.6069034059292804,
+        "max_x": 0.6069034440762522,
+        "min_y": -1.7473400488345305,
+        "max_y": 1.7473400488345305,
+        "half_w": 0.6069034250027663,
+        "half_d": 1.7473400488345305
+      },
+      "measured_footprint_radius": 1.8497375526114908,
+      "delta_m": -0.0002624473885093348,
+      "delta_pct": -0.014186345324828908
+    },
+    {
+      "kind": "forklift",
+      "variant_index": 1,
+      "usd_path": "/Isaac/Samples/Rigging/Forklift/forklift_b_unrigged_cm.usd",
+      "catalog_footprint_radius": 1.85,
+      "aabb_xy": {
+        "min_x": -0.565146052126302,
+        "max_x": 0.5646921031618392,
+        "min_y": -2.1461518380160958,
+        "max_y": 0.8851270477817865,
+        "half_w": 0.5649190776440706,
+        "half_d": 1.5156394428989413
+      },
+      "measured_footprint_radius": 1.6174969814986488,
+      "delta_m": -0.23250301850135124,
+      "delta_pct": -12.56773072980277
+    },
+    {
+      "kind": "bucket",
+      "variant_index": 0,
+      "usd_path": "/Isaac/Environments/Simple_Warehouse/Props/SM_BucketPlastic_B.usd",
+      "catalog_footprint_radius": 0.48,
+      "aabb_xy": {
+        "min_x": -0.30525111469810184,
+        "max_x": 0.30525111469810184,
+        "min_y": -0.36304869793991656,
+        "max_y": 0.3630499186430143,
+        "half_w": 0.30525111469810184,
+        "half_d": 0.3630493082914654
+      },
+      "measured_footprint_radius": 0.474323774731296,
+      "delta_m": -0.005676225268703983,
+      "delta_pct": -1.1825469309799965
+    },
+    {
+      "kind": "rack_pile",
+      "variant_index": 0,
+      "usd_path": "/Isaac/Environments/Simple_Warehouse/Props/SM_RackPile_06.usd",
+      "catalog_footprint_radius": 1.72,
+      "aabb_xy": {
+        "min_x": -1.5668143875863905,
+        "max_x": 1.5852892712066478,
+        "min_y": -0.8063340579047633,
+        "max_y": 0.5648498408902469,
+        "half_w": 1.576051829396519,
+        "half_d": 0.6855919493975051
+      },
+      "measured_footprint_radius": 1.718713382162013,
+      "delta_m": -0.001286617837986892,
+      "delta_pct": -0.07480336267365652
+    },
+    {
+      "kind": "traffic_cone",
+      "variant_index": 0,
+      "usd_path": "/Isaac/Environments/Simple_Warehouse/Props/S_TrafficCone.usd",
+      "catalog_footprint_radius": 0.3,
+      "aabb_xy": {
+        "min_x": -0.16784852606396683,
+        "max_x": 0.16784852606396683,
+        "min_y": -0.16697213753375095,
+        "max_y": 0.16697223290118046,
+        "half_w": 0.16784852606396683,
+        "half_d": 0.1669721852174657
+      },
+      "measured_footprint_radius": 0.2367548063675621,
+      "delta_m": -0.06324519363243788,
+      "delta_pct": -21.08173121081263
+    },
+    {
+      "kind": "fire_extinguisher",
+      "variant_index": 0,
+      "usd_path": "/Isaac/Environments/Simple_Warehouse/Props/SM_FireExtinguisher_02.usd",
+      "catalog_footprint_radius": 0.2,
+      "aabb_xy": {
+        "min_x": -6.122588974477594e-06,
+        "max_x": 0.18281373569040582,
+        "min_y": -0.1482638230562845,
+        "max_y": 0.14749114660565965,
+        "half_w": 0.09140992913969015,
+        "half_d": 0.14787748483097207
+      },
+      "measured_footprint_radius": 0.1738491462885497,
+      "delta_m": -0.026150853711450317,
+      "delta_pct": -13.075426855725159
+    }
+  ],
+  "per_kind_measured_max": {
+    "box": {
+      "measured_max": 0.5099983703731084,
+      "catalog": 0.51
+    },
+    "pallet": {
+      "measured_max": 0.7870345549580599,
+      "catalog": 0.79
+    },
+    "crate": {
+      "measured_max": 0.4589867457229204,
+      "catalog": 0.46
+    },
+    "barrel": {
+      "measured_max": 0.4640528883884287,
+      "catalog": 0.47
+    },
+    "cart": {
+      "measured_max": 0.9476037778396694,
+      "catalog": 0.95
+    },
+    "forklift": {
+      "measured_max": 1.8497375526114908,
+      "catalog": 1.85
+    },
+    "bucket": {
+      "measured_max": 0.474323774731296,
+      "catalog": 0.48
+    },
+    "rack_pile": {
+      "measured_max": 1.718713382162013,
+      "catalog": 1.72
+    },
+    "traffic_cone": {
+      "measured_max": 0.2367548063675621,
+      "catalog": 0.3
+    },
+    "fire_extinguisher": {
+      "measured_max": 0.1738491462885497,
+      "catalog": 0.2
+    }
+  }
+}

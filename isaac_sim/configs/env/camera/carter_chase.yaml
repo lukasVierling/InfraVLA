@@ -1,0 +1,45 @@
+# ============================================================================
+# Camera: third-person chase cam (parented to the active robot)
+# ============================================================================
+#
+# Same idea as the old server's `scene_cam` - reuse the robot's built-in
+# third-person camera prim and push it back / up via a local translate so
+# we get a "backshot" framing. Auto-follows the robot because it's parented
+# under the robot's prim hierarchy.
+#
+# This camera is NOT seen by the policy - it's purely for visualisation /
+# the Recorder's third-person video.
+#
+# Robot-agnostic via ${env.robot.*}: works for any robot whose USD has a
+# camera matching `cameras.chase_hints` under its prim_path. Nova Carter
+# does NOT ship a built-in chase cam, so chase-cam camera_sets used with
+# env/robot=nova_carter will fail loudly at startup. Drop the chase cam
+# from the camera_set or add an explicit prim_path here in that case.
+# ============================================================================
+
+name: scene_cam
+
+prim_path: null
+auto_discover:
+  parent_prefix: ${env.robot.prim_path}
+  name_hints: ${env.robot.cameras.chase_hints}
+
+# Yes - we apply a local translate so the cam sits behind/above the chassis.
+# The env builder reads extrinsics.local_translate_m + adds a translate op.
+translation_required: true
+
+resolution: [640, 480]
+frequency: 30
+logging: true
+
+intrinsics:
+  focal_length_mm: null
+  horizontal_aperture_mm: null
+  vertical_aperture_mm: null
+
+# Values match the old server's SCENE_CAM_*_OFFSET_M constants:
+#   back = -X in Carter's local frame
+#   up   = +Z in Carter's local frame
+extrinsics:
+  local_translate_m: [-4.0, 0.0, 2.0]
+  local_rotate_euler_deg: [0.0, 0.0, 0.0]

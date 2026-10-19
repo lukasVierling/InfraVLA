@@ -1,0 +1,170 @@
+{
+ "scenes": [
+  {
+   "name": "warehouse_2x3_langv2_0500_tC",
+   "family": "warehouse_2x3_langv2_0500",
+   "twin": "tC",
+   "sibling_names": [
+    "warehouse_2x3_langv2_0500_tA",
+    "warehouse_2x3_langv2_0500_tB",
+    "warehouse_2x3_langv2_0500_tD"
+   ],
+   "seed": 48000,
+   "goal_zone": "E",
+   "target_kind": "traffic_cone",
+   "target_variant": 0,
+   "target_xy": [
+    -4.09,
+    -12.722
+   ],
+   "target_phrase": "safety cone",
+   "lang_pattern": "go to the {x}",
+   "instruction": "go to the traffic cone",
+   "zone_objects": {
+    "B": "box",
+    "C": "forklift",
+    "E": "traffic_cone",
+    "F": "barrel"
+   },
+   "n_objects": 4,
+   "spawn_xy": [
+    -6.75,
+    4.9
+   ],
+   "spawn_heading_deg": 0.0
+  },
+  {
+   "name": "warehouse_2x3_langv2_0502_tA",
+   "family": "warehouse_2x3_langv2_0502",
+   "twin": "tA",
+   "sibling_names": [
+    "warehouse_2x3_langv2_0502_tB",
+    "warehouse_2x3_langv2_0502_tC",
+    "warehouse_2x3_langv2_0502_tD"
+   ],
+   "seed": 48002,
+   "goal_zone": "B",
+   "target_kind": "traffic_cone",
+   "target_variant": 0,
+   "target_xy": [
+    -2.818,
+    17.424
+   ],
+   "target_phrase": "safety cone",
+   "lang_pattern": "navigate to the {x}",
+   "instruction": "navigate to the traffic cone",
+   "zone_objects": {
+    "B": "traffic_cone",
+    "C": "box",
+    "E": "forklift",
+    "F": "barrel"
+   },
+   "n_objects": 4,
+   "spawn_xy": [
+    -6.75,
+    4.9
+   ],
+   "spawn_heading_deg": 0.0
+  },
+  {
+   "name": "warehouse_2x3_langv2_0504_tC",
+   "family": "warehouse_2x3_langv2_0504",
+   "twin": "tC",
+   "sibling_names": [
+    "warehouse_2x3_langv2_0504_tA",
+    "warehouse_2x3_langv2_0504_tB",
+    "warehouse_2x3_langv2_0504_tD"
+   ],
+   "seed": 48004,
+   "goal_zone": "E",
+   "target_kind": "traffic_cone",
+   "target_variant": 0,
+   "target_xy": [
+    -3.852,
+    -9.313
+   ],
+   "target_phrase": "safety cone",
+   "lang_pattern": "navigate to the {x}",
+   "instruction": "navigate to the traffic cone",
+   "zone_objects": {
+    "B": "box",
+    "C": "forklift",
+    "E": "traffic_cone",
+    "F": "barrel"
+   },
+   "n_objects": 4,
+   "spawn_xy": [
+    -6.75,
+    4.9
+   ],
+   "spawn_heading_deg": 0.0
+  },
+  {
+   "name": "warehouse_2x3_langv2_0505_tC",
+   "family": "warehouse_2x3_langv2_0505",
+   "twin": "tC",
+   "sibling_names": [
+    "warehouse_2x3_langv2_0505_tA",
+    "warehouse_2x3_langv2_0505_tB",
+    "warehouse_2x3_langv2_0505_tD"
+   ],
+   "seed": 48005,
+   "goal_zone": "E",
+   "target_kind": "traffic_cone",
+   "target_variant": 0,
+   "target_xy": [
+    -5.526,
+    -11.348
+   ],
+   "target_phrase": "safety cone",
+   "lang_pattern": "go to the {x}",
+   "instruction": "go to the traffic cone",
+   "zone_objects": {
+    "B": "barrel",
+    "C": "box",
+    "E": "traffic_cone",
+    "F": "forklift"
+   },
+   "n_objects": 4,
+   "spawn_xy": [
+    -6.75,
+    4.9
+   ],
+   "spawn_heading_deg": 0.0
+  },
+  {
+   "name": "warehouse_2x3_langv2_0507_tA",
+   "family": "warehouse_2x3_langv2_0507",
+   "twin": "tA",
+   "sibling_names": [
+    "warehouse_2x3_langv2_0507_tB",
+    "warehouse_2x3_langv2_0507_tC",
+    "warehouse_2x3_langv2_0507_tD"
+   ],
+   "seed": 48007,
+   "goal_zone": "B",
+   "target_kind": "traffic_cone",
+   "target_variant": 0,
+   "target_xy": [
+    -5.09,
+    21.427
+   ],
+   "target_phrase": "safety cone",
+   "lang_pattern": "move toward the {x}",
+   "instruction": "move toward the traffic cone",
+   "zone_objects": {
+    "B": "traffic_cone",
+    "C": "forklift",
+    "E": "barrel",
+    "F": "box"
+   },
+   "n_objects": 4,
+   "spawn_xy": [
+    -6.75,
+    4.9
+   ],
+   "spawn_heading_deg": 0.0
+  }
+ ],
+ "_note": "SYNONYM CLOSED-LOOP: 5 standard-test scenes whose target is a traffic cone, with target_phrase rewritten to 'safety cone'. Everything else identical, so the paired canonical rollouts already exist in the A0full sweep."
+}

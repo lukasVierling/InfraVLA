@@ -1,0 +1,18 @@
+# @package env
+# 2x3 warehouse base scene. Opens scenes/warehouse_2x3_base.usda verbatim
+# (reshape + manual tile fixes + 4 symmetric CCTVs) via `base_usda`; the
+# warehouse_2x3 template only layers lighting + goal (+ optional obstacles) on top.
+# start/goal below are a smoke-test pose up the east aisle — override per data-gen sample.
+{
+  "template": "warehouse_2x3",
+  "name": "warehouse_2x3",
+  "base_usda": "${oc.env:INFRAVLA_ROOT}/isaac_sim/scenes/warehouse_layout/scenes/warehouse_2x3_base.usda",
+  "seed": 0,
+  "start_xy": [0.7, 4.0],
+  "start_heading_deg": 90.0,
+  "start_heading_mode": "fixed",
+  "goal_xy": [0.7, 20.0],
+  "goal_kinds": [],
+  "goal_yaw_deg": 0.0,
+  "lighting": "normal"
+}

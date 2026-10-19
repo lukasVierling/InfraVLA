@@ -1,0 +1,8 @@
+# Loose-tolerance variant of `pose`. See lang_loose.yaml for rationale.
+
+defaults:
+  - pose
+  - _self_
+
+name: pose_loose
+success_dist: 0.8

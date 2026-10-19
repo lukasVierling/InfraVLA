@@ -1,0 +1,27 @@
+# ============================================================================
+# Policy: A* path-following oracle — NO-BRAKE variant (training-data generator)
+# ============================================================================
+#
+# Identical to astar_oracle.yaml EXCEPT arrival_distance_ratio = 0.0, so the
+# expert drives full speed all the way to the goal and never decelerates. Used
+# to generate brake-free trajectories: paired on the training side with the
+# no-pad index cutoff (curr_time <= n - num_actions_chunk) and
+# min_goal_distance_steps >= 1, so action labels are pure cruise with no
+# padded terminal-stop steps and no goal=current contradiction.
+#
+# Why a separate file (not editing astar_oracle.yaml): astar_oracle is also
+# used by the eval pipeline; the brake there is harmless at eval (arrival is
+# detected externally via success_dist in eval_policy.py), so we leave it at
+# 1.0 and only swap policy for data-gen experiments that opt in.
+#
+# Safety: arrival_distance_ratio = 0.0 => arrival_distance_m = 0, so the
+# `if dist_to_goal < arrival_distance_m` branch in a_star_policy.py never
+# fires (no braking, and the `brake = dist/arrival_distance_m` line that would
+# divide by zero is never reached).
+# ============================================================================
+
+# (See astar_oracle.yaml for the rationale on this value.)
+densify_spacing_m: 0.05
+
+# No arrival deceleration — full speed to the goal. See header.
+arrival_distance_ratio: 0.0

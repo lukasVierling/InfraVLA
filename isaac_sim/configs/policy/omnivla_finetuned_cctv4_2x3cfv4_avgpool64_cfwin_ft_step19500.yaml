@@ -1,0 +1,39 @@
+# 2x3 CFV4 (A-spawn only, fixed 270deg heading, south-third forklifts, BIGCAM)
+# 4-CCTV + ego-goal eval policy, AVG-POOL64, fg50, no-hflip — PLAIN arch (no
+# camembed/sepproj), trained WITH cf-window upweighting (data.cf_window_balance
+# boost 8) on the CFV4 dataset (481/46 traj). step_19500 (BEST window cf-val 0.0048; +5k cfwin ft of the parent,
+# fg100, no swap) of
+# 2026-07-12_..._cfwin_ft20k_v0 (parent = the 15k boost8 arm).
+# Ckpt trained on kaitain, step_15000 rsynced to arrakis 2026-07-11 evening.
+# The CCTV arm of the cfv4 pair — vs the ego-only cfv4+boost8 control (73.6%
+# reach@1m). MUST eval with camera_set with_4cctv_2x3_bigcam (trained on
+# bigcam CCTVs) — the experiment shards set that override.
+save_dir: "${recorder.runs_root}/${run.name}/policy"
+cameras:
+  - { obs_cam: front_cam, goal_frames: null, present: true }
+  - { obs_cam: cctv_NE,   goal_frames: null, present: true }
+  - { obs_cam: cctv_NW,   goal_frames: null, present: true }
+  - { obs_cam: cctv_SE,   goal_frames: null, present: true }
+  - { obs_cam: cctv_SW,   goal_frames: null, present: true }
+use_cctv_goal: false
+no_goal_image: false
+inference:
+  resume: true
+  vla_path: "${oc.env:INFRAVLA_ROOT}/omnivla-original"
+  resume_step: 120000
+  use_l1_regression: true
+  use_diffusion: false
+  use_film: false
+  num_images_in_input: 6
+  use_lora: true
+  lora_rank: 32
+  lora_dropout: 0.0
+finetune:
+  checkpoint_dir: "${oc.env:INFRAVLA_ROOT}/runs/training/runs/2026-07-12_cctv4_sharedenc_2x3cfv4_egogoal_avgpool64_r16_fg100_cfwin_ft20k_v0/checkpoints/step_19500"
+  step: 19500
+  use_cctv_encoder: true
+  num_ego_images: 2
+  cctv_downsample:
+    method: avgpool
+    out_tokens: 64
+  cctv_cam_names: [cctv_NE, cctv_NW, cctv_SE, cctv_SW]

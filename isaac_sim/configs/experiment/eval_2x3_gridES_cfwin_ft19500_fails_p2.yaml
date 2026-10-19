@@ -1,0 +1,24 @@
+# @package _global_
+# ft19500 RETRY of the cfv4 avgpool+boost8 parent's 16 gridES routing failures
+# (all second-split seals): does the +5k counterfactual-window fine-tune fix
+# them in CLOSED LOOP? Shard 2/4. Protocol identical to all gridES sweeps.
+defaults:
+  - override /policy: omnivla_finetuned_cctv4_2x3cfv4_avgpool64_cfwin_ft_step19500
+  - override /task: pose
+  - override /env/scene: warehouse_2x3_gridES_sC_gL_cfCF
+  - override /env/robot: nova_carter
+  - override /env/camera_set: with_4cctv_2x3_bigcam
+  - override /env/astar: warehouse_2x3
+  - override /controller: omnivla_default
+  - override /recorder: default
+run: {name: "eval_2x3_gridES_cfwin_ft19500_fails_p2", notes: "ft19500 on the parent's 16 failed cells, shard 2/4."}
+control_hz: 3.0
+record_hz: 3.0
+fine_grained: {enabled: true, control_hz: 30}
+task: {max_steps: 300}
+recorder: {runs_root: "${oc.env:INFRAVLA_ROOT}/runs/evaluation/sweeps/warehouse_2x3_gridES_2026-07-08/cfwin_ft19500_avgpoolfails", log_frames: false}
+runs:
+  - { name: "warehouse_2x3_gridES_sC_gL_cfCF__pose", env_scene: warehouse_2x3_gridES_sC_gL_cfCF, task: pose, policy: omnivla_finetuned_cctv4_2x3cfv4_avgpool64_cfwin_ft_step19500, action: RELOAD }
+  - { name: "warehouse_2x3_gridES_sL_gC_cfF__pose", env_scene: warehouse_2x3_gridES_sL_gC_cfF, task: pose, action: KEEP_POLICY }
+  - { name: "warehouse_2x3_gridES_sL_gR_cfCF__pose", env_scene: warehouse_2x3_gridES_sL_gR_cfCF, task: pose, action: KEEP_POLICY }
+  - { name: "warehouse_2x3_gridES_sR_gL_cfCF__pose", env_scene: warehouse_2x3_gridES_sR_gL_cfCF, task: pose, action: KEEP_POLICY }

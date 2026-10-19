@@ -1,0 +1,1584 @@
+{
+  "stats": {
+    "n": 52,
+    "n_bases": 21,
+    "skipped": 0,
+    "family_size_distribution": {
+      "2": 16,
+      "4": 5
+    },
+    "blocked_variants": 31,
+    "blocked_detours": 9,
+    "blocked_vacuous": 0,
+    "blocked_elongation": {
+      "min": 1.002,
+      "max": 1.503,
+      "avg": 1.123
+    }
+  },
+  "scenes": [
+    {
+      "name": "warehouse_2x3_1100_cf0",
+      "base": "warehouse_2x3_1100",
+      "seed": 20000,
+      "start_zone": "A",
+      "goal_zone": "G",
+      "transit_zones": [
+        "C",
+        "E"
+      ],
+      "blocked_zones": [],
+      "cf_n_variants": 4,
+      "route_aisles": [
+        "C",
+        "E"
+      ],
+      "vacuous": null,
+      "n_blockers": 0,
+      "n_distractors": 0,
+      "aisle_distractor_counts": {
+        "B": 0,
+        "C": 0,
+        "E": 0,
+        "F": 0
+      },
+      "path_len_m": 48.18,
+      "path_len_unblocked_m": 48.18,
+      "elongation": 1.0,
+      "detour": false
+    },
+    {
+      "name": "warehouse_2x3_1100_cfC",
+      "base": "warehouse_2x3_1100",
+      "seed": 20000,
+      "start_zone": "A",
+      "goal_zone": "G",
+      "transit_zones": [
+        "C",
+        "E"
+      ],
+      "blocked_zones": [
+        "C"
+      ],
+      "cf_n_variants": 4,
+      "route_aisles": [
+        "B",
+        "E"
+      ],
+      "vacuous": false,
+      "n_blockers": 1,
+      "n_distractors": 0,
+      "aisle_distractor_counts": {
+        "B": 0,
+        "C": 0,
+        "E": 0,
+        "F": 0
+      },
+      "path_len_m": 50.23,
+      "path_len_unblocked_m": 48.18,
+      "elongation": 1.043,
+      "detour": false
+    },
+    {
+      "name": "warehouse_2x3_1100_cfE",
+      "base": "warehouse_2x3_1100",
+      "seed": 20000,
+      "start_zone": "A",
+      "goal_zone": "G",
+      "transit_zones": [
+        "C",
+        "E"
+      ],
+      "blocked_zones": [
+        "E"
+      ],
+      "cf_n_variants": 4,
+      "route_aisles": [
+        "C",
+        "F"
+      ],
+      "vacuous": false,
+      "n_blockers": 1,
+      "n_distractors": 0,
+      "aisle_distractor_counts": {
+        "B": 0,
+        "C": 0,
+        "E": 0,
+        "F": 0
+      },
+      "path_len_m": 48.27,
+      "path_len_unblocked_m": 48.18,
+      "elongation": 1.002,
+      "detour": false
+    },
+    {
+      "name": "warehouse_2x3_1100_cfCE",
+      "base": "warehouse_2x3_1100",
+      "seed": 20000,
+      "start_zone": "A",
+      "goal_zone": "G",
+      "transit_zones": [
+        "C",
+        "E"
+      ],
+      "blocked_zones": [
+        "C",
+        "E"
+      ],
+      "cf_n_variants": 4,
+      "route_aisles": [
+        "B",
+        "F"
+      ],
+      "vacuous": false,
+      "n_blockers": 2,
+      "n_distractors": 0,
+      "aisle_distractor_counts": {
+        "B": 0,
+        "C": 0,
+        "E": 0,
+        "F": 0
+      },
+      "path_len_m": 54.38,
+      "path_len_unblocked_m": 48.18,
+      "elongation": 1.129,
+      "detour": false
+    },
+    {
+      "name": "warehouse_2x3_1101_cf0",
+      "base": "warehouse_2x3_1101",
+      "seed": 20001,
+      "start_zone": "A",
+      "goal_zone": "G",
+      "transit_zones": [
+        "C",
+        "F"
+      ],
+      "blocked_zones": [],
+      "cf_n_variants": 4,
+      "route_aisles": [
+        "C",
+        "F"
+      ],
+      "vacuous": null,
+      "n_blockers": 0,
+      "n_distractors": 0,
+      "aisle_distractor_counts": {
+        "B": 0,
+        "C": 0,
+        "E": 0,
+        "F": 0
+      },
+      "path_len_m": 44.4,
+      "path_len_unblocked_m": 44.4,
+      "elongation": 1.0,
+      "detour": false
+    },
+    {
+      "name": "warehouse_2x3_1101_cfC",
+      "base": "warehouse_2x3_1101",
+      "seed": 20001,
+      "start_zone": "A",
+      "goal_zone": "G",
+      "transit_zones": [
+        "C",
+        "F"
+      ],
+      "blocked_zones": [
+        "C"
+      ],
+      "cf_n_variants": 4,
+      "route_aisles": [
+        "B",
+        "E"
+      ],
+      "vacuous": false,
+      "n_blockers": 1,
+      "n_distractors": 0,
+      "aisle_distractor_counts": {
+        "B": 0,
+        "C": 0,
+        "E": 0,
+        "F": 0
+      },
+      "path_len_m": 46.54,
+      "path_len_unblocked_m": 44.4,
+      "elongation": 1.048,
+      "detour": false
+    },
+    {
+      "name": "warehouse_2x3_1101_cfF",
+      "base": "warehouse_2x3_1101",
+      "seed": 20001,
+      "start_zone": "A",
+      "goal_zone": "G",
+      "transit_zones": [
+        "C",
+        "F"
+      ],
+      "blocked_zones": [
+        "F"
+      ],
+      "cf_n_variants": 4,
+      "route_aisles": [
+        "B",
+        "E"
+      ],
+      "vacuous": false,
+      "n_blockers": 1,
+      "n_distractors": 0,
+      "aisle_distractor_counts": {
+        "B": 0,
+        "C": 0,
+        "E": 0,
+        "F": 0
+      },
+      "path_len_m": 46.54,
+      "path_len_unblocked_m": 44.4,
+      "elongation": 1.048,
+      "detour": false
+    },
+    {
+      "name": "warehouse_2x3_1101_cfCF",
+      "base": "warehouse_2x3_1101",
+      "seed": 20001,
+      "start_zone": "A",
+      "goal_zone": "G",
+      "transit_zones": [
+        "C",
+        "F"
+      ],
+      "blocked_zones": [
+        "C",
+        "F"
+      ],
+      "cf_n_variants": 4,
+      "route_aisles": [
+        "B",
+        "E"
+      ],
+      "vacuous": false,
+      "n_blockers": 2,
+      "n_distractors": 0,
+      "aisle_distractor_counts": {
+        "B": 0,
+        "C": 0,
+        "E": 0,
+        "F": 0
+      },
+      "path_len_m": 46.54,
+      "path_len_unblocked_m": 44.4,
+      "elongation": 1.048,
+      "detour": false
+    },
+    {
+      "name": "warehouse_2x3_1102_cf0",
+      "base": "warehouse_2x3_1102",
+      "seed": 20002,
+      "start_zone": "A",
+      "goal_zone": "D",
+      "transit_zones": [
+        "B"
+      ],
+      "blocked_zones": [],
+      "cf_n_variants": 2,
+      "route_aisles": [
+        "B"
+      ],
+      "vacuous": null,
+      "n_blockers": 0,
+      "n_distractors": 0,
+      "aisle_distractor_counts": {
+        "B": 0,
+        "C": 0,
+        "E": 0,
+        "F": 0
+      },
+      "path_len_m": 25.59,
+      "path_len_unblocked_m": 25.59,
+      "elongation": 1.0,
+      "detour": false
+    },
+    {
+      "name": "warehouse_2x3_1102_cfB",
+      "base": "warehouse_2x3_1102",
+      "seed": 20002,
+      "start_zone": "A",
+      "goal_zone": "D",
+      "transit_zones": [
+        "B"
+      ],
+      "blocked_zones": [
+        "B"
+      ],
+      "cf_n_variants": 2,
+      "route_aisles": [
+        "C"
+      ],
+      "vacuous": false,
+      "n_blockers": 1,
+      "n_distractors": 0,
+      "aisle_distractor_counts": {
+        "B": 0,
+        "C": 0,
+        "E": 0,
+        "F": 0
+      },
+      "path_len_m": 27.08,
+      "path_len_unblocked_m": 25.59,
+      "elongation": 1.058,
+      "detour": false
+    },
+    {
+      "name": "warehouse_2x3_1103_cf0",
+      "base": "warehouse_2x3_1103",
+      "seed": 20003,
+      "start_zone": "D",
+      "goal_zone": "A",
+      "transit_zones": [
+        "B"
+      ],
+      "blocked_zones": [],
+      "cf_n_variants": 2,
+      "route_aisles": [
+        "B"
+      ],
+      "vacuous": null,
+      "n_blockers": 0,
+      "n_distractors": 0,
+      "aisle_distractor_counts": {
+        "B": 0,
+        "C": 0,
+        "E": 0,
+        "F": 0
+      },
+      "path_len_m": 25.11,
+      "path_len_unblocked_m": 25.11,
+      "elongation": 1.0,
+      "detour": false
+    },
+    {
+      "name": "warehouse_2x3_1103_cfB",
+      "base": "warehouse_2x3_1103",
+      "seed": 20003,
+      "start_zone": "D",
+      "goal_zone": "A",
+      "transit_zones": [
+        "B"
+      ],
+      "blocked_zones": [
+        "B"
+      ],
+      "cf_n_variants": 2,
+      "route_aisles": [
+        "C"
+      ],
+      "vacuous": false,
+      "n_blockers": 1,
+      "n_distractors": 0,
+      "aisle_distractor_counts": {
+        "B": 0,
+        "C": 0,
+        "E": 0,
+        "F": 0
+      },
+      "path_len_m": 32.65,
+      "path_len_unblocked_m": 25.11,
+      "elongation": 1.3,
+      "detour": true
+    },
+    {
+      "name": "warehouse_2x3_1104_cf0",
+      "base": "warehouse_2x3_1104",
+      "seed": 20004,
+      "start_zone": "D",
+      "goal_zone": "G",
+      "transit_zones": [
+        "E"
+      ],
+      "blocked_zones": [],
+      "cf_n_variants": 2,
+      "route_aisles": [
+        "E"
+      ],
+      "vacuous": null,
+      "n_blockers": 0,
+      "n_distractors": 0,
+      "aisle_distractor_counts": {
+        "B": 0,
+        "C": 0,
+        "E": 0,
+        "F": 0
+      },
+      "path_len_m": 23.53,
+      "path_len_unblocked_m": 23.53,
+      "elongation": 1.0,
+      "detour": false
+    },
+    {
+      "name": "warehouse_2x3_1104_cfE",
+      "base": "warehouse_2x3_1104",
+      "seed": 20004,
+      "start_zone": "D",
+      "goal_zone": "G",
+      "transit_zones": [
+        "E"
+      ],
+      "blocked_zones": [
+        "E"
+      ],
+      "cf_n_variants": 2,
+      "route_aisles": [
+        "F"
+      ],
+      "vacuous": false,
+      "n_blockers": 1,
+      "n_distractors": 0,
+      "aisle_distractor_counts": {
+        "B": 0,
+        "C": 0,
+        "E": 0,
+        "F": 0
+      },
+      "path_len_m": 30.1,
+      "path_len_unblocked_m": 23.53,
+      "elongation": 1.279,
+      "detour": true
+    },
+    {
+      "name": "warehouse_2x3_1105_cf0",
+      "base": "warehouse_2x3_1105",
+      "seed": 20005,
+      "start_zone": "D",
+      "goal_zone": "G",
+      "transit_zones": [
+        "E"
+      ],
+      "blocked_zones": [],
+      "cf_n_variants": 2,
+      "route_aisles": [
+        "E"
+      ],
+      "vacuous": null,
+      "n_blockers": 0,
+      "n_distractors": 0,
+      "aisle_distractor_counts": {
+        "B": 0,
+        "C": 0,
+        "E": 0,
+        "F": 0
+      },
+      "path_len_m": 23.91,
+      "path_len_unblocked_m": 23.91,
+      "elongation": 1.0,
+      "detour": false
+    },
+    {
+      "name": "warehouse_2x3_1105_cfE",
+      "base": "warehouse_2x3_1105",
+      "seed": 20005,
+      "start_zone": "D",
+      "goal_zone": "G",
+      "transit_zones": [
+        "E"
+      ],
+      "blocked_zones": [
+        "E"
+      ],
+      "cf_n_variants": 2,
+      "route_aisles": [
+        "F"
+      ],
+      "vacuous": false,
+      "n_blockers": 1,
+      "n_distractors": 0,
+      "aisle_distractor_counts": {
+        "B": 0,
+        "C": 0,
+        "E": 0,
+        "F": 0
+      },
+      "path_len_m": 28.36,
+      "path_len_unblocked_m": 23.91,
+      "elongation": 1.186,
+      "detour": true
+    },
+    {
+      "name": "warehouse_2x3_1106_cf0",
+      "base": "warehouse_2x3_1106",
+      "seed": 20006,
+      "start_zone": "D",
+      "goal_zone": "A",
+      "transit_zones": [
+        "C"
+      ],
+      "blocked_zones": [],
+      "cf_n_variants": 2,
+      "route_aisles": [
+        "C"
+      ],
+      "vacuous": null,
+      "n_blockers": 0,
+      "n_distractors": 0,
+      "aisle_distractor_counts": {
+        "B": 0,
+        "C": 0,
+        "E": 0,
+        "F": 0
+      },
+      "path_len_m": 25.08,
+      "path_len_unblocked_m": 25.08,
+      "elongation": 1.0,
+      "detour": false
+    },
+    {
+      "name": "warehouse_2x3_1106_cfC",
+      "base": "warehouse_2x3_1106",
+      "seed": 20006,
+      "start_zone": "D",
+      "goal_zone": "A",
+      "transit_zones": [
+        "C"
+      ],
+      "blocked_zones": [
+        "C"
+      ],
+      "cf_n_variants": 2,
+      "route_aisles": [
+        "B"
+      ],
+      "vacuous": false,
+      "n_blockers": 1,
+      "n_distractors": 0,
+      "aisle_distractor_counts": {
+        "B": 0,
+        "C": 0,
+        "E": 0,
+        "F": 0
+      },
+      "path_len_m": 30.83,
+      "path_len_unblocked_m": 25.08,
+      "elongation": 1.229,
+      "detour": true
+    },
+    {
+      "name": "warehouse_2x3_1107_cf0",
+      "base": "warehouse_2x3_1107",
+      "seed": 20007,
+      "start_zone": "D",
+      "goal_zone": "G",
+      "transit_zones": [
+        "F"
+      ],
+      "blocked_zones": [],
+      "cf_n_variants": 2,
+      "route_aisles": [
+        "F"
+      ],
+      "vacuous": null,
+      "n_blockers": 0,
+      "n_distractors": 0,
+      "aisle_distractor_counts": {
+        "B": 0,
+        "C": 0,
+        "E": 0,
+        "F": 0
+      },
+      "path_len_m": 19.36,
+      "path_len_unblocked_m": 19.36,
+      "elongation": 1.0,
+      "detour": false
+    },
+    {
+      "name": "warehouse_2x3_1107_cfF",
+      "base": "warehouse_2x3_1107",
+      "seed": 20007,
+      "start_zone": "D",
+      "goal_zone": "G",
+      "transit_zones": [
+        "F"
+      ],
+      "blocked_zones": [
+        "F"
+      ],
+      "cf_n_variants": 2,
+      "route_aisles": [
+        "E"
+      ],
+      "vacuous": false,
+      "n_blockers": 1,
+      "n_distractors": 0,
+      "aisle_distractor_counts": {
+        "B": 0,
+        "C": 0,
+        "E": 0,
+        "F": 0
+      },
+      "path_len_m": 29.1,
+      "path_len_unblocked_m": 19.36,
+      "elongation": 1.503,
+      "detour": true
+    },
+    {
+      "name": "warehouse_2x3_1108_cf0",
+      "base": "warehouse_2x3_1108",
+      "seed": 20008,
+      "start_zone": "A",
+      "goal_zone": "D",
+      "transit_zones": [
+        "C"
+      ],
+      "blocked_zones": [],
+      "cf_n_variants": 2,
+      "route_aisles": [
+        "C"
+      ],
+      "vacuous": null,
+      "n_blockers": 0,
+      "n_distractors": 0,
+      "aisle_distractor_counts": {
+        "B": 0,
+        "C": 0,
+        "E": 0,
+        "F": 0
+      },
+      "path_len_m": 22.51,
+      "path_len_unblocked_m": 22.51,
+      "elongation": 1.0,
+      "detour": false
+    },
+    {
+      "name": "warehouse_2x3_1108_cfC",
+      "base": "warehouse_2x3_1108",
+      "seed": 20008,
+      "start_zone": "A",
+      "goal_zone": "D",
+      "transit_zones": [
+        "C"
+      ],
+      "blocked_zones": [
+        "C"
+      ],
+      "cf_n_variants": 2,
+      "route_aisles": [
+        "B"
+      ],
+      "vacuous": false,
+      "n_blockers": 1,
+      "n_distractors": 0,
+      "aisle_distractor_counts": {
+        "B": 0,
+        "C": 0,
+        "E": 0,
+        "F": 0
+      },
+      "path_len_m": 25.34,
+      "path_len_unblocked_m": 22.51,
+      "elongation": 1.126,
+      "detour": false
+    },
+    {
+      "name": "warehouse_2x3_1109_cf0",
+      "base": "warehouse_2x3_1109",
+      "seed": 20009,
+      "start_zone": "G",
+      "goal_zone": "D",
+      "transit_zones": [
+        "F"
+      ],
+      "blocked_zones": [],
+      "cf_n_variants": 2,
+      "route_aisles": [
+        "F"
+      ],
+      "vacuous": null,
+      "n_blockers": 0,
+      "n_distractors": 0,
+      "aisle_distractor_counts": {
+        "B": 0,
+        "C": 0,
+        "E": 0,
+        "F": 0
+      },
+      "path_len_m": 24.63,
+      "path_len_unblocked_m": 24.63,
+      "elongation": 1.0,
+      "detour": false
+    },
+    {
+      "name": "warehouse_2x3_1109_cfF",
+      "base": "warehouse_2x3_1109",
+      "seed": 20009,
+      "start_zone": "G",
+      "goal_zone": "D",
+      "transit_zones": [
+        "F"
+      ],
+      "blocked_zones": [
+        "F"
+      ],
+      "cf_n_variants": 2,
+      "route_aisles": [
+        "E"
+      ],
+      "vacuous": false,
+      "n_blockers": 1,
+      "n_distractors": 0,
+      "aisle_distractor_counts": {
+        "B": 0,
+        "C": 0,
+        "E": 0,
+        "F": 0
+      },
+      "path_len_m": 26.62,
+      "path_len_unblocked_m": 24.63,
+      "elongation": 1.081,
+      "detour": false
+    },
+    {
+      "name": "warehouse_2x3_1110_cf0",
+      "base": "warehouse_2x3_1110",
+      "seed": 20010,
+      "start_zone": "A",
+      "goal_zone": "D",
+      "transit_zones": [
+        "C"
+      ],
+      "blocked_zones": [],
+      "cf_n_variants": 2,
+      "route_aisles": [
+        "C"
+      ],
+      "vacuous": null,
+      "n_blockers": 0,
+      "n_distractors": 0,
+      "aisle_distractor_counts": {
+        "B": 0,
+        "C": 0,
+        "E": 0,
+        "F": 0
+      },
+      "path_len_m": 26.41,
+      "path_len_unblocked_m": 26.41,
+      "elongation": 1.0,
+      "detour": false
+    },
+    {
+      "name": "warehouse_2x3_1110_cfC",
+      "base": "warehouse_2x3_1110",
+      "seed": 20010,
+      "start_zone": "A",
+      "goal_zone": "D",
+      "transit_zones": [
+        "C"
+      ],
+      "blocked_zones": [
+        "C"
+      ],
+      "cf_n_variants": 2,
+      "route_aisles": [
+        "B"
+      ],
+      "vacuous": false,
+      "n_blockers": 1,
+      "n_distractors": 0,
+      "aisle_distractor_counts": {
+        "B": 0,
+        "C": 0,
+        "E": 0,
+        "F": 0
+      },
+      "path_len_m": 29.37,
+      "path_len_unblocked_m": 26.41,
+      "elongation": 1.112,
+      "detour": false
+    },
+    {
+      "name": "warehouse_2x3_1111_cf0",
+      "base": "warehouse_2x3_1111",
+      "seed": 20011,
+      "start_zone": "D",
+      "goal_zone": "G",
+      "transit_zones": [
+        "F"
+      ],
+      "blocked_zones": [],
+      "cf_n_variants": 2,
+      "route_aisles": [
+        "F"
+      ],
+      "vacuous": null,
+      "n_blockers": 0,
+      "n_distractors": 0,
+      "aisle_distractor_counts": {
+        "B": 0,
+        "C": 0,
+        "E": 0,
+        "F": 0
+      },
+      "path_len_m": 23.02,
+      "path_len_unblocked_m": 23.02,
+      "elongation": 1.0,
+      "detour": false
+    },
+    {
+      "name": "warehouse_2x3_1111_cfF",
+      "base": "warehouse_2x3_1111",
+      "seed": 20011,
+      "start_zone": "D",
+      "goal_zone": "G",
+      "transit_zones": [
+        "F"
+      ],
+      "blocked_zones": [
+        "F"
+      ],
+      "cf_n_variants": 2,
+      "route_aisles": [
+        "E"
+      ],
+      "vacuous": false,
+      "n_blockers": 1,
+      "n_distractors": 0,
+      "aisle_distractor_counts": {
+        "B": 0,
+        "C": 0,
+        "E": 0,
+        "F": 0
+      },
+      "path_len_m": 24.37,
+      "path_len_unblocked_m": 23.02,
+      "elongation": 1.059,
+      "detour": false
+    },
+    {
+      "name": "warehouse_2x3_1112_cf0",
+      "base": "warehouse_2x3_1112",
+      "seed": 20012,
+      "start_zone": "G",
+      "goal_zone": "D",
+      "transit_zones": [
+        "F"
+      ],
+      "blocked_zones": [],
+      "cf_n_variants": 2,
+      "route_aisles": [
+        "F"
+      ],
+      "vacuous": null,
+      "n_blockers": 0,
+      "n_distractors": 0,
+      "aisle_distractor_counts": {
+        "B": 0,
+        "C": 0,
+        "E": 0,
+        "F": 0
+      },
+      "path_len_m": 24.92,
+      "path_len_unblocked_m": 24.92,
+      "elongation": 1.0,
+      "detour": false
+    },
+    {
+      "name": "warehouse_2x3_1112_cfF",
+      "base": "warehouse_2x3_1112",
+      "seed": 20012,
+      "start_zone": "G",
+      "goal_zone": "D",
+      "transit_zones": [
+        "F"
+      ],
+      "blocked_zones": [
+        "F"
+      ],
+      "cf_n_variants": 2,
+      "route_aisles": [
+        "E"
+      ],
+      "vacuous": false,
+      "n_blockers": 1,
+      "n_distractors": 0,
+      "aisle_distractor_counts": {
+        "B": 0,
+        "C": 0,
+        "E": 0,
+        "F": 0
+      },
+      "path_len_m": 30.11,
+      "path_len_unblocked_m": 24.92,
+      "elongation": 1.208,
+      "detour": true
+    },
+    {
+      "name": "warehouse_2x3_1113_cf0",
+      "base": "warehouse_2x3_1113",
+      "seed": 20013,
+      "start_zone": "D",
+      "goal_zone": "A",
+      "transit_zones": [
+        "B"
+      ],
+      "blocked_zones": [],
+      "cf_n_variants": 2,
+      "route_aisles": [
+        "B"
+      ],
+      "vacuous": null,
+      "n_blockers": 0,
+      "n_distractors": 0,
+      "aisle_distractor_counts": {
+        "B": 0,
+        "C": 0,
+        "E": 0,
+        "F": 0
+      },
+      "path_len_m": 25.74,
+      "path_len_unblocked_m": 25.74,
+      "elongation": 1.0,
+      "detour": false
+    },
+    {
+      "name": "warehouse_2x3_1113_cfB",
+      "base": "warehouse_2x3_1113",
+      "seed": 20013,
+      "start_zone": "D",
+      "goal_zone": "A",
+      "transit_zones": [
+        "B"
+      ],
+      "blocked_zones": [
+        "B"
+      ],
+      "cf_n_variants": 2,
+      "route_aisles": [
+        "C"
+      ],
+      "vacuous": false,
+      "n_blockers": 1,
+      "n_distractors": 0,
+      "aisle_distractor_counts": {
+        "B": 0,
+        "C": 0,
+        "E": 0,
+        "F": 0
+      },
+      "path_len_m": 29.74,
+      "path_len_unblocked_m": 25.74,
+      "elongation": 1.156,
+      "detour": true
+    },
+    {
+      "name": "warehouse_2x3_1114_cf0",
+      "base": "warehouse_2x3_1114",
+      "seed": 20014,
+      "start_zone": "D",
+      "goal_zone": "G",
+      "transit_zones": [
+        "E"
+      ],
+      "blocked_zones": [],
+      "cf_n_variants": 2,
+      "route_aisles": [
+        "E"
+      ],
+      "vacuous": null,
+      "n_blockers": 0,
+      "n_distractors": 0,
+      "aisle_distractor_counts": {
+        "B": 0,
+        "C": 0,
+        "E": 0,
+        "F": 0
+      },
+      "path_len_m": 24.55,
+      "path_len_unblocked_m": 24.55,
+      "elongation": 1.0,
+      "detour": false
+    },
+    {
+      "name": "warehouse_2x3_1114_cfE",
+      "base": "warehouse_2x3_1114",
+      "seed": 20014,
+      "start_zone": "D",
+      "goal_zone": "G",
+      "transit_zones": [
+        "E"
+      ],
+      "blocked_zones": [
+        "E"
+      ],
+      "cf_n_variants": 2,
+      "route_aisles": [
+        "F"
+      ],
+      "vacuous": false,
+      "n_blockers": 1,
+      "n_distractors": 0,
+      "aisle_distractor_counts": {
+        "B": 0,
+        "C": 0,
+        "E": 0,
+        "F": 0
+      },
+      "path_len_m": 28.92,
+      "path_len_unblocked_m": 24.55,
+      "elongation": 1.178,
+      "detour": true
+    },
+    {
+      "name": "warehouse_2x3_1115_cf0",
+      "base": "warehouse_2x3_1115",
+      "seed": 20015,
+      "start_zone": "G",
+      "goal_zone": "A",
+      "transit_zones": [
+        "B",
+        "F"
+      ],
+      "blocked_zones": [],
+      "cf_n_variants": 4,
+      "route_aisles": [
+        "B",
+        "F"
+      ],
+      "vacuous": null,
+      "n_blockers": 0,
+      "n_distractors": 0,
+      "aisle_distractor_counts": {
+        "B": 0,
+        "C": 0,
+        "E": 0,
+        "F": 0
+      },
+      "path_len_m": 50.51,
+      "path_len_unblocked_m": 50.51,
+      "elongation": 1.0,
+      "detour": false
+    },
+    {
+      "name": "warehouse_2x3_1115_cfB",
+      "base": "warehouse_2x3_1115",
+      "seed": 20015,
+      "start_zone": "G",
+      "goal_zone": "A",
+      "transit_zones": [
+        "B",
+        "F"
+      ],
+      "blocked_zones": [
+        "B"
+      ],
+      "cf_n_variants": 4,
+      "route_aisles": [
+        "C",
+        "F"
+      ],
+      "vacuous": false,
+      "n_blockers": 1,
+      "n_distractors": 0,
+      "aisle_distractor_counts": {
+        "B": 0,
+        "C": 0,
+        "E": 0,
+        "F": 0
+      },
+      "path_len_m": 52.8,
+      "path_len_unblocked_m": 50.51,
+      "elongation": 1.045,
+      "detour": false
+    },
+    {
+      "name": "warehouse_2x3_1115_cfF",
+      "base": "warehouse_2x3_1115",
+      "seed": 20015,
+      "start_zone": "G",
+      "goal_zone": "A",
+      "transit_zones": [
+        "B",
+        "F"
+      ],
+      "blocked_zones": [
+        "F"
+      ],
+      "cf_n_variants": 4,
+      "route_aisles": [
+        "B",
+        "E"
+      ],
+      "vacuous": false,
+      "n_blockers": 1,
+      "n_distractors": 0,
+      "aisle_distractor_counts": {
+        "B": 0,
+        "C": 0,
+        "E": 0,
+        "F": 0
+      },
+      "path_len_m": 51.69,
+      "path_len_unblocked_m": 50.51,
+      "elongation": 1.023,
+      "detour": false
+    },
+    {
+      "name": "warehouse_2x3_1115_cfBF",
+      "base": "warehouse_2x3_1115",
+      "seed": 20015,
+      "start_zone": "G",
+      "goal_zone": "A",
+      "transit_zones": [
+        "B",
+        "F"
+      ],
+      "blocked_zones": [
+        "B",
+        "F"
+      ],
+      "cf_n_variants": 4,
+      "route_aisles": [
+        "C",
+        "E"
+      ],
+      "vacuous": false,
+      "n_blockers": 2,
+      "n_distractors": 0,
+      "aisle_distractor_counts": {
+        "B": 0,
+        "C": 0,
+        "E": 0,
+        "F": 0
+      },
+      "path_len_m": 58.03,
+      "path_len_unblocked_m": 50.51,
+      "elongation": 1.149,
+      "detour": false
+    },
+    {
+      "name": "warehouse_2x3_1116_cf0",
+      "base": "warehouse_2x3_1116",
+      "seed": 20016,
+      "start_zone": "D",
+      "goal_zone": "G",
+      "transit_zones": [
+        "E"
+      ],
+      "blocked_zones": [],
+      "cf_n_variants": 2,
+      "route_aisles": [
+        "E"
+      ],
+      "vacuous": null,
+      "n_blockers": 0,
+      "n_distractors": 0,
+      "aisle_distractor_counts": {
+        "B": 0,
+        "C": 0,
+        "E": 0,
+        "F": 0
+      },
+      "path_len_m": 23.36,
+      "path_len_unblocked_m": 23.36,
+      "elongation": 1.0,
+      "detour": false
+    },
+    {
+      "name": "warehouse_2x3_1116_cfE",
+      "base": "warehouse_2x3_1116",
+      "seed": 20016,
+      "start_zone": "D",
+      "goal_zone": "G",
+      "transit_zones": [
+        "E"
+      ],
+      "blocked_zones": [
+        "E"
+      ],
+      "cf_n_variants": 2,
+      "route_aisles": [
+        "F"
+      ],
+      "vacuous": false,
+      "n_blockers": 1,
+      "n_distractors": 0,
+      "aisle_distractor_counts": {
+        "B": 0,
+        "C": 0,
+        "E": 0,
+        "F": 0
+      },
+      "path_len_m": 27.09,
+      "path_len_unblocked_m": 23.36,
+      "elongation": 1.16,
+      "detour": true
+    },
+    {
+      "name": "warehouse_2x3_1117_cf0",
+      "base": "warehouse_2x3_1117",
+      "seed": 20017,
+      "start_zone": "A",
+      "goal_zone": "D",
+      "transit_zones": [
+        "B"
+      ],
+      "blocked_zones": [],
+      "cf_n_variants": 2,
+      "route_aisles": [
+        "B"
+      ],
+      "vacuous": null,
+      "n_blockers": 0,
+      "n_distractors": 0,
+      "aisle_distractor_counts": {
+        "B": 0,
+        "C": 0,
+        "E": 0,
+        "F": 0
+      },
+      "path_len_m": 24.57,
+      "path_len_unblocked_m": 24.57,
+      "elongation": 1.0,
+      "detour": false
+    },
+    {
+      "name": "warehouse_2x3_1117_cfB",
+      "base": "warehouse_2x3_1117",
+      "seed": 20017,
+      "start_zone": "A",
+      "goal_zone": "D",
+      "transit_zones": [
+        "B"
+      ],
+      "blocked_zones": [
+        "B"
+      ],
+      "cf_n_variants": 2,
+      "route_aisles": [
+        "C"
+      ],
+      "vacuous": false,
+      "n_blockers": 1,
+      "n_distractors": 0,
+      "aisle_distractor_counts": {
+        "B": 0,
+        "C": 0,
+        "E": 0,
+        "F": 0
+      },
+      "path_len_m": 27.96,
+      "path_len_unblocked_m": 24.57,
+      "elongation": 1.138,
+      "detour": false
+    },
+    {
+      "name": "warehouse_2x3_1118_cf0",
+      "base": "warehouse_2x3_1118",
+      "seed": 20018,
+      "start_zone": "D",
+      "goal_zone": "G",
+      "transit_zones": [
+        "E"
+      ],
+      "blocked_zones": [],
+      "cf_n_variants": 2,
+      "route_aisles": [
+        "E"
+      ],
+      "vacuous": null,
+      "n_blockers": 0,
+      "n_distractors": 0,
+      "aisle_distractor_counts": {
+        "B": 0,
+        "C": 0,
+        "E": 0,
+        "F": 0
+      },
+      "path_len_m": 27.16,
+      "path_len_unblocked_m": 27.16,
+      "elongation": 1.0,
+      "detour": false
+    },
+    {
+      "name": "warehouse_2x3_1118_cfE",
+      "base": "warehouse_2x3_1118",
+      "seed": 20018,
+      "start_zone": "D",
+      "goal_zone": "G",
+      "transit_zones": [
+        "E"
+      ],
+      "blocked_zones": [
+        "E"
+      ],
+      "cf_n_variants": 2,
+      "route_aisles": [
+        "F"
+      ],
+      "vacuous": false,
+      "n_blockers": 1,
+      "n_distractors": 0,
+      "aisle_distractor_counts": {
+        "B": 0,
+        "C": 0,
+        "E": 0,
+        "F": 0
+      },
+      "path_len_m": 30.45,
+      "path_len_unblocked_m": 27.16,
+      "elongation": 1.121,
+      "detour": false
+    },
+    {
+      "name": "warehouse_2x3_1119_cf0",
+      "base": "warehouse_2x3_1119",
+      "seed": 20019,
+      "start_zone": "G",
+      "goal_zone": "A",
+      "transit_zones": [
+        "C",
+        "F"
+      ],
+      "blocked_zones": [],
+      "cf_n_variants": 4,
+      "route_aisles": [
+        "C",
+        "F"
+      ],
+      "vacuous": null,
+      "n_blockers": 0,
+      "n_distractors": 0,
+      "aisle_distractor_counts": {
+        "B": 0,
+        "C": 0,
+        "E": 0,
+        "F": 0
+      },
+      "path_len_m": 48.92,
+      "path_len_unblocked_m": 48.92,
+      "elongation": 1.0,
+      "detour": false
+    },
+    {
+      "name": "warehouse_2x3_1119_cfC",
+      "base": "warehouse_2x3_1119",
+      "seed": 20019,
+      "start_zone": "G",
+      "goal_zone": "A",
+      "transit_zones": [
+        "C",
+        "F"
+      ],
+      "blocked_zones": [
+        "C"
+      ],
+      "cf_n_variants": 4,
+      "route_aisles": [
+        "B",
+        "E"
+      ],
+      "vacuous": false,
+      "n_blockers": 1,
+      "n_distractors": 0,
+      "aisle_distractor_counts": {
+        "B": 0,
+        "C": 0,
+        "E": 0,
+        "F": 0
+      },
+      "path_len_m": 52.43,
+      "path_len_unblocked_m": 48.92,
+      "elongation": 1.072,
+      "detour": false
+    },
+    {
+      "name": "warehouse_2x3_1119_cfF",
+      "base": "warehouse_2x3_1119",
+      "seed": 20019,
+      "start_zone": "G",
+      "goal_zone": "A",
+      "transit_zones": [
+        "C",
+        "F"
+      ],
+      "blocked_zones": [
+        "F"
+      ],
+      "cf_n_variants": 4,
+      "route_aisles": [
+        "C",
+        "E"
+      ],
+      "vacuous": false,
+      "n_blockers": 1,
+      "n_distractors": 0,
+      "aisle_distractor_counts": {
+        "B": 0,
+        "C": 0,
+        "E": 0,
+        "F": 0
+      },
+      "path_len_m": 50.85,
+      "path_len_unblocked_m": 48.92,
+      "elongation": 1.039,
+      "detour": false
+    },
+    {
+      "name": "warehouse_2x3_1119_cfCF",
+      "base": "warehouse_2x3_1119",
+      "seed": 20019,
+      "start_zone": "G",
+      "goal_zone": "A",
+      "transit_zones": [
+        "C",
+        "F"
+      ],
+      "blocked_zones": [
+        "C",
+        "F"
+      ],
+      "cf_n_variants": 4,
+      "route_aisles": [
+        "B",
+        "E"
+      ],
+      "vacuous": false,
+      "n_blockers": 2,
+      "n_distractors": 0,
+      "aisle_distractor_counts": {
+        "B": 0,
+        "C": 0,
+        "E": 0,
+        "F": 0
+      },
+      "path_len_m": 52.43,
+      "path_len_unblocked_m": 48.92,
+      "elongation": 1.072,
+      "detour": false
+    },
+    {
+      "name": "warehouse_2x3_1120_cf0",
+      "base": "warehouse_2x3_1120",
+      "seed": 20020,
+      "start_zone": "A",
+      "goal_zone": "G",
+      "transit_zones": [
+        "C",
+        "E"
+      ],
+      "blocked_zones": [],
+      "cf_n_variants": 4,
+      "route_aisles": [
+        "C",
+        "E"
+      ],
+      "vacuous": null,
+      "n_blockers": 0,
+      "n_distractors": 0,
+      "aisle_distractor_counts": {
+        "B": 0,
+        "C": 0,
+        "E": 0,
+        "F": 0
+      },
+      "path_len_m": 49.42,
+      "path_len_unblocked_m": 49.42,
+      "elongation": 1.0,
+      "detour": false
+    },
+    {
+      "name": "warehouse_2x3_1120_cfC",
+      "base": "warehouse_2x3_1120",
+      "seed": 20020,
+      "start_zone": "A",
+      "goal_zone": "G",
+      "transit_zones": [
+        "C",
+        "E"
+      ],
+      "blocked_zones": [
+        "C"
+      ],
+      "cf_n_variants": 4,
+      "route_aisles": [
+        "B",
+        "E"
+      ],
+      "vacuous": false,
+      "n_blockers": 1,
+      "n_distractors": 0,
+      "aisle_distractor_counts": {
+        "B": 0,
+        "C": 0,
+        "E": 0,
+        "F": 0
+      },
+      "path_len_m": 51.58,
+      "path_len_unblocked_m": 49.42,
+      "elongation": 1.044,
+      "detour": false
+    },
+    {
+      "name": "warehouse_2x3_1120_cfE",
+      "base": "warehouse_2x3_1120",
+      "seed": 20020,
+      "start_zone": "A",
+      "goal_zone": "G",
+      "transit_zones": [
+        "C",
+        "E"
+      ],
+      "blocked_zones": [
+        "E"
+      ],
+      "cf_n_variants": 4,
+      "route_aisles": [
+        "C",
+        "F"
+      ],
+      "vacuous": false,
+      "n_blockers": 1,
+      "n_distractors": 0,
+      "aisle_distractor_counts": {
+        "B": 0,
+        "C": 0,
+        "E": 0,
+        "F": 0
+      },
+      "path_len_m": 50.35,
+      "path_len_unblocked_m": 49.42,
+      "elongation": 1.019,
+      "detour": false
+    },
+    {
+      "name": "warehouse_2x3_1120_cfCE",
+      "base": "warehouse_2x3_1120",
+      "seed": 20020,
+      "start_zone": "A",
+      "goal_zone": "G",
+      "transit_zones": [
+        "C",
+        "E"
+      ],
+      "blocked_zones": [
+        "C",
+        "E"
+      ],
+      "cf_n_variants": 4,
+      "route_aisles": [
+        "B",
+        "F"
+      ],
+      "vacuous": false,
+      "n_blockers": 2,
+      "n_distractors": 0,
+      "aisle_distractor_counts": {
+        "B": 0,
+        "C": 0,
+        "E": 0,
+        "F": 0
+      },
+      "path_len_m": 56.58,
+      "path_len_unblocked_m": 49.42,
+      "elongation": 1.145,
+      "detour": false
+    }
+  ]
+}

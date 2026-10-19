@@ -1,0 +1,170 @@
+# ============================================================================
+# Counterfactual recovery-data collection — top-level Hydra config
+# ============================================================================
+#
+# Consumed by:  isaac_sim/recovery/recovery.py  (offline pipeline; see its header)
+#
+# The env group below is a PLACEHOLDER: recovery.py replaces run_cfg.env per
+# scene with the source trajectory's stored config.yaml env node (the exact
+# sealed world). Everything else — model policy, oracle policy, controller,
+# task, recorder, rates — comes from here.
+#
+# Launch (Isaac python, like eval_policy):
+#   /isaacsim/python.sh isaac_sim/recovery/recovery.py \
+#       recovery.split_dir=... recovery.output_root=... recovery.quota=25
+# ============================================================================
+
+defaults:
+  - policy: omnivla_finetuned_cctv4_2x3cfv4_avgpool64_cfwinboost8_step15000  # the MODEL being mined — set per campaign
+  - policy@policy_oracle: astar_oracle_nobrake     # the recovery-label expert (clean A*)
+  - task: pose
+  - env/scene: warehouse_2x3                      # placeholder — replaced per scene
+  - env/robot: nova_carter
+  - env/camera_set: default                        # placeholder — replaced per scene
+  - env/astar: default
+  - controller: data_gen_default                   # 30 Hz control / 3 Hz record
+  - recorder: data_gen                             # runs_root overridden to recovery.output_root
+  - viz: default
+  - _self_
+
+# Confirmation rollouts must run the SAME control stack as the arm's evals
+# (legacy vs fine-grained follower) — a mismatched follower manufactures
+# failure modes the deployed stack does not have. Mirror the eval config of
+# the checkpoint being mined (the cfv4 gridES shards run
+# {enabled: true, control_hz: 30}).
+# Standard per-run rollout_viz.png (recorder.finalize). recorder/data_gen.yaml
+# carries no path_viz block and the flag defaults to FALSE, so enable it here:
+# every mined rollout should be visually inspectable.
+recorder:
+  path_viz:
+    enabled: true
+
+fine_grained:
+  enabled: false
+  control_hz: 30       # follower rate when enabled (eval-shard convention)
+
+recovery:
+  # TRAIN split only — never point this at a val/test split (recovery data
+  # becomes training data).
+  split_dir: "${oc.env:INFRAVLA_ROOT}/runs/data/splits/2026-07-11_warehouse_2x3_cfv4/train"
+  output_root: "${oc.env:INFRAVLA_ROOT}/runs/data/recovery/UNNAMED"   # set per campaign
+  # Stop after this many reached recovery runs (Lukas 2026-07-15: quota
+  # sampling over randomly ordered scenes; ~25 may already be enough).
+  quota: 25
+  # Sharding for parallel processes (launch_recovery_shards.sh): each process
+  # takes permutation[shard::n_shards] of the SAME seeded sample order —
+  # disjoint by construction, no coordination needed.
+  shard: 0
+  n_shards: 1
+  # Hard cap on confirmation rollouts (safety net if the failure rate is
+  # near zero and the quota would never fill).
+  max_rollouts: 200
+  seed: 0
+
+  # ---- cf samples (taken as given: the dataset's own window definition,
+  # mine_cf_windows with the standard knobs) ----
+  n_chunk: 8               # = num_actions_chunk (training contract)
+  window_pre_steps: 16
+  window_post_steps: 8
+  # Window definition must MATCH the arm's training-side cf_window_balance:
+  # distance = legacy 16/8/0.75; yaw = the leak-aware crux (last frame before
+  # the twins' headings split), the langv2 + yawcrux82 definition.
+  criterion: distance      # distance | yaw
+  yaw_eps_deg: 1.0         # only used when criterion=yaw
+
+  # ---- Model rollout ----
+  # Budget = factor * the cf snippet's remaining length ("roughly the same
+  # length as the counterfactual sample"; 1.2 = slack for a model slower than
+  # the oracle). min_rollout_steps floors the budget for samples near the
+  # snippet end (one chunk's worth), so late-window samples still get a
+  # meaningful rollout.
+  # Which frame of each cf window the model rollout spawns at.
+  #   random       — every window frame is a candidate (all campaigns <= 2026-08-22)
+  #   window_start — one probe per trajectory at the window's earliest frame
+  #   spawn        — v2 (2026-08-23): one FULL rollout per trajectory from the
+  #                  scene's own spawn (budget = factor * route length); every
+  #                  threshold excursion is segmented (rejoin semantics) and
+  #                  bands are selected by min_excursion_peak_m (below)
+  anchor_mode: random
+
+  budget_factor: 1.0   # 1:1 with snippet length (1.2 was arbitrary — Lukas 2026-07-17)
+  min_rollout_steps: 8
+
+  # ---- Derailment check (recovery_analysis.find_derailment) ----
+  # dev_thresh_m defines the cf WINDOWS above (training-side contract, keep
+  # 0.75); rollout_dev_thresh_m is the derailment verdict on model rollouts —
+  # decoupled 2026-07-16, set to 0.25 from smoke evidence (clean tracking
+  # peaks ~0.19 m, failure wobbles start ~0.49 m, borderline states flip
+  # across runs).
+  dev_thresh_m: 0.75
+  rollout_dev_thresh_m: 0.5   # raised from 0.25 (Lukas 2026-07-16): catch the failure cluster, skip small tracking slop
+  sustain_steps: 1         # 1 = OFF (any single step over threshold derails; Lukas 2026-07-16)
+  aligned_eps_m: 0.05
+  # Recoveries per derailment, spawns drawn WITHOUT replacement from the
+  # [last_aligned, onset] band (capped by band width). 2 (Lukas 2026-07-17):
+  # the band is the scarce initiate-the-correction supervision — the offset-L1
+  # probe showed handoff-1 L1 9x worse than late-recovery anchors.
+  n_spawns: 2      # "still on course" (Lukas 2026-07-16); spawn range lower end
+
+  # ---- Which excursions are worth mining (anchor_mode=spawn only) ----
+  # ACCEPTANCE threshold on an excursion's PEAK deviation. Distinct from
+  # rollout_dev_thresh_m, which is the DETECTION threshold (when an excursion
+  # starts, and therefore where the oracle-spawn band ends). Keeping them
+  # separate is the point: detection stays at 0.5 m so the band still hugs the
+  # route and recoveries begin while the robot is only ~0.05-0.5 m off (teach
+  # the correction EARLY), while acceptance decides whether the mistake was
+  # real at all.
+  # 2.5 m is fixed by two independent derivations that agree (2026-08-24):
+  #   geometric  — half the 4.96 m aisle pitch (B centre -4.23, C centre +0.73),
+  #                i.e. the robot ended up nearer the WRONG aisle's centreline
+  #                than its own route.
+  #   empirical  — the exact boundary between excursions the policy fixes
+  #                itself and ones it never returns from: on the BEfullrun
+  #                probes, all 12 excursions >= 2.5 m ran to the end of the
+  #                trace without rejoining, all 5 below rejoined within 12-14
+  #                steps. 17/17, no exceptions.
+  # 0.0 disables the filter (mine every detected excursion).
+  min_excursion_peak_m: 2.5
+
+  # ---- Replay / measurement mode (2026-07-17) ----
+  # replay_manifest: path to an earlier campaign's recovery_manifest.json —
+  # roll exactly its DERAILED (scene, t) states instead of random samples
+  # ("did the fine-tune fix the known failure states?").
+  # measure_only: verdict + manifest only — no oracle run, no stitching.
+  # rerecord_source_root: consumed ONLY by recovery_rerecord.py, the one-off
+  # 2026-07-17 re-record tool, removed 2026-09-07 (cleanup batch 16). Kept as
+  # an inert key so old campaign configs still compose; recover the tool from
+  # tag pre-cleanup-2026-09-04 if a re-record is ever needed again.
+  rerecord_source_root: null
+  replay_manifest: null
+  measure_only: false
+  keep_rollouts: false     # measure_only: archive rollouts under output_root/rollouts/
+
+  # ---- Oracle recovery runs ----
+  # Recovery follows the ORIGINAL route to the ORIGINAL goal (2026-07-17):
+  # full-route runs — cap sized to the longest source trajectories (~150
+  # frames) + slack. Non-reaching runs are FILTERED (no stitch).
+  oracle_max_record_steps: 250   # cap per run (task.max_steps for the oracle)
+  # Oracle PD tick rate (data_gen semantics: fast inner loop between 3 Hz
+  # records). Separate from the top-level control_hz, which follows EVAL
+  # semantics (= model query rate) because the confirmation rollout reuses
+  # eval_policy's loops.
+  oracle_control_hz: 30.0
+
+run:
+  name: "recovery_collection"
+  notes: ""
+
+hydra:
+  searchpath:
+    - pkg://isaac_sim.configs._generated
+  run:
+    dir: ${recovery.output_root}/_hydra/${now:%Y-%m-%d_%H-%M-%S}
+
+# EVAL semantics (the confirmation rollout reuses eval_policy's loops):
+# control_hz = MODEL QUERY rate (3 Hz, paper-pinned) — the 30 Hz inner rates
+# live in fine_grained.control_hz (follower) and recovery.oracle_control_hz
+# (oracle PD loop).
+record_hz: 3.0
+control_hz: 3.0
+physics_hz: 60

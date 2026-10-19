@@ -1,0 +1,169 @@
+# dmrecext2 (2026-07-17 evening, kaitain): same recipe as dmrecext but on the
+# FINAL data rule — no failure-prefix anchors, no cruise tail (first-touch
+# 0.05 m rejoin cut). Hypothesis (Lukas): dmrecext's weird loss jitter came
+# from training on failure-prefix frames; this arm tests the cleaned data.
+# EXTGOAL VARIANT (2026-07-17, Lukas): recovery trajectories extended with the
+# source GT tail to the ORIGINAL goal (recovery_extend_goal.py) — under fg100
+# the recovery samples' goal is now the deployment-matched far goal, not the
+# nearby snippet endpoint. Supersedes the snippet-goal arm
+# 2026-07-16_..._dmrec_ft20k_v0 (stopped at step_18500, KEPT as the
+# snippet-goal ablation: same mix, only the recovery-goal semantics differ).
+# fg100 is LOAD-BEARING here: it is the mechanism that pins recovery goals to
+# the (now-extended) final frame. Tracked in the project's suspicion log.
+# ============================================================================
+# OmniVLA Isaac Sim fine-tune — CFV4 avgpool64+boost8 parent, RECOVERY
+# FINE-TUNE via DatasetManager (resume step_15000 -> 20000).
+# ============================================================================
+#
+# First consumer of the 2026-07-16 recovery campaign (47 stitched fail->recover
+# trajectories mined from THIS parent checkpoint, rollout_dev_thresh 0.5 m,
+# spawn in [aligned, onset], oracle to the cf-snippet endpoint). Question: does
+# training on self-mined recovery demonstrations improve closed-loop cf routing
+# (gridES), where the cfwin-only ft (2026-07-12) did not?
+#
+# Deltas vs the cfwin_ft20k precedent (2026-07-12_..._cfwin_ft20k, which
+# carries the resume/fine-tune rationale; parent 2026-07-11_..._cfwinboost8_15k
+# carries every other knob):
+#   data.counterfactual_windows -> REMOVED. Replaced by data.dataset_manager:
+#       cf-window view + recovery as weighted ConcatDataset entries; normal is
+#       weight-0 (derivation-only parent, NO normal-data mass — Lukas
+#       2026-07-16: "we shouldn't train on normal data anymore", same
+#       window-only stance as the cfwin_ft precedent, plus recovery).
+#   data.cf_val_report -> RESTORED (parent-style): main val = full set
+#       (comparable to parent + baseline arms), cf-val as side channel.
+#   train.max_steps 20000 (resume step_15000 -> +5k, same as precedent).
+# Resume is FULL-STATE (optimizer/scheduler/RNG; lr = restored 1e-4); parent
+# step_15000 checkpoint copied into this run's checkpoints/ before launch.
+# Acceptance metric is NOT the loss: gridES closed-loop (72 cells) vs the
+# parent @15k and the cfwin_ft20k arm.
+# ============================================================================
+
+run:
+  name: "2026-08-13_cctv4_avgpool64_b20ladder_N12_ft20k_v0"
+  notes: "UNIFIED-RECIPE RECOVERY LADDER N=12 (Lukas 2026-08-13): identical to the 2026-07-17 dmrecext2 recipe EXCEPT recovery.traj_root -> the fresh budget-2.0 campaign (budget_factor 2.0 / n_spawns 1, unified with the langv2 campaigns; the old ladder was budget 1.2, n_spawns unrecorded). N=12 = first-12 anchors in collection order (nested 12 c 24 c 48). Parent UNCHANGED (07-11 cfwinboost8 step_15000, same as S0/S1/S2). Checkpoints kept every 500; BEST-VAL is the primary eval checkpoint (the 17k/20k saga: old N47 1.000 at best-val vs 0.750 at final)."
+
+model:
+  vla_path: "${INFRAVLA_ROOT}/omnivla-original"
+  pretrained_step: 120000
+  num_images_in_input: 6
+  use_cctv_encoder: true
+  num_ego_images: 2
+  cctv_downsample:
+    method: avgpool
+    out_tokens: 64
+  use_lora: true
+  lora_rank: 16
+  lora_alpha: 8
+  lora_dropout: 0.0
+
+data:
+  train_dir: "${INFRAVLA_ROOT}/runs/data/splits/2026-07-11_warehouse_2x3_cfv4/train"
+  val_dir:   "${INFRAVLA_ROOT}/runs/data/splits/2026-07-11_warehouse_2x3_cfv4/val"
+  test_dir:  "${INFRAVLA_ROOT}/runs/data/splits/2026-07-11_warehouse_2x3_cfv4/test"
+
+  max_train_trajectories: null
+  max_val_trajectories:   null
+  max_test_trajectories:  null
+
+  num_actions_chunk: 8
+  context_size: 5
+
+  modality_list: [4, 5, 6]
+  image_only_max_distance_steps: 10
+
+  min_goal_distance_steps: 1
+  max_goal_distance_steps: 300
+
+  # 1.0 (both existing 5k-ft arms used fg100 — comparability across the ft
+  # family; also correct for recovery trajs: final frame = the recovered
+  # snippet endpoint, so the goal is always the post-recovery state).
+  final_goal_prob: 1.0
+
+  predict_stop_token: true
+  metric_waypoint_spacing: 0.333
+  waypoint_spacing: 1
+  image_size: [224, 224]
+  random_hflip: false
+  goals_per_obs: 1
+
+  emit_cctv: true
+
+  cctv_cam_names: [cctv_NE, cctv_NW, cctv_SE, cctv_SW]
+  no_goal_image: false
+  use_cctv_goal: false
+  perception_dropout:     [1.0, 0.0, 0.0]
+  val_perception_dropout: [1.0, 0.0, 0.0]
+
+  # --- DatasetManager mix (replaces cf_window_balance / counterfactual_windows)
+  # Masses are DATASET-mass shares (weight_d / sum(weights) of total sampling
+  # mass, regardless of entry size). normal_weight 0.0 = derivation-only (the
+  # cf view + recovery kwargs derive from it; it contributes NO samples).
+  # cf 1.0 + recovery 0.25 -> 80/20 draws: each of the 686 recovery samples
+  # is drawn ~44x over the 5k steps (150k draws) — watch cf-val + val for
+  # overfit; 47 trajectories is a small pool (Lukas 2026-07-16).
+  dataset_manager:
+    enabled: true
+    normal_weight: 0.0
+    counterfactual:
+      enabled: true
+      weight: 1.0
+      pre_steps: 16
+      post_steps: 8
+      dev_thresh_m: 0.75
+    recovery:
+      enabled: true
+      weight: 0.25
+      traj_root: "${INFRAVLA_ROOT}/runs/data/recovery/2026-08-13_avgpool15k_cfv4_b20_N48/subset_N12"
+      # FINAL anchor rule (Lukas 2026-07-17 evening): RECOVERY-ONLY anchors
+      # (prefix = obs history, never anchored — prefix chunks would supervise
+      # the drift and contradict cf-window labels), span = handoff .. first
+      # frame within 0.05 m of the original plan (no sustain), min 1.
+      # -> 581 anchors, each ~52x/5k steps at mass 0.2.
+      anchor_rejoin: {eps_m: 0.05}
+
+  # cf-val side channel (parent-style): main val stays the FULL set for
+  # comparability; window-restricted val logged as cf_val/*.
+  cf_val_report:
+    enabled: true
+    pre_steps: 16
+    post_steps: 8
+    dev_thresh_m: 0.75
+
+train:
+  batch_size: 5
+  grad_accumulation_steps: 6
+  learning_rate: 1.0e-4
+  num_steps_before_decay: 100000
+  lr_decay_gamma: 0.1
+  max_steps: 20000          # resume step_15000 -> +5k fine-tune steps
+  weight_decay: 0.0
+  betas: [0.9, 0.999]
+  eps: 1.0e-8
+  seed: 42
+
+loss:
+  smoothness_weight: 0.1
+  obj_weight: 0.1
+
+val:
+  val_freq: 250             # tight overfit watch (47 recovery trajs repeat fast)
+  max_samples: null
+
+checkpoint:
+  save_freq: 500            # catch the pre-overfit peak
+  keep_top_k: 99
+  keep_latest: true
+  keep_every_n_steps: 500   # keep EVERY FT checkpoint — the 17k/20k saga
+
+logging:
+  wandb_entity: "cctv_vla"
+  wandb_project: "CCTV_VLA"
+  wandb_tags: ["cctv_exp", "warehouse_2x3_cfv4", "aspawn_only", "fixed_heading", "souththird_forklift", "bigcam", "cctv4", "avgpool64", "fg100", "nohflip", "r16", "dm_recovery_ft", "extgoal", "20k"]
+  log_freq: 10
+
+extensibility:
+  extra_obs_modalities: []
+  extra_goal_modalities: []
+
+output:
+  runs_root: "${INFRAVLA_ROOT}/runs/training/runs"

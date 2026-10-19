@@ -1,0 +1,34 @@
+# @package env.astar
+# ============================================================================
+# A* planner knobs for the 2x3 warehouse — same as default.yaml PLUS a
+# navigable_bounds play-area restriction.
+# ============================================================================
+# Self-contained (not a hydra `defaults: [default]`) so the offline gate can
+# OmegaConf.load it verbatim. Keep the shared knobs in sync with
+# env/astar/default.yaml (they rarely change). navigable_bounds mirrors
+# WAREHOUSE_2X3_NAV_X/Y in scenes/_common.py — keep in sync (logged in
+# potential_bugs).
+# ============================================================================
+
+grid_resolution_m: 0.1
+robot_inflation_m: ${env.robot.inflation_m}
+world_buffer_m: 5.0
+max_obstacle_half_extent_m: 3.0
+standoff_buffer_m: 0.5   # raised 0.3->0.5 (2026-07-20): two-pass planning needs the
+                         # standoff endpoint OUTSIDE the target inflated by
+                         # robot_inflation_m (0.35), else pass 2 cannot plan to it.
+                         # Only fires when /World/Goal exists (= lang-task scenes).
+min_standoff_m: 0.5
+heading_window_segments: 3
+alpha_clearance: 0.5
+hill_climb_window_m: 0.1
+pipeline:
+  sdf_weighted: true
+  hill_climbing: true
+  cubic_spline: true
+
+# Restrict A* to the rack-bounded operational box (x: outer-rack faces,
+# y: perimeter). Every grid cell OUTSIDE this rectangle is marked occupied, so
+# the planner won't route into the gap behind the shelves — NO fabricated wall
+# prims. = (WAREHOUSE_2X3_NAV_X[0], _Y[0], _X[1], _Y[1]).
+navigable_bounds: [-7.25, -20.5, 3.76, 30.3]

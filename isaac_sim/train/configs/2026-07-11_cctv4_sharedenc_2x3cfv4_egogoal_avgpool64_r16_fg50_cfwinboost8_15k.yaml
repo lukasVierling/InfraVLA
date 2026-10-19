@@ -1,0 +1,150 @@
+# ============================================================================
+# OmniVLA Isaac Sim fine-tune — CFV4 DATA + PLAIN AVGPOOL64 + CF-WINDOW
+# UPWEIGHTED SAMPLING (boost 8) + cf-val side channel.
+# ============================================================================
+#
+# Byte-for-byte the 2026-07-09 cfwinboost8_15k arm (cfv3)
+# EXCEPT the data split -> cfv4 (2026-07-10 campaign, bases 1500-1774):
+#
+#   cfv4 delta vs cfv3: A-spawn ONLY (every run a full A->G traverse), FIXED
+#   270 deg start heading (decoupled from goal -> aisle choice must come from
+#   CCTV/ego, not orientation), ~2x the data: 529/550 scenes reached ->
+#   base-grouped split 1500:1750 / 1750:1775 = 481 train / 48 val traj
+#   (21 scenes lost to the C-mouth stuck pinch, see potential_bugs 2026-07-10).
+#   Split-type mix ~63% first-split (A->B/C) vs 37% second-split (D->E/F) —
+#   near-inverse of cfv3's 29/71 (D-spawns dropped).
+#
+# Arch + sampling identical to the 07-09 PLAIN cfwinboost8 arm: shared-enc
+# avgpool64, NO camembed / sepproj; cf_window_balance boost 8 (~50% gradient
+# mass on [t*-16, t*+8] decision windows, thresh 0.75).
+# cf_val_report on: val_cf/* = decision-window subset of the cfv4 val split.
+# NOTE: val_cf numbers are NOT comparable to the cfv3 arms' (different val
+# set); cross-arm comparison for this run = the cfv3-era models re-evaled on
+# gridES vs this one, or a cfv3-val --val-only pass.
+#
+# WHY (2026-07-11): cfv4 attacks the data axis: more decision density (A-only
+# spawns), no heading leak, 2x volume. PLAIN arch, not camembed — decision
+# made 2026-07-11 (this arm was originally launched as camembed, swapped
+# before training started): on cfv3, camembed showed no benefit on two
+# independent measures (cf-val plain 0.0342 < camembed 0.0411; gridES routing
+# on 32 matched cells plain 29/32 strict superset of camembed 27/32), so the
+# cfv4 factorial uses the simpler arch — cfv4-plain vs cfv3-plain isolates
+# DATA, cfv4-egoonly-boost8 vs cfv4-plain isolates CCTV. Camembed's one open
+# thread (persistently better reach@0.3m parking) stays testable via the kept
+# cfv3 camembed checkpoints.
+# ============================================================================
+
+run:
+  name: "2026-07-11_cctv4_sharedenc_2x3cfv4_egogoal_avgpool64_r16_fg50_cfwinboost8_15k_v0"
+  notes: "PLAIN AVGPOOL64 + CF-WINDOW UPWEIGHTED arm on CFV4 data (A-spawn only, fixed 270deg heading, 481/48 traj base-grouped split of 529 reached): from scratch 15k, data.cf_window_balance boost 8 (~50% gradient mass on [t*-16, t*+8] decision windows, thresh 0.75), cf_val_report on (val_cf/* = cfv4 decision-window val subset; NOT comparable to cfv3 arms' val_cf). NO camembed/sepproj (swapped 2026-07-11 before training started: camembed showed no cf-val or gridES-routing benefit on cfv3). Otherwise verbatim the 2026-07-09 cfv3 plain cfwinboost8 arm: 4-CCTV shared enc + EGO GOAL, EGO-FIRST + AVG-POOL64, r16, final_goal_prob 0.5, nobrake longgoal, nohflip, FULL val drives checkpointing."
+
+model:
+  vla_path: "${INFRAVLA_ROOT}/omnivla-original"
+  pretrained_step: 120000
+  num_images_in_input: 6
+  use_cctv_encoder: true
+  num_ego_images: 2
+  cctv_downsample:
+    method: avgpool
+    out_tokens: 64
+  use_lora: true
+  lora_rank: 16
+  lora_alpha: 8
+  lora_dropout: 0.0
+
+data:
+  # cfv3 split (2026-07-08): symlinks into /mnt/localdata (identical path on
+  # arrakis + kaitain). Built by run_cfv3_avgpool64_pipeline.sh.
+  train_dir: "${INFRAVLA_ROOT}/runs/data/splits/2026-07-11_warehouse_2x3_cfv4/train"
+  val_dir:   "${INFRAVLA_ROOT}/runs/data/splits/2026-07-11_warehouse_2x3_cfv4/val"
+  test_dir:  "${INFRAVLA_ROOT}/runs/data/splits/2026-07-11_warehouse_2x3_cfv4/test"
+
+  max_train_trajectories: null
+  max_val_trajectories:   null
+  max_test_trajectories:  null
+
+  num_actions_chunk: 8
+  context_size: 5
+
+  modality_list: [4, 5, 6]
+  image_only_max_distance_steps: 10
+
+  min_goal_distance_steps: 1
+  max_goal_distance_steps: 300
+
+  final_goal_prob: 0.5
+
+  predict_stop_token: true
+  metric_waypoint_spacing: 0.333
+  waypoint_spacing: 1
+  image_size: [224, 224]
+  random_hflip: false
+  goals_per_obs: 1
+
+  emit_cctv: true
+
+  cctv_cam_names: [cctv_NE, cctv_NW, cctv_SE, cctv_SW]
+  no_goal_image: false
+  use_cctv_goal: false
+  perception_dropout:     [1.0, 0.0, 0.0]
+  val_perception_dropout: [1.0, 0.0, 0.0]
+
+  # --- CF-window upweighted sampling ---
+  # Full dataset + WeightedRandomSampler: in-window samples get weight `boost`,
+  # the rest 1.0. Window def identical to the cfwin_ft arm (mine_cf_windows).
+  # boost 8 -> crux mass ~0.50 (window fraction 0.114). TRAIN only.
+  cf_window_balance:
+    enabled: true
+    pre_steps: 16
+    post_steps: 8
+    dev_thresh_m: 0.75
+    boost: 8.0
+
+  # --- cf-val side channel: report loss on the decision-window val subset ---
+  # (val_cf/* in wandb) alongside the full val each val_freq. Reporting only —
+  # best-checkpoint selection stays on the full val. Same knobs as the sampler
+  # so "crux" means the same thing in train weighting and val reporting.
+  cf_val_report:
+    enabled: true
+    pre_steps: 16
+    post_steps: 8
+    dev_thresh_m: 0.75
+
+train:
+  batch_size: 5
+  grad_accumulation_steps: 6
+  learning_rate: 1.0e-4
+  num_steps_before_decay: 100000
+  lr_decay_gamma: 0.1
+  max_steps: 15000
+  weight_decay: 0.0
+  betas: [0.9, 0.999]
+  eps: 1.0e-8
+  seed: 42
+
+loss:
+  smoothness_weight: 0.1
+  obj_weight: 0.1
+
+val:
+  val_freq: 500
+  max_samples: null
+
+checkpoint:
+  save_freq: 1000
+  keep_top_k: 3
+  keep_latest: true
+  keep_every_n_steps: 5000
+
+logging:
+  wandb_entity: "cctv_vla"
+  wandb_project: "CCTV_VLA"
+  wandb_tags: ["cctv_exp", "warehouse_2x3_cfv4", "aspawn_only", "fixed_heading", "souththird_forklift", "bigcam", "cctv4", "avgpool64", "fg50", "nohflip", "r16", "cfwinboost8", "cfval", "15k"]
+  log_freq: 10
+
+extensibility:
+  extra_obs_modalities: []
+  extra_goal_modalities: []
+
+output:
+  runs_root: "${INFRAVLA_ROOT}/runs/training/runs"

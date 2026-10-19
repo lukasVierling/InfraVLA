@@ -1,0 +1,71 @@
+{
+ "scenes": [
+  {
+   "name": "warehouse_2x3_langv2_0512_tA",
+   "family": "warehouse_2x3_langv2_0512",
+   "twin": "tA",
+   "sibling_names": [
+    "warehouse_2x3_langv2_0512_tB",
+    "warehouse_2x3_langv2_0512_tC",
+    "warehouse_2x3_langv2_0512_tD"
+   ],
+   "seed": 48012,
+   "goal_zone": "B",
+   "target_kind": "traffic_cone",
+   "target_variant": 0,
+   "target_xy": [
+    -3.346,
+    21.482
+   ],
+   "target_phrase": "witch's hat",
+   "lang_pattern": "go to the {x}",
+   "instruction": "go to the traffic cone",
+   "zone_objects": {
+    "B": "traffic_cone",
+    "C": "barrel",
+    "E": "box",
+    "F": "forklift"
+   },
+   "n_objects": 4,
+   "spawn_xy": [
+    -6.75,
+    4.9
+   ],
+   "spawn_heading_deg": 0.0
+  },
+  {
+   "name": "warehouse_2x3_langv2_0503_tD",
+   "family": "warehouse_2x3_langv2_0503",
+   "twin": "tD",
+   "sibling_names": [
+    "warehouse_2x3_langv2_0503_tA",
+    "warehouse_2x3_langv2_0503_tB",
+    "warehouse_2x3_langv2_0503_tC"
+   ],
+   "seed": 48003,
+   "goal_zone": "F",
+   "target_kind": "traffic_cone",
+   "target_variant": 0,
+   "target_xy": [
+    0.094,
+    -12.794
+   ],
+   "target_phrase": "witch's hat",
+   "lang_pattern": "navigate to the {x}",
+   "instruction": "navigate to the traffic cone",
+   "zone_objects": {
+    "B": "box",
+    "C": "barrel",
+    "E": "forklift",
+    "F": "traffic_cone"
+   },
+   "n_objects": 4,
+   "spawn_xy": [
+    -6.75,
+    4.9
+   ],
+   "spawn_heading_deg": 0.0
+  }
+ ],
+ "_note": "PATCH: replaces the 2 unplannable cone scenes (goal inside inflated rack margin) with same-aisle plannable ones; keeps the 4x3 balance at n=12."
+}

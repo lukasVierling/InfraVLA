@@ -1,0 +1,308 @@
+[
+ {
+  "object": "forklift",
+  "aisle": "B",
+  "scene": "warehouse_2x3_langv2_0099_tA",
+  "pool": "parent_val"
+ },
+ {
+  "object": "forklift",
+  "aisle": "B",
+  "scene": "warehouse_2x3_langv2_0123_tA",
+  "pool": "parent_val"
+ },
+ {
+  "object": "forklift",
+  "aisle": "B",
+  "scene": "warehouse_2x3_langv2_0506_tA",
+  "pool": "test52"
+ },
+ {
+  "object": "forklift",
+  "aisle": "C",
+  "scene": "warehouse_2x3_langv2_0504_tB",
+  "pool": "test52"
+ },
+ {
+  "object": "forklift",
+  "aisle": "C",
+  "scene": "warehouse_2x3_langv2_0083_tB",
+  "pool": "parent_val"
+ },
+ {
+  "object": "forklift",
+  "aisle": "C",
+  "scene": "warehouse_2x3_langv2_0500_tB",
+  "pool": "test52"
+ },
+ {
+  "object": "forklift",
+  "aisle": "E",
+  "scene": "warehouse_2x3_langv2_0140_tC",
+  "pool": "parent_val"
+ },
+ {
+  "object": "forklift",
+  "aisle": "E",
+  "scene": "warehouse_2x3_langv2_0501_tC",
+  "pool": "test52"
+ },
+ {
+  "object": "forklift",
+  "aisle": "E",
+  "scene": "warehouse_2x3_langv2_0502_tC",
+  "pool": "test52"
+ },
+ {
+  "object": "forklift",
+  "aisle": "F",
+  "scene": "warehouse_2x3_langv2_0068_tD",
+  "pool": "parent_val"
+ },
+ {
+  "object": "forklift",
+  "aisle": "F",
+  "scene": "warehouse_2x3_langv2_0512_tD",
+  "pool": "test52"
+ },
+ {
+  "object": "forklift",
+  "aisle": "F",
+  "scene": "warehouse_2x3_langv2_0505_tD",
+  "pool": "test52"
+ },
+ {
+  "object": "barrel",
+  "aisle": "B",
+  "scene": "warehouse_2x3_langv2_0501_tA",
+  "pool": "test52"
+ },
+ {
+  "object": "barrel",
+  "aisle": "B",
+  "scene": "warehouse_2x3_langv2_0068_tA",
+  "pool": "parent_val"
+ },
+ {
+  "object": "barrel",
+  "aisle": "B",
+  "scene": "warehouse_2x3_langv2_0064_tA",
+  "pool": "parent_val"
+ },
+ {
+  "object": "barrel",
+  "aisle": "C",
+  "scene": "warehouse_2x3_langv2_0512_tB",
+  "pool": "test52"
+ },
+ {
+  "object": "barrel",
+  "aisle": "C",
+  "scene": "warehouse_2x3_langv2_0510_tB",
+  "pool": "test52"
+ },
+ {
+  "object": "barrel",
+  "aisle": "C",
+  "scene": "warehouse_2x3_langv2_0506_tB",
+  "pool": "test52"
+ },
+ {
+  "object": "barrel",
+  "aisle": "E",
+  "scene": "warehouse_2x3_langv2_0070_tC",
+  "pool": "parent_val"
+ },
+ {
+  "object": "barrel",
+  "aisle": "E",
+  "scene": "warehouse_2x3_langv2_0045_tC",
+  "pool": "parent_val"
+ },
+ {
+  "object": "barrel",
+  "aisle": "E",
+  "scene": "warehouse_2x3_langv2_0507_tC",
+  "pool": "test52"
+ },
+ {
+  "object": "barrel",
+  "aisle": "F",
+  "scene": "warehouse_2x3_langv2_0502_tD",
+  "pool": "test52"
+ },
+ {
+  "object": "barrel",
+  "aisle": "F",
+  "scene": "warehouse_2x3_langv2_0504_tD",
+  "pool": "test52"
+ },
+ {
+  "object": "barrel",
+  "aisle": "F",
+  "scene": "warehouse_2x3_langv2_0083_tD",
+  "pool": "parent_val"
+ },
+ {
+  "object": "box",
+  "aisle": "B",
+  "scene": "warehouse_2x3_langv2_0503_tA",
+  "pool": "test52"
+ },
+ {
+  "object": "box",
+  "aisle": "B",
+  "scene": "warehouse_2x3_langv2_0508_tA",
+  "pool": "test52"
+ },
+ {
+  "object": "box",
+  "aisle": "B",
+  "scene": "warehouse_2x3_langv2_0500_tA",
+  "pool": "test52"
+ },
+ {
+  "object": "box",
+  "aisle": "C",
+  "scene": "warehouse_2x3_langv2_0068_tB",
+  "pool": "parent_val"
+ },
+ {
+  "object": "box",
+  "aisle": "C",
+  "scene": "warehouse_2x3_langv2_0045_tB",
+  "pool": "parent_val"
+ },
+ {
+  "object": "box",
+  "aisle": "C",
+  "scene": "warehouse_2x3_langv2_0501_tB",
+  "pool": "test52"
+ },
+ {
+  "object": "box",
+  "aisle": "E",
+  "scene": "warehouse_2x3_langv2_0083_tC",
+  "pool": "parent_val"
+ },
+ {
+  "object": "box",
+  "aisle": "E",
+  "scene": "warehouse_2x3_langv2_0506_tC",
+  "pool": "test52"
+ },
+ {
+  "object": "box",
+  "aisle": "E",
+  "scene": "warehouse_2x3_langv2_0123_tC",
+  "pool": "parent_val"
+ },
+ {
+  "object": "box",
+  "aisle": "F",
+  "scene": "warehouse_2x3_langv2_0507_tD",
+  "pool": "test52"
+ },
+ {
+  "object": "box",
+  "aisle": "F",
+  "scene": "warehouse_2x3_langv2_0115_tD",
+  "pool": "parent_val"
+ },
+ {
+  "object": "box",
+  "aisle": "F",
+  "scene": "warehouse_2x3_langv2_0511_tD",
+  "pool": "test52"
+ },
+ {
+  "object": "traffic cone",
+  "aisle": "B",
+  "scene": "warehouse_2x3_langv2_0083_tA",
+  "pool": "parent_val"
+ },
+ {
+  "object": "traffic cone",
+  "aisle": "B",
+  "scene": "warehouse_2x3_langv2_0507_tA",
+  "pool": "test52"
+ },
+ {
+  "object": "traffic cone",
+  "aisle": "B",
+  "scene": "warehouse_2x3_langv2_0502_tA",
+  "pool": "test52",
+  "replaced_by": "warehouse_2x3_langv2_0512_tA",
+  "reason": "unplannable: goal inside inflated rack margin"
+ },
+ {
+  "object": "traffic cone",
+  "aisle": "C",
+  "scene": "warehouse_2x3_langv2_0064_tB",
+  "pool": "parent_val"
+ },
+ {
+  "object": "traffic cone",
+  "aisle": "C",
+  "scene": "warehouse_2x3_langv2_0055_tB",
+  "pool": "parent_val"
+ },
+ {
+  "object": "traffic cone",
+  "aisle": "C",
+  "scene": "warehouse_2x3_langv2_0043_tB",
+  "pool": "parent_val"
+ },
+ {
+  "object": "traffic cone",
+  "aisle": "E",
+  "scene": "warehouse_2x3_langv2_0148_tC",
+  "pool": "parent_val"
+ },
+ {
+  "object": "traffic cone",
+  "aisle": "E",
+  "scene": "warehouse_2x3_langv2_0500_tC",
+  "pool": "test52"
+ },
+ {
+  "object": "traffic cone",
+  "aisle": "E",
+  "scene": "warehouse_2x3_langv2_0068_tC",
+  "pool": "parent_val"
+ },
+ {
+  "object": "traffic cone",
+  "aisle": "F",
+  "scene": "warehouse_2x3_langv2_0045_tD",
+  "pool": "parent_val"
+ },
+ {
+  "object": "traffic cone",
+  "aisle": "F",
+  "scene": "warehouse_2x3_langv2_0501_tD",
+  "pool": "test52",
+  "replaced_by": "warehouse_2x3_langv2_0503_tD",
+  "reason": "unplannable: goal inside inflated rack margin"
+ },
+ {
+  "object": "traffic cone",
+  "aisle": "F",
+  "scene": "warehouse_2x3_langv2_0510_tD",
+  "pool": "test52"
+ },
+ {
+  "object": "traffic cone",
+  "aisle": "B",
+  "scene": "warehouse_2x3_langv2_0512_tA",
+  "pool": "test52",
+  "replacement": true
+ },
+ {
+  "object": "traffic cone",
+  "aisle": "F",
+  "scene": "warehouse_2x3_langv2_0503_tD",
+  "pool": "test52",
+  "replacement": true
+ }
+]

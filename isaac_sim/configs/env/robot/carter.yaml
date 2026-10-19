@@ -1,0 +1,59 @@
+# @package env.robot
+# ============================================================================
+# Robot: NVIDIA Carter v1
+# ============================================================================
+#
+# # @package env.robot mounts these fields at cfg.env.robot, which is exactly
+# what Robot(env_config.robot_config) in robot.py pulls apart.
+#
+# Values mirror isaac_sim/helper/constants.py (the canonical source for the
+# *trained* model's robot geometry). If you ever change wheel_base or
+# wheel_radius here you also need to retrain — the controller's twist solve
+# assumes these values.
+# ============================================================================
+
+robot_name: "Carter"
+controller: "Differential"
+
+# Stage path the robot is instantiated under. Single source of truth for any
+# other code that needs to locate the robot in the USD stage (camera auto-
+# discovery walks under this; scouting's obstacle reader excludes this).
+prim_path: "/World/Carter"
+
+# USD asset path, RELATIVE to the Isaac Sim assets_root (Nucleus). The Robot
+# constructor prepends assets_root before passing to WheeledRobot.
+usd_rel: "/Isaac/Robots/NVIDIA/Carter/carter_v1.usd"
+
+# Names of the wheel DOFs as exposed by the loaded USD. If wheel names ever
+# mismatch (USD update / asset swap), the server's print of `dof_names` at
+# startup is the right place to look.
+wheel_dof_names: ["left_wheel", "right_wheel"]
+
+# Carter v1 physical geometry. Same numbers as constants.CARTER_V1_*.
+wheel_radius: 0.24
+wheel_base: 0.54
+
+# Chassis half-extent + safety buffer, used by A* to inflate obstacles so the
+# planner can treat the robot as a point. Carter v1 chassis half-width is
+# ~0.27 m; 0.4 m here adds ~0.13 m buffer for control error and goal-prop
+# AABB slop. Lower it only if A* starts claiming "no path" in tight aisles.
+# Single source of truth — env/astar/default.yaml interpolates this via
+# ${env.robot.inflation_m}; do NOT also set robot_inflation_m there.
+inflation_m: 0.4
+
+# Camera prim-discovery hints, consumed by env/camera/*.yaml via
+# ${env.robot.cameras.*}. Kept on the robot file (not the camera file) so
+# swapping the robot automatically swaps camera search prefixes/hints — the
+# camera YAMLs themselves are robot-agnostic.
+cameras:
+  # First-person ego cam (the one the policy reads). Carter v1's onboard
+  # camera prim path contains "first_person" / "front" / "rgb".
+  front_hints: ["first_person", "front", "rgb"]
+  # Third-person chase cam (recorder/visualisation only).
+  chase_hints: ["third_person"]
+
+# Initial pose — initial_pos / initial_ori are usually set programmatically
+# from the scene config (start_xy + start_heading_deg) at reset time. Leave
+# at null here; Robot() reads from the `initial` arg the env passes in.
+initial_pos: null
+initial_ori: null

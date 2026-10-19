@@ -1,0 +1,9 @@
+# @package env.cameras
+# Camera-set selector: full thesis setup - ego front + chase + a static CCTV
+# stream. Phase 6's CCTV-aware policy will read env.cameras.cctv_topdown.
+# Result: env.cameras = {front_cam: ..., scene_cam: ..., cctv_topdown: ...}
+
+defaults:
+  - /env/camera@front_cam: carter_front
+  - /env/camera@scene_cam: carter_chase
+  - /env/camera@cctv_topdown: cctv_topdown

@@ -1,0 +1,13 @@
+# ============================================================================
+# Recorder — data-generation runs, NO-BRAKE variant
+# ============================================================================
+#
+# Identical to data_gen.yaml EXCEPT runs_root points at a separate folder so
+# brake-free trajectories never co-mingle with braked ones in runs/data_gen/.
+# Used by the no-brake data-gen experiments (paired with policy
+# astar_oracle_nobrake). Keeping them in their own root means a split built
+# from here can't accidentally pull braked dirs, and vice-versa.
+# ============================================================================
+
+# Separate root for brake-free oracle rollouts.
+runs_root: "${oc.env:INFRAVLA_ROOT}/runs/data/sweeps/data_gen_nobrake"

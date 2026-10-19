@@ -1,0 +1,18 @@
+# Task: single goal-image (modality = {"image"} -> mode 6).
+# Paper's "<=3 m" case from root.tex:300. For longer-range image goals
+# use image_graph.yaml (topological memory).
+
+name: image
+modality: ["image"]
+
+lang_instruction: ""
+
+# Path is resolved relative to isaac_sim/ at Task.__post_init__ time.
+goal_image_path: "isaac_sim/goal_images/blue_barrel.png"
+goal_graph_path: null
+
+goal_xy: null
+goal_heading_deg: 0.0
+
+max_steps: 200
+success_dist: 0.3

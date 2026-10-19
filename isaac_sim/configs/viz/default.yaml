@@ -1,0 +1,96 @@
+# ============================================================================
+# Visualisation cosmetics — SINGLE SOURCE OF TRUTH
+# ============================================================================
+#
+# Every tunable visual knob for the two viz utils lives here, so there are no
+# magic numbers / colours buried in the code. Consumed by:
+#
+#   render_path_map   (utils/planning_viz.py)  <-  cfg.viz.path_map
+#   plot_action_chunk (utils/action_viz.py)    <-  cfg.viz.action_chunk
+#
+# Pulled into both pipelines via `- viz: default` in eval.yaml / data_gen.yaml,
+# so eval + data-gen share one definition (override per-run on the CLI, e.g.
+# `viz.path_map.dpi=200` or swap the whole group with `viz=<variant>`).
+#
+# NOT here (these are behaviour, not cosmetics — they live in recorder.path_viz):
+#   enabled              — whether finalize writes rollout_viz.png at all
+#   behavior_map_panel   — whether save_robot_behavior swaps in the map panel
+#
+# Also NOT here (structural drawing constants, not knobs): matplotlib zorder
+# layering, marker shapes (o/*/X/s), colormap choice + vmin, quiver geometry.
+# ============================================================================
+
+# ---- render_path_map: world-frame occupancy/SDF map + paths ----
+path_map:
+  # --- what to draw ---
+  backdrop: sdf                 # 'sdf' (viridis field + faint occupancy) | 'occupancy' (binary mask)
+  include_astar: true           # overlay the A* plan when one is provided
+  heading_arrows: true          # planning viz: per-node yaw quiver on the A* path
+  astar_linestyle: "--"         # '--' dashed reference (behind robot path) | '-' solid + node dots
+  astar_sample_spacing_m: 0.5   # density (m) the A* Path is sampled to for plotting (viz-only)
+  crop_pad_m: 1.0               # padding (m) around the drawn content
+  # --- figure ---
+  figsize: [12, 8]
+  dpi: 110
+  # --- line / marker geometry ---
+  arrow_len_m: 0.30             # heading-quiver arrow length (m)
+  occupancy_alpha: 0.4          # occupancy overlay opacity on the SDF backdrop
+  astar_linewidth: 1.8
+  astar_marker_size: 18         # per-node dots, only when astar_linestyle == '-'
+  astar_marker_edgewidth: 0.5
+  quiver_linewidth: 0.6
+  quiver_width: 0.004
+  quiver_headwidth: 4
+  quiver_headlength: 5
+  robot_linewidth: 2.2
+  robot_end_size: 130
+  start_size: 120
+  goal_size: 150
+  # --- text ---
+  legend_fontsize: 10
+  legend_framealpha: 0.85
+  legend_loc: upper right
+  title_fontsize: 11
+  label_fontsize: 11
+  # --- colours ---
+  colors:
+    astar: orange
+    start: lime
+    goal: red
+    arrow: white
+    robot_path: deepskyblue
+    robot_end: magenta
+    marker_edge: black
+
+# ---- plot_action_chunk: robot-local action chunk (eval behaviour panel) ----
+# Defaults tuned for the big 34x16 behaviour figure (thick lines, large fonts).
+# The val-debugger passes its own smaller style (literal dict in that script).
+action_chunk:
+  equal_aspect: false           # false → use xlim/ylim; true → ax.axis('equal')
+  xlim: [-3.0, 3.0]
+  ylim: [-0.1, 10.0]
+  linewidth: 4.0
+  markersize: 12.0
+  origin_size: 80               # robot-at-origin marker
+  goal_star_size: 15
+  annotate_offset: [-20, 20]    # modality-label offset (points)
+  grid_alpha: 0.3
+  title_fontsize: 18
+  label_fontsize: 18
+  tick_fontsize: 15
+  legend_fontsize: 16
+  annotate_fontsize: 18
+  colors:
+    pred: blue
+    gt: red
+    goal: red
+    origin: black
+
+# ---- save_robot_behavior: the per-step 3-panel figure scaffolding ----
+# (current image | goal-image-or-map | action chunk). The two sub-panels are
+# drawn by render_path_map + plot_action_chunk above; this block is just the
+# figure-level cosmetics the recorder owns.
+behaviour_panel:
+  figsize: [34, 16]
+  dpi: 80
+  panel_title_fontsize: 18

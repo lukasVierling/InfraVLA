@@ -1,0 +1,51 @@
+# ============================================================================
+# Controller knobs — data-generation (fast inner control loop)
+# ============================================================================
+#
+# Functionally identical to controller/omnivla_default.yaml. The CADENCE
+# differs: data_gen runs the A* policy at the top-level `control_hz` (30 Hz)
+# rather than eval's 3 Hz. dt_s is DERIVED in a_star_policy.py from
+# control_hz at construction time, so this yaml does not need to (and must
+# not) repeat it.
+#
+# Rationale for the 30 Hz inner loop — see [[omnivla-paper-data-source]]:
+# the paper's training data is real-robot deployment, where the low-level
+# controller runs at hundreds of Hz and integrates (v, w) continuously
+# between 3 Hz pose samples. A 3 Hz control loop in sim stair-steps motion
+# at the recording rate, which is out-of-distribution. Running the control
+# loop at 30 Hz and recording at 3 Hz approximates the real-robot data
+# shape.
+#
+# Consumed by A_star_policy via cfg.controller.*.
+# ============================================================================
+
+# --- Goal handling ----------------------------------------------------------
+# Unused by A_star_policy (it doesn't encode goal poses), but kept in the
+# block so the controller schema is identical across eval and data-gen.
+thres_dist_m: 30.0
+
+# --- Waypoint controller ----------------------------------------------------
+# Unused by A_star_policy (no chunked waypoint predictions). Kept for schema parity.
+waypoint_select: 4
+
+# --- "Stuck" detection ------------------------------------------------------
+# Consumed by controller_utils.is_stuck via cfg.controller.stuck_*. These
+# operate on the *recorded* pose buffer — the data_gen rollout loop only
+# appends to recent_poses on recording ticks, and only calls is_stuck on
+# recording ticks. So the count-based knobs are in recording-sample units
+# (3 Hz), identical to the eval controller. The fast control loop is
+# invisible to is_stuck.
+stuck_window: 25         # ≈ 8.3 s of recorded pose history
+stuck_bbox_m: 0.20       # physical extent — no-progress bbox side length
+stuck_grace_steps: 10    # ≈ 3.3 s grace before stuck check can fire
+
+# --- Velocity limits --------------------------------------------------------
+# Same caps as eval. The benefit of the fast loop comes from updating
+# commands more often, not from being allowed to command harder — raising
+# these would change the *envelope* of motion, which is a separate design
+# decision.
+max_linear_vel_mps: 1.0
+max_angular_vel_radps: 1.0
+
+# Numerical guard for the 1/dx path of the PD controller.
+eps: 1.0e-8

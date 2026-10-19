@@ -1,0 +1,82 @@
+# @package env.astar
+# ============================================================================
+# A* planner knobs used to resolve the effective goal pose
+# ============================================================================
+#
+# # @package env.astar mounts these at cfg.env.astar, which is what
+# IsaacSimEnv.resolve_effective_goal_pose() reads.
+#
+# Values mirror the DEFAULT_* constants in
+# isaac_sim/scouting/oracle_scout.py — promoted here so they're swept-over-
+# able and defendable rather than buried as module-level constants.
+# ============================================================================
+
+# Occupancy grid cell size in metres. 0.1 m is a good trade for the warehouse
+# scale (~20 m × ~20 m = ~40000 cells) — fine enough to thread aisle gaps,
+# coarse enough that A* stays sub-second.
+grid_resolution_m: 0.1
+
+# Radius (m) by which obstacles are inflated. Sourced from the active robot's
+# yaml — the inflation depends on chassis geometry, not on planner knobs, so
+# it lives at cfg.env.robot.inflation_m and is interpolated here. Lower the
+# robot's `inflation_m` (not this line) if A* claims "no path" in tight
+# templates.
+robot_inflation_m: ${env.robot.inflation_m}
+
+# Padding (m) added around the start/goal/obstacle bounding box when sizing the
+# occupancy grid. 5 m keeps the planner from clipping near the edge if the
+# robot needs to swing outward to round an obstacle.
+world_buffer_m: 5.0
+
+# Prims whose world-AABB half-extent exceeds this (m) are EXCLUDED from the
+# occupancy map — rejects building-scale geometry (floor slabs, ceiling)
+# that would otherwise mark the whole grid occupied. 3.0 fits the prop
+# catalog (largest: forklift, ~1.9 m radius). CAVEAT: a stock 6 m wall
+# segment (SM_WallA_6M) composes to half-extent 2.9999997 m — under this
+# cap by only 3e-7, and any yaw tilt >~0.1 deg pushes its AABB over and
+# silently drops the wall body from the map. Scenes that place walls
+# (wall_layout template) must use env/astar=wall_layout (cap 3.5).
+# Promoted from the _MAX_OBSTACLE_HALF_EXTENT_M constant in a_star/map.py
+# (2026-06-11); 3.0 preserves the prior behavior of every existing scene.
+max_obstacle_half_extent_m: 3.0
+
+# Extra slack (m) added to the goal prop's AABB half-extent when computing the
+# standoff. Keeps the robot from getting wedged against the prop even on tight
+# successful approaches.
+standoff_buffer_m: 0.3
+
+# Floor (m) on the standoff distance. For tiny goals (cone, fire extinguisher)
+# the AABB-derived term is small; this minimum ensures the final-frame view
+# of the object is still recognisable.
+min_standoff_m: 0.5
+
+# Number of trailing path segments averaged to extract the approach heading.
+# 8-connected A* only produces angles in multiples of 45° per single segment,
+# so a single final segment is too quantised — averaging over ~3 segments
+# smooths that out. Decrease only if you trust the planner's last segment
+# direction (e.g. continuous-yaw planner replaces grid A*).
+heading_window_segments: 3
+
+# A* edge-cost weight on the ESDF clearance term (alpha in
+# step * (1 + alpha / (clearance + eps))). 0 disables the soft term cleanly
+# → pure shortest-path; large values bias the planner strongly away from
+# obstacles. 0.5 is the value used in the planner-tuning viz sweeps and
+# matches what's used as the "init" baseline there.
+alpha_clearance: 0.5
+
+# Half-window (m) for the hill-climb refinement pass that snaps each waypoint
+# to the local clearance maximum within ±hill_climb_window_m/2 cells. 0.1 m
+# = one cell at the default grid_resolution_m → a light refinement that
+# preserves the A* topology while easing it off the cell wall. Bump for
+# wider corridors.
+hill_climb_window_m: 0.1
+
+# Pipeline stages enabled in get_a_star_path():
+#   sdf_weighted   — ESDF clearance term in edge cost (uses alpha_clearance)
+#   hill_climbing  — local-max refinement pass (uses hill_climb_window_m)
+#   cubic_spline   — natural cubic spline through the refined waypoints
+# Defaults match the "init" recipe in the planner-tuning viz sweeps.
+pipeline:
+  sdf_weighted: true
+  hill_climbing: true
+  cubic_spline: true

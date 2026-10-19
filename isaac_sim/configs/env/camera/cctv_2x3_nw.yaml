@@ -1,0 +1,10 @@
+# 2x3 warehouse CCTV — NW corner. Pose + intrinsics (focal 10, 1:1 aperture)
+# come from the base scene (warehouse_2x3_base.usda); translation_required=false
+# so we attach the capture wrapper to the existing prim without re-posing it.
+name: cctv_2x3_nw
+prim_path: "/World/CCTV/cctv_NW"
+auto_discover: null
+translation_required: false
+resolution: [720, 720]
+frequency: 10
+logging: true

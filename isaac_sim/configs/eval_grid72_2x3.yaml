@@ -1,0 +1,36 @@
+# Systematic eval grid ("grid72") for the 2x3 warehouse — read by
+# run_builders/build_2x3_grid72.py (config generation only, no Isaac).
+#
+# 3 spawn x-positions (in zone A, facing south) x 3 goal x-positions (in zone G)
+# x 8 blockade conditions = 72 fixed scenes. Zero distractors; only the factors
+# vary, so cross-model comparisons are paired per cell instead of relying on a
+# random test set. Geometry (zone boxes, aisle centres, navigable bounds) comes
+# from scenes/_common.py; gate/robot/clearance knobs are read from
+# configs/datagen_2x3.yaml so there is a single source of truth for those.
+
+# "very left / very right" = navigable-box edge (outer rack faces, x=-7.25/3.76)
+# pushed inward by this margin. -> x = -6.25 / -1.745 / 2.76 (symmetric).
+edge_margin_m: 1.0
+
+# Spawn row in zone A: probe runway-v2 value (4.5 m runway to the central rack
+# so weak-commitment rollouts reveal their aisle choice before crashing).
+spawn_y: 29.5
+start_heading_deg: 270.0   # facing south for all spawns — uniform + leak-free
+# Goal y is derived in the builder: centre of zone G (= -17.85, as in the probes).
+
+lighting: normal
+seed: 7200                 # bookkeeping only — scenes are fully deterministic
+
+# Blockade conditions: 4 singles, 2 lines (whole west / east column sealed),
+# 2 diagonals (route must zigzag through the cross-aisle D). All solvable.
+conditions: [B, C, E, F, BE, CF, BF, CE]
+
+# --- emitted eval experiments (probe_runway / cfv2fwdtest protocol) ----------
+max_steps: 300             # headroom over the probes' 200 so double-block
+                           # detours finish; timeout then means stuck, not clock
+partition_size: 12         # 72 scenes -> 6 shards per model
+camera_set: with_4cctv_2x3
+models:
+  baseline: omnivla_finetuned_baseline_2x3cfv2fwd_fg50_r16
+  avgpool64: omnivla_finetuned_cctv4_2x3cfv2fwd_avgpool64_fg50_r16
+runs_root_tmpl: "${oc.env:INFRAVLA_ROOT}/runs/evaluation/sweeps/warehouse_2x3_grid72_{date}/{model}"

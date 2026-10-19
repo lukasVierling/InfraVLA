@@ -1,0 +1,368 @@
+{
+ "scenes": [
+  {
+   "name": "warehouse_2x3_langv2_0500_tA",
+   "family": "warehouse_2x3_langv2_0500",
+   "twin": "tA",
+   "sibling_names": [
+    "warehouse_2x3_langv2_0500_tB",
+    "warehouse_2x3_langv2_0500_tC",
+    "warehouse_2x3_langv2_0500_tD"
+   ],
+   "seed": 48000,
+   "goal_zone": "B",
+   "target_kind": "box",
+   "target_variant": 0,
+   "target_xy": [
+    -2.914,
+    19.981
+   ],
+   "target_phrase": "box",
+   "lang_pattern": "navigate to the {x}",
+   "instruction": "navigate to the box",
+   "zone_objects": {
+    "B": "box",
+    "C": "forklift",
+    "E": "traffic_cone",
+    "F": "barrel"
+   },
+   "n_objects": 4,
+   "spawn_xy": [
+    -6.75,
+    4.9
+   ],
+   "spawn_heading_deg": 0.0
+  },
+  {
+   "name": "warehouse_2x3_langv2_0501_tA",
+   "family": "warehouse_2x3_langv2_0501",
+   "twin": "tA",
+   "sibling_names": [
+    "warehouse_2x3_langv2_0501_tB",
+    "warehouse_2x3_langv2_0501_tC",
+    "warehouse_2x3_langv2_0501_tD"
+   ],
+   "seed": 48001,
+   "goal_zone": "B",
+   "target_kind": "barrel",
+   "target_variant": 0,
+   "target_xy": [
+    -3.164,
+    17.067
+   ],
+   "target_phrase": "barrel",
+   "lang_pattern": "navigate to the {x}",
+   "instruction": "navigate to the barrel",
+   "zone_objects": {
+    "B": "barrel",
+    "C": "box",
+    "E": "forklift",
+    "F": "traffic_cone"
+   },
+   "n_objects": 4,
+   "spawn_xy": [
+    -6.75,
+    4.9
+   ],
+   "spawn_heading_deg": 0.0
+  },
+  {
+   "name": "warehouse_2x3_langv2_0502_tA",
+   "family": "warehouse_2x3_langv2_0502",
+   "twin": "tA",
+   "sibling_names": [
+    "warehouse_2x3_langv2_0502_tB",
+    "warehouse_2x3_langv2_0502_tC",
+    "warehouse_2x3_langv2_0502_tD"
+   ],
+   "seed": 48002,
+   "goal_zone": "B",
+   "target_kind": "traffic_cone",
+   "target_variant": 0,
+   "target_xy": [
+    -2.818,
+    17.424
+   ],
+   "target_phrase": "traffic cone",
+   "lang_pattern": "navigate to the {x}",
+   "instruction": "navigate to the traffic cone",
+   "zone_objects": {
+    "B": "traffic_cone",
+    "C": "box",
+    "E": "forklift",
+    "F": "barrel"
+   },
+   "n_objects": 4,
+   "spawn_xy": [
+    -6.75,
+    4.9
+   ],
+   "spawn_heading_deg": 0.0
+  },
+  {
+   "name": "warehouse_2x3_langv2_0503_tA",
+   "family": "warehouse_2x3_langv2_0503",
+   "twin": "tA",
+   "sibling_names": [
+    "warehouse_2x3_langv2_0503_tB",
+    "warehouse_2x3_langv2_0503_tC",
+    "warehouse_2x3_langv2_0503_tD"
+   ],
+   "seed": 48003,
+   "goal_zone": "B",
+   "target_kind": "box",
+   "target_variant": 0,
+   "target_xy": [
+    -4.373,
+    23.967
+   ],
+   "target_phrase": "box",
+   "lang_pattern": "move toward the {x}",
+   "instruction": "move toward the box",
+   "zone_objects": {
+    "B": "box",
+    "C": "barrel",
+    "E": "forklift",
+    "F": "traffic_cone"
+   },
+   "n_objects": 4,
+   "spawn_xy": [
+    -6.75,
+    4.9
+   ],
+   "spawn_heading_deg": 0.0
+  },
+  {
+   "name": "warehouse_2x3_langv2_0504_tA",
+   "family": "warehouse_2x3_langv2_0504",
+   "twin": "tA",
+   "sibling_names": [
+    "warehouse_2x3_langv2_0504_tB",
+    "warehouse_2x3_langv2_0504_tC",
+    "warehouse_2x3_langv2_0504_tD"
+   ],
+   "seed": 48004,
+   "goal_zone": "B",
+   "target_kind": "box",
+   "target_variant": 0,
+   "target_xy": [
+    -4.627,
+    18.829
+   ],
+   "target_phrase": "box",
+   "lang_pattern": "go to the {x}",
+   "instruction": "go to the box",
+   "zone_objects": {
+    "B": "box",
+    "C": "forklift",
+    "E": "traffic_cone",
+    "F": "barrel"
+   },
+   "n_objects": 4,
+   "spawn_xy": [
+    -6.75,
+    4.9
+   ],
+   "spawn_heading_deg": 0.0
+  },
+  {
+   "name": "warehouse_2x3_langv2_0505_tA",
+   "family": "warehouse_2x3_langv2_0505",
+   "twin": "tA",
+   "sibling_names": [
+    "warehouse_2x3_langv2_0505_tB",
+    "warehouse_2x3_langv2_0505_tC",
+    "warehouse_2x3_langv2_0505_tD"
+   ],
+   "seed": 48005,
+   "goal_zone": "B",
+   "target_kind": "barrel",
+   "target_variant": 0,
+   "target_xy": [
+    -4.515,
+    20.514
+   ],
+   "target_phrase": "barrel",
+   "lang_pattern": "move toward the {x}",
+   "instruction": "move toward the barrel",
+   "zone_objects": {
+    "B": "barrel",
+    "C": "box",
+    "E": "traffic_cone",
+    "F": "forklift"
+   },
+   "n_objects": 4,
+   "spawn_xy": [
+    -6.75,
+    4.9
+   ],
+   "spawn_heading_deg": 0.0
+  },
+  {
+   "name": "warehouse_2x3_langv2_0507_tA",
+   "family": "warehouse_2x3_langv2_0507",
+   "twin": "tA",
+   "sibling_names": [
+    "warehouse_2x3_langv2_0507_tB",
+    "warehouse_2x3_langv2_0507_tC",
+    "warehouse_2x3_langv2_0507_tD"
+   ],
+   "seed": 48007,
+   "goal_zone": "B",
+   "target_kind": "traffic_cone",
+   "target_variant": 0,
+   "target_xy": [
+    -5.09,
+    21.427
+   ],
+   "target_phrase": "traffic cone",
+   "lang_pattern": "move toward the {x}",
+   "instruction": "move toward the traffic cone",
+   "zone_objects": {
+    "B": "traffic_cone",
+    "C": "forklift",
+    "E": "barrel",
+    "F": "box"
+   },
+   "n_objects": 4,
+   "spawn_xy": [
+    -6.75,
+    4.9
+   ],
+   "spawn_heading_deg": 0.0
+  },
+  {
+   "name": "warehouse_2x3_langv2_0508_tA",
+   "family": "warehouse_2x3_langv2_0508",
+   "twin": "tA",
+   "sibling_names": [
+    "warehouse_2x3_langv2_0508_tB",
+    "warehouse_2x3_langv2_0508_tC",
+    "warehouse_2x3_langv2_0508_tD"
+   ],
+   "seed": 48008,
+   "goal_zone": "B",
+   "target_kind": "box",
+   "target_variant": 0,
+   "target_xy": [
+    -5.587,
+    22.033
+   ],
+   "target_phrase": "box",
+   "lang_pattern": "navigate to the {x}",
+   "instruction": "navigate to the box",
+   "zone_objects": {
+    "B": "box",
+    "C": "barrel",
+    "E": "forklift",
+    "F": "traffic_cone"
+   },
+   "n_objects": 4,
+   "spawn_xy": [
+    -6.75,
+    4.9
+   ],
+   "spawn_heading_deg": 0.0
+  },
+  {
+   "name": "warehouse_2x3_langv2_0509_tA",
+   "family": "warehouse_2x3_langv2_0509",
+   "twin": "tA",
+   "sibling_names": [
+    "warehouse_2x3_langv2_0509_tB",
+    "warehouse_2x3_langv2_0509_tC",
+    "warehouse_2x3_langv2_0509_tD"
+   ],
+   "seed": 48009,
+   "goal_zone": "B",
+   "target_kind": "box",
+   "target_variant": 0,
+   "target_xy": [
+    -3.509,
+    17.546
+   ],
+   "target_phrase": "box",
+   "lang_pattern": "move toward the {x}",
+   "instruction": "move toward the box",
+   "zone_objects": {
+    "B": "box",
+    "C": "forklift",
+    "E": "traffic_cone",
+    "F": "barrel"
+   },
+   "n_objects": 4,
+   "spawn_xy": [
+    -6.75,
+    4.9
+   ],
+   "spawn_heading_deg": 0.0
+  },
+  {
+   "name": "warehouse_2x3_langv2_0511_tA",
+   "family": "warehouse_2x3_langv2_0511",
+   "twin": "tA",
+   "sibling_names": [
+    "warehouse_2x3_langv2_0511_tB",
+    "warehouse_2x3_langv2_0511_tC",
+    "warehouse_2x3_langv2_0511_tD"
+   ],
+   "seed": 48011,
+   "goal_zone": "B",
+   "target_kind": "barrel",
+   "target_variant": 0,
+   "target_xy": [
+    -4.027,
+    20.884
+   ],
+   "target_phrase": "barrel",
+   "lang_pattern": "navigate to the {x}",
+   "instruction": "navigate to the barrel",
+   "zone_objects": {
+    "B": "barrel",
+    "C": "forklift",
+    "E": "traffic_cone",
+    "F": "box"
+   },
+   "n_objects": 4,
+   "spawn_xy": [
+    -6.75,
+    4.9
+   ],
+   "spawn_heading_deg": 0.0
+  },
+  {
+   "name": "warehouse_2x3_langv2_0512_tA",
+   "family": "warehouse_2x3_langv2_0512",
+   "twin": "tA",
+   "sibling_names": [
+    "warehouse_2x3_langv2_0512_tB",
+    "warehouse_2x3_langv2_0512_tC",
+    "warehouse_2x3_langv2_0512_tD"
+   ],
+   "seed": 48012,
+   "goal_zone": "B",
+   "target_kind": "traffic_cone",
+   "target_variant": 0,
+   "target_xy": [
+    -3.346,
+    21.482
+   ],
+   "target_phrase": "traffic cone",
+   "lang_pattern": "go to the {x}",
+   "instruction": "go to the traffic cone",
+   "zone_objects": {
+    "B": "traffic_cone",
+    "C": "barrel",
+    "E": "box",
+    "F": "forklift"
+   },
+   "n_objects": 4,
+   "spawn_xy": [
+    -6.75,
+    4.9
+   ],
+   "spawn_heading_deg": 0.0
+  }
+ ],
+ "_note": "B-CONTROL: unseen test scenes, target = a SEEN object in aisle B. Isolates baseline aisle-B turn competence from the unseen forklift@B pairing."
+}

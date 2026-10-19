@@ -1,0 +1,22 @@
+# 2x3 warehouse CCTV — NW "adjusted bigcam" (16mm, 24x24 aperture).
+# SYMMETRIZED 2026-07-07: master = Lukas's GUI-tuned cctv_NE; the other three
+# are exact mirrors about the warehouse midlines (x=-1.7474999999999998, y=4.9) — removes
+# hand-jitter so all four cams frame their aisle identically. Reference stage:
+# warehouse_2x3_adjusted_bigcam_ref.usda. New prim; base 10mm cams untouched.
+name: cctv_nw_bigcam
+prim_path: "/World/CCTVBIG/cctv_NW"
+auto_discover: null
+translation_required: true
+resolution: [720, 720]
+frequency: 10
+logging: false
+intrinsics:
+  focal_length_mm: 16.0
+  horizontal_aperture_mm: 24.0
+  vertical_aperture_mm: 24.0
+extrinsics:
+  world_transform_matrix: [
+    [-0.9925411010, -0.1219104702, -0.0000000000, 0.0000000000],
+    [0.0948002871, -0.7718219868, 0.6287318397, 0.0000000000],
+    [-0.0766489942, 0.6240421925, 0.7776221921, 0.0000000000],
+    [-5.6492611711, 30.1112592804, 7.8936423587, 1.0000000000]]

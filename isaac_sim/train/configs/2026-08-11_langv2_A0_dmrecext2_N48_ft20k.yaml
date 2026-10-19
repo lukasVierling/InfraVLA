@@ -1,0 +1,136 @@
+# ============================================================================
+# LANGV2 RECOVERY FINE-TUNE — noforkliftB parent + self-mined recovery (N~50)
+#
+# First recovery FT on a LANGUAGE arm. Recipe = the spatial dmrecext2 chain
+# (2026-08-05 N56-b20: resume parent, +5k steps, DatasetManager cf 0.8 /
+# recovery 0.2, recovery-only anchors on the first-touch 0.05 m rejoin rule),
+# with the two knobs that are a langv2 TRAINING-SIDE CONTRACT swapped in:
+# the cf view uses criterion=yaw pre3/post0 (the exact 1282-frame set the
+# parent's cf_window_balance boost 16.6 emphasised — verified identical
+# 2026-08-10, symmetric diff 0), not the spatial distance 16/8 window.
+#
+# Parent:   2026-07-27_..._noforkliftB_15k_v0 @ step_13000 (best-val; the
+#           checkpoint every probe/eval in the failure analysis used).
+# Resume:   step_13000 seeded into this run's checkpoints, --resume-step 13000,
+#           max_steps 18000 -> +5k FT steps, lr restored 1e-4.
+# Recovery: 2026-08-11_A015k_langv2_recovery_t05_N48 — mined FROM this exact
+#           checkpoint over its own train split (DAgger-style self-consistency;
+#           zero scene/family overlap with val, heldout_forkliftB, parent
+#           test/val — verified before mining).
+#
+# Question: does recovery supervision fix the in-dist aisle-B wedging (B-control
+# 1/10 reached) and does any of it transfer to the OOD forklift@B pairing
+# (S3 0/30 entered B, frame-0 bearing 41 deg vs 53 deg GT)?
+# ============================================================================
+run:
+  name: "2026-08-11_langv2_A0_dmrecext2_N48_ft20k_v0"
+  notes: "BASELINE RECOVERY FT (Lukas 2026-08-11): the dmrecext2 recipe of the held-out arm applied to the FULL-DATA model. Resume A0 (2026-07-23 pre3 avgpool64) step_15000 -> 20000 (+5k, full state, lr 1e-4) on the cf-window view (mass 0.8, criterion=yaw pre3/post0) + ~48 self-mined recovery trajectories (mass 0.2; rollout_dev_thresh 0.5 m, budget_factor 2.0, n_spawns 1, oracle to the ORIGINAL goal, fine-grained follower ON). Anchor count TARGETED at 48 to match the held-out campaign exactly so the two recovery arms are comparable; A0 derails far less often than nfB (B-control 0.74 vs 0.09) so this needs more mining rounds. Motivation: the synonym closed-loop test drifted on 2/7 salvaged rollouts where the canonical word succeeded -- does recovery remove that drift? Parent val ladder is monotone to 15k (best-val = last step), unlike nfB whose best was an interior 13k."
+model:
+  vla_path: "${INFRAVLA_ROOT}/omnivla-original"
+  pretrained_step: 120000
+  num_images_in_input: 6
+  use_cctv_encoder: true
+  num_ego_images: 2
+  cctv_downsample:
+    method: avgpool
+    out_tokens: 64
+  use_lora: true
+  lora_rank: 16
+  lora_alpha: 8
+  lora_dropout: 0.0
+data:
+  train_dir: "${INFRAVLA_ROOT}/runs/data/splits/2026-07-22_warehouse_2x3_langv2/train"
+  val_dir:   "${INFRAVLA_ROOT}/runs/data/splits/2026-07-22_warehouse_2x3_langv2/val"
+  test_dir:  "${INFRAVLA_ROOT}/runs/data/splits/2026-07-22_warehouse_2x3_langv2/val"  # unused during training
+  max_train_trajectories: null
+  max_val_trajectories:   null
+  max_test_trajectories:  null
+  num_actions_chunk: 8
+  context_size: 5
+  modality_list: [7, 4, 5, 6]
+  # 80% language-only (id 7); id 8 excluded — the pose goal differs between
+  # twins, so language+pose would leak the answer past the instruction.
+  modality_weights: [0.8, 0.06667, 0.06667, 0.06666]
+  lang_manifest: "${INFRAVLA_ROOT}/isaac_sim/configs/experiment/datagen_2x3_langv2_all_manifest.json"
+  lang_pattern: "move toward the {x}"
+  image_only_max_distance_steps: 10
+  min_goal_distance_steps: 1
+  max_goal_distance_steps: 300
+  final_goal_prob: 0.5
+  predict_stop_token: true
+  metric_waypoint_spacing: 0.333
+  waypoint_spacing: 1
+  image_size: [224, 224]
+  random_hflip: false
+  goals_per_obs: 1
+  emit_cctv: true
+  cctv_cam_names: [cctv_NE, cctv_NW, cctv_SE, cctv_SW]
+  no_goal_image: false
+  use_cctv_goal: false
+  perception_dropout:     [1.0, 0.0, 0.0]
+  val_perception_dropout: [1.0, 0.0, 0.0]
+  # --- DatasetManager mix (replaces the parent's cf_window_balance boost) ---
+  # Masses are dataset-mass shares: cf 1.0 + recovery 0.25 -> 80/20 draws.
+  # normal_weight 0.0 = derivation-only (cf view + recovery kwargs derive from
+  # it; it contributes no samples) — the spatial dmrecext2 recipe verbatim.
+  # criterion=yaw pre3/post0 selects the SAME 1282 frames the parent's boost
+  # 16.6 emphasised (contract-verified 2026-08-10; see test_dataset_manager).
+  dataset_manager:
+    enabled: true
+    normal_weight: 0.0
+    counterfactual:
+      enabled: true
+      weight: 1.0
+      criterion: yaw          # langv2 training-side contract — NOT the spatial 16/8 distance window
+      yaw_eps_deg: 1.0
+      pre_steps: 3            # window = [crux-3, crux], all pre-divergence
+      post_steps: 0           # >0 reaches past the crux into leaked frames
+      dev_thresh_m: 0.75      # unused under yaw; kept so the key exists
+    recovery:
+      enabled: true
+      weight: 0.25
+      traj_root: "${INFRAVLA_ROOT}/runs/data/recovery/2026-08-11_A015k_langv2_recovery_t05_N48"
+      # FINAL anchor rule (2026-07-17): recovery-ONLY anchors (prefix = obs
+      # history, never anchored), span = handoff .. first frame within 0.05 m
+      # of the original plan (no sustain), min 1.
+      anchor_rejoin: {eps_m: 0.05}
+  # --- cf-val side channel: kept BYTE-IDENTICAL to the parent's block (which
+  # ran under distance mining pre6/post0) so val_cf/* stays comparable to the
+  # parent's logged curve. The yaw-window val story lives in the cf view above.
+  cf_val_report:
+    enabled: true
+    pre_steps: 6
+    post_steps: 0
+    dev_thresh_m: 0.75
+train:
+  batch_size: 5
+  grad_accumulation_steps: 6
+  learning_rate: 1.0e-4
+  num_steps_before_decay: 100000
+  lr_decay_gamma: 0.1
+  max_steps: 20000          # resume step_15000 -> +5k fine-tune steps
+  weight_decay: 0.0
+  betas: [0.9, 0.999]
+  eps: 1.0e-8
+  seed: 42
+loss:
+  smoothness_weight: 0.1
+  obj_weight: 0.0
+val:
+  val_freq: 250             # tight overfit watch (~50 recovery trajs repeat fast)
+  max_samples: null
+checkpoint:
+  save_freq: 1000
+  keep_top_k: 3
+  keep_latest: true
+  keep_every_n_steps: 5000
+logging:
+  wandb_entity: "cctv_vla"
+  wandb_project: "cctv_vla_thesis"
+  wandb_tags: ["cctv_exp", "warehouse_2x3_cfv4", "aspawn_only", "fixed_heading", "souththird_forklift", "bigcam", "cctv4", "avgpool64", "fg50", "nohflip", "r16", "yawcrux", "langv2", "lang80", "movetoward", "pairingholdout", "noforkliftB", "dm_recovery_ft", "dmrecext2", "recovery", "ft18k"]
+  log_freq: 10
+extensibility:
+  extra_obs_modalities: []
+  extra_goal_modalities: []
+output:
+  runs_root: "${INFRAVLA_ROOT}/runs/training/runs"

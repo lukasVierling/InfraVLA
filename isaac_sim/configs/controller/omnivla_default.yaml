@@ -1,0 +1,69 @@
+# ============================================================================
+# Policy-side controller knobs
+# ============================================================================
+#
+# These used to live as class constants on Policy in policy.py (THRES_DIST,
+# WAYPOINT_*, STUCK_*, maxv/maxw, DT). Promoting them into a config group so
+# they're swept-over-able and defendable in the thesis. Each value below
+# carries a justification — that's the point of the config.
+#
+# Consumed by Policy via cfg.controller.*. If you add a knob, also add a
+# justifying comment for *why* the default is what it is — silent numerical
+# choices are the thing this config exists to prevent.
+# ============================================================================
+
+# --- Goal handling ----------------------------------------------------------
+
+# Clamp goal-pose radius (in metres) before encoding. Paper's run_omnivla.py
+# uses 30.0 — goals farther away than this are pulled in along the same
+# bearing so the encoded value stays in-distribution for the pose embedder.
+# 2026-07-02 (Lukas): DISABLED (.inf -> the policy.py:313 `radius > thres`
+# branch never fires). The paper's 30 m cap protected the PRETRAIN pose
+# distribution; our 2x3 fine-tune data feeds UNCAPPED goal poses up to ~50 m
+# (max_goal_distance_steps 300, no Euclidean clamp in the dataset), so the cap
+# was a train/inference inconsistency — eval saturated at 30 m while training
+# saw the true distance. Paper value kept above for provenance.
+thres_dist_m: .inf
+
+# --- Waypoint controller ----------------------------------------------------
+
+# Note: waypoint_spacing_m and dt_s are DERIVED in policy.py from the top-
+# level `control_hz` and `max_linear_vel_mps`:
+#     waypoint_spacing_m = max_linear_vel_mps / control_hz
+#     dt_s               = 1 / control_hz
+# They are not configured here because they are not independent knobs — they
+# are the same physical quantity stated two ways, and decoupling them mis-
+# times the controller. See eval.yaml for control_hz, and policy.py:__init__
+# for the derivation.
+
+# Which waypoint in the predicted chunk to track. 0 is closest in time,
+# 7 is farthest (chunk size N=8). Paper picks index 4 — far enough that
+# the controller commits to a direction, close enough to react to errors.
+waypoint_select: 4
+
+# --- "Stuck" detection ------------------------------------------------------
+
+# Sliding window of recent poses to check for being stuck. The detector
+# fails the run if the robot's xy bbox over this many steps stays inside
+# stuck_bbox_m and we're past the grace period.
+stuck_window: 25
+
+# Side length (m) of the "no progress" bounding box. Tight enough to catch
+# the policy oscillating in front of an obstacle without false-positiving
+# on slow turns-in-place.
+stuck_bbox_m: 0.20
+
+# Steps to wait before the stuck check can ever fire. Avoids tripping at
+# t=0 when the recent-poses buffer is empty.
+stuck_grace_steps: 10
+
+# --- Velocity limits (diff-drive twist saturation) --------------------------
+
+# Hard caps on linear and angular velocity, applied AFTER the unconstrained
+# PD-style solve. Lower than Carter's mechanical limits — chosen so the
+# robot doesn't outpace the inference cadence (3 Hz) and overshoot waypoints.
+max_linear_vel_mps: 1.0
+max_angular_vel_radps: 1.0
+
+# Numerical guard for the 1/dx path of the controller.
+eps: 1.0e-8

@@ -1,0 +1,131 @@
+# ============================================================================
+# OmniVLA Isaac Sim fine-tune — CFV4 avgpool64+boost8 parent, COUNTERFACTUAL-
+# WINDOW FINE-TUNE (resume step_15000 -> 19000). ARM 1 of the 2026-07-12
+# onboard-swap experiment pair: the NO-SWAP CONTROL.
+# ============================================================================
+#
+# Question: the
+# cfv4 avgpool model resolves second-split decisions from its own onboard
+# drift (ego tilt; goal-pose fingerprint on train), CCTV causal share only 6%.
+# Does plain window fine-tuning ("train until it understands") move that — or
+# does the loss get paid by tilt-polish + memorization, as the probes predict?
+# This arm answers that; its twin (..._cfwin_obswap_ft19k) adds the onboard-
+# bundle swap that FORCES the loss through the CCTV stream. Same steps, same
+# data, same seed — the swap flag is the only difference.
+#
+# Deltas vs the parent (2026-07-11_..._cfwinboost8_15k, which carries every
+# other knob's rationale):
+#   data.cf_window_balance / cf_val_report -> REMOVED (counterfactual_windows
+#       replaces both: train IS the window subset, val IS cf-val).
+#   data.counterfactual_windows -> enabled (16/8/0.75 — the standard window).
+#   train.max_steps 15000 -> 20000 (+5k fine-tune steps, Lukas 2026-07-12).
+#   val.val_freq 500 -> 250, checkpoint.save_freq 1000 -> 500 (overfit watch;
+#       cfwin_ft18k precedent).
+# Resume is FULL-STATE (optimizer/scheduler/RNG; lr = restored 1e-4).
+# Acceptance metric is NOT the loss: cf_cctv_swap_probe second-split CCTV
+# share on the resulting checkpoints (control expected ~unchanged ~6%).
+# ============================================================================
+
+run:
+  name: "2026-07-12_cctv4_sharedenc_2x3cfv4_egogoal_avgpool64_r16_fg100_cfwin_ft20k_v0"
+  notes: "CF-WINDOW FINE-TUNE of the cfv4 avgpool64+boost8 arm (NO-SWAP CONTROL of the onboard-swap pair): resume step_15000 (full state, lr restored 1e-4), +5k steps on ONLY the decision-window samples (CounterfactualDataset [t*-16, t*+8], thresh 0.75; cfv4 train windows 7208 samples, val windows = cf-val). Tests whether plain window fine-tuning moves the second-split CCTV causal share (probes predict NO: loss paid by tilt-polish + goal-pose memorization). Twin arm ..._cfwin_obswap_ft19k differs ONLY in data.cf_onboard_swap. Everything else verbatim the parent: cfv4 A-spawn data, 4-CCTV shared enc + EGO GOAL, avgpool64, r16, fg100 (final-goal only, this ft), nobrake longgoal, nohflip, batch 5x6."
+
+model:
+  vla_path: "${INFRAVLA_ROOT}/omnivla-original"
+  pretrained_step: 120000
+  num_images_in_input: 6
+  use_cctv_encoder: true
+  num_ego_images: 2
+  cctv_downsample:
+    method: avgpool
+    out_tokens: 64
+  use_lora: true
+  lora_rank: 16
+  lora_alpha: 8
+  lora_dropout: 0.0
+
+data:
+  train_dir: "${INFRAVLA_ROOT}/runs/data/splits/2026-07-11_warehouse_2x3_cfv4/train"
+  val_dir:   "${INFRAVLA_ROOT}/runs/data/splits/2026-07-11_warehouse_2x3_cfv4/val"
+  test_dir:  "${INFRAVLA_ROOT}/runs/data/splits/2026-07-11_warehouse_2x3_cfv4/test"
+
+  max_train_trajectories: null
+  max_val_trajectories:   null
+  max_test_trajectories:  null
+
+  num_actions_chunk: 8
+  context_size: 5
+
+  modality_list: [4, 5, 6]
+  image_only_max_distance_steps: 10
+
+  min_goal_distance_steps: 1
+  max_goal_distance_steps: 300
+
+  # 1.0 for this fine-tune (Lukas 2026-07-12): goals are ALWAYS the final
+  # frame — no intermediate goals. Intermediate goal points sit on the route
+  # and leak the branch; the crux supervision this ft exists for lives in
+  # final-goal samples. Also makes every window sample swap-eligible in the
+  # obswap arm (the swap only fires on final-goal draws).
+  final_goal_prob: 1.0
+
+  predict_stop_token: true
+  metric_waypoint_spacing: 0.333
+  waypoint_spacing: 1
+  image_size: [224, 224]
+  random_hflip: false
+  goals_per_obs: 1
+
+  emit_cctv: true
+
+  cctv_cam_names: [cctv_NE, cctv_NW, cctv_SE, cctv_SW]
+  no_goal_image: false
+  use_cctv_goal: false
+  perception_dropout:     [1.0, 0.0, 0.0]
+  val_perception_dropout: [1.0, 0.0, 0.0]
+
+  # --- Train + val restricted to the decision windows (cfwin_ft recipe) ---
+  counterfactual_windows:
+    enabled: true
+    pre_steps: 16
+    post_steps: 8
+    dev_thresh_m: 0.75
+
+train:
+  batch_size: 5
+  grad_accumulation_steps: 6
+  learning_rate: 1.0e-4
+  num_steps_before_decay: 100000
+  lr_decay_gamma: 0.1
+  max_steps: 20000          # resume step_15000 -> +5k fine-tune steps (Lukas 2026-07-12)
+  weight_decay: 0.0
+  betas: [0.9, 0.999]
+  eps: 1.0e-8
+  seed: 42
+
+loss:
+  smoothness_weight: 0.1
+  obj_weight: 0.1
+
+val:
+  val_freq: 250             # tight overfit watch on the window cf-val
+  max_samples: null
+
+checkpoint:
+  save_freq: 500            # catch the pre-overfit peak
+  keep_top_k: 3
+  keep_latest: true
+  keep_every_n_steps: 5000
+
+logging:
+  wandb_entity: "cctv_vla"
+  wandb_project: "CCTV_VLA"
+  wandb_tags: ["cctv_exp", "warehouse_2x3_cfv4", "aspawn_only", "fixed_heading", "souththird_forklift", "bigcam", "cctv4", "avgpool64", "fg100", "nohflip", "r16", "cfwin_ft", "noswap_control", "19k"]
+  log_freq: 10
+
+extensibility:
+  extra_obs_modalities: []
+  extra_goal_modalities: []
+
+output:
+  runs_root: "${INFRAVLA_ROOT}/runs/training/runs"

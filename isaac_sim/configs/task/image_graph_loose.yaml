@@ -1,0 +1,8 @@
+# Loose-tolerance variant of `image_graph`. See lang_loose.yaml for rationale.
+
+defaults:
+  - image_graph
+  - _self_
+
+name: image_graph_loose
+success_dist: 0.8

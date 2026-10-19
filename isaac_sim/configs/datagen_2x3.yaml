@@ -1,0 +1,96 @@
+# ============================================================================
+# 2x3 warehouse procedural data-gen — GENERATOR INPUT config (v3, 2026-07-07).
+# ============================================================================
+# Read directly by run_builders/build_2x3.py (OmegaConf.load). This is the
+# generator's INPUT — it PRODUCES the run tree (configs/env/scene/* +
+# configs/experiment/*), so it is NOT a default in data_gen.yaml and must never
+# be composed into the eval/data-gen run tree.
+#
+# v3 REDESIGN (2026-07-07): balanced counterfactual PAIRS.
+# Per base: sample (start, goal); compute the A* route under each of the 9
+# seal patterns; draw pattern 1 UNIFORM over the 9, pattern 2 UNIFORM over the
+# patterns whose route differs from pattern 1's. Every family is a divergence
+# pair; draw-1 scenes are an unbiased subsample (audit on them is exact).
+# Fixes the v2 confound (seal <=> must-detour: measured 185/186 on-route in
+# the 07-04 cfv2fwd split). Legacy modes (non-cf sampler, random blocking,
+# distractors, random-360 heading) DELETED in the same change — regenerating
+# scenes 0000-1199 needs git history (their yamls stay on disk / in git).
+#
+# Every behaviour-controlling literal lives here (no magic numbers in code).
+# ============================================================================
+
+partition_size: 10      # scenes per experiment yaml (< ~20 Isaac env-reload-leak threshold)
+max_steps: 250          # rollout step cap. 2x3 detours reach ~53 m (~66 m worst-case) at
+                        # ~3.3 record-steps/m; the pose default (100) cuts off at ~30 m.
+
+# --- start/goal zones + the stackable rule engine ---------------------------
+zones:
+  # v3: eval-aligned directions ONLY — A->G (full traverse) and D->G (front-row
+  # decision from inside the cross-aisle, incl. its east part: the measured
+  # zero-support corner of the 07-04 split). G->A / G->D / A->D dropped: 28%
+  # of the v2 budget trained the mirrored direction grid72 never tests.
+  start: [A]                      # v4 (2026-07-10): A-spawn ONLY (D-spawn dropped — it
+                                  # over-represented the front/D decision and mismatched
+                                  # the A->G eval). Every run is a full A->G traverse.
+  goal:  [G]
+  rules: [no_adjacent]            # goal differs from start and isn't a zone-graph neighbour
+
+# --- balanced counterfactual campaign (the only generation mode) ------------
+counterfactual_v3:
+  n_bases: 275               # 2 scenes/base -> 550 trajectories (split later 500 train / 50 val)
+  base_seed: 15000           # fresh seed range (cfv3 used 12000)
+  name_start_index: 1500     # bases named warehouse_2x3_1500+ (1200-1499 = cfv3)
+  # The 9 seal patterns = every subset of {B,C,E,F} with at most one aisle per
+  # row (BC / EF would disconnect north from south -> unsolvable) plus "0" = no
+  # seals. Pattern 2 is drawn from those with a DIFFERENT threaded-aisle route
+  # than pattern 1, so each family is a counterfactual pair by construction.
+  patterns: ["0", "B", "C", "E", "F", "BE", "BF", "CE", "CF"]
+
+# --- robot (defines "blocked"/"solvable") -----------------------------------
+robot:
+  inflation_m: 0.35     # nova_carter (the data-gen default robot)
+
+# --- A* gate config: loaded from configs/env/astar/<astar_config>.yaml (SINGLE
+#     SOURCE — not re-typed here) so the gate's verdict matches the rollout
+#     planner. `robot.inflation_m` above resolves that file's
+#     ${env.robot.inflation_m}.
+astar_config: warehouse_2x3   # = default knobs + navigable_bounds (masks the gap behind the shelves)
+
+# --- object pool: blockers only (v3 has no distractors) ----------------------
+object_pools:
+  aisle:
+    blockers:
+      - { kind: forklift, variant: 0, yaw_across: true }  # 3.49 m across leaves 0.37 m gap < 0.70 m
+                                                           # (2*inflation) -> A* gate seals 3.86 m aisle
+
+# --- placement geometry -----------------------------------------------------
+placement:
+  point_margin_m: 0.8           # keep sampled points this far from zone edges
+  start_goal_clearance_m: 0.6   # min static clearance for start/goal points
+  blocker_end_margin_m: 1.0     # keep a blocker this far from the aisle ends
+  # v3: forklift y confined to the SOUTH span of its aisle (fractions of the
+  # aisle y-extent, measured from the south end). All v3 runs enter aisles from
+  # the north, so [0.0, 0.5] hides the seal from the ego camera at the decision
+  # point — the CCTV is then the only timely source. Leak-free ONLY because
+  # direction is fixed A/D->G; revisit if other directions are ever re-added.
+  # Tightened 0.5 -> 1/3 (2026-07-07, Lukas): deepest third only, so ego-
+  # visibility is uniformly hard and the CCTVs can be aimed at a compact region.
+  blocker_y_span_frac: [0.0, 0.333]
+  max_tries: 50                 # rejection-sampling attempts per point
+  solvable_retries: 8           # resample forklift positions up to N times if any pattern gates unsolvable
+
+# --- heading -----------------------------------------------------------------
+heading:
+  start_heading: fixed            # v4: FIXED corridor axis, DECOUPLED from the goal point.
+                                  # Removes the goal-direction cue from the heading entirely
+                                  # (bearing_to_goal angled slightly toward the goal x) -> the
+                                  # aisle choice must come from CCTV/ego, not orientation.
+  start_heading_deg: 270.0        # A->G straight line = due south (env yaw convention: 270=south).
+  start_heading_noise_deg: 0.0    # no jitter (0.0 = exact)
+  start_heading_mode: fixed       # emitted as a literal the env uses verbatim. NEVER 'astar' —
+                                  # that re-leaks the detour direction.
+
+# --- misc -------------------------------------------------------------------
+lighting: [normal]              # sampled per scene (add dark/bright for robustness later)
+stats:
+  detour_threshold: 1.15        # elongation ratio above which a variant counts as a "detour" in stats

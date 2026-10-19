@@ -1,0 +1,401 @@
+{
+ "scenes": [
+  {
+   "name": "warehouse_2x3_langv2_0083_tA",
+   "family": "warehouse_2x3_langv2_0083",
+   "twin": "tA",
+   "sibling_names": [
+    "warehouse_2x3_langv2_0083_tB",
+    "warehouse_2x3_langv2_0083_tC",
+    "warehouse_2x3_langv2_0083_tD"
+   ],
+   "seed": 43083,
+   "goal_zone": "B",
+   "target_kind": "traffic_cone",
+   "target_variant": 0,
+   "target_xy": [
+    -3.603,
+    17.932
+   ],
+   "target_phrase": "witch's hat",
+   "lang_pattern": "move toward the {x}",
+   "instruction": "move toward the traffic cone",
+   "zone_objects": {
+    "B": "traffic_cone",
+    "C": "forklift",
+    "E": "box",
+    "F": "barrel"
+   },
+   "n_objects": 4,
+   "spawn_xy": [
+    -6.75,
+    4.9
+   ],
+   "spawn_heading_deg": 0.0
+  },
+  {
+   "name": "warehouse_2x3_langv2_0507_tA",
+   "family": "warehouse_2x3_langv2_0507",
+   "twin": "tA",
+   "sibling_names": [
+    "warehouse_2x3_langv2_0507_tB",
+    "warehouse_2x3_langv2_0507_tC",
+    "warehouse_2x3_langv2_0507_tD"
+   ],
+   "seed": 48007,
+   "goal_zone": "B",
+   "target_kind": "traffic_cone",
+   "target_variant": 0,
+   "target_xy": [
+    -5.09,
+    21.427
+   ],
+   "target_phrase": "witch's hat",
+   "lang_pattern": "move toward the {x}",
+   "instruction": "move toward the traffic cone",
+   "zone_objects": {
+    "B": "traffic_cone",
+    "C": "forklift",
+    "E": "barrel",
+    "F": "box"
+   },
+   "n_objects": 4,
+   "spawn_xy": [
+    -6.75,
+    4.9
+   ],
+   "spawn_heading_deg": 0.0
+  },
+  {
+   "name": "warehouse_2x3_langv2_0502_tA",
+   "family": "warehouse_2x3_langv2_0502",
+   "twin": "tA",
+   "sibling_names": [
+    "warehouse_2x3_langv2_0502_tB",
+    "warehouse_2x3_langv2_0502_tC",
+    "warehouse_2x3_langv2_0502_tD"
+   ],
+   "seed": 48002,
+   "goal_zone": "B",
+   "target_kind": "traffic_cone",
+   "target_variant": 0,
+   "target_xy": [
+    -2.818,
+    17.424
+   ],
+   "target_phrase": "witch's hat",
+   "lang_pattern": "navigate to the {x}",
+   "instruction": "navigate to the traffic cone",
+   "zone_objects": {
+    "B": "traffic_cone",
+    "C": "box",
+    "E": "forklift",
+    "F": "barrel"
+   },
+   "n_objects": 4,
+   "spawn_xy": [
+    -6.75,
+    4.9
+   ],
+   "spawn_heading_deg": 0.0
+  },
+  {
+   "name": "warehouse_2x3_langv2_0064_tB",
+   "family": "warehouse_2x3_langv2_0064",
+   "twin": "tB",
+   "sibling_names": [
+    "warehouse_2x3_langv2_0064_tA",
+    "warehouse_2x3_langv2_0064_tC",
+    "warehouse_2x3_langv2_0064_tD"
+   ],
+   "seed": 43064,
+   "goal_zone": "C",
+   "target_kind": "traffic_cone",
+   "target_variant": 0,
+   "target_xy": [
+    2.036,
+    21.494
+   ],
+   "target_phrase": "witch's hat",
+   "lang_pattern": "move toward the {x}",
+   "instruction": "move toward the traffic cone",
+   "zone_objects": {
+    "B": "barrel",
+    "C": "traffic_cone",
+    "E": "box",
+    "F": "forklift"
+   },
+   "n_objects": 4,
+   "spawn_xy": [
+    -6.75,
+    4.9
+   ],
+   "spawn_heading_deg": 0.0
+  },
+  {
+   "name": "warehouse_2x3_langv2_0055_tB",
+   "family": "warehouse_2x3_langv2_0055",
+   "twin": "tB",
+   "sibling_names": [
+    "warehouse_2x3_langv2_0055_tA",
+    "warehouse_2x3_langv2_0055_tC",
+    "warehouse_2x3_langv2_0055_tD"
+   ],
+   "seed": 43055,
+   "goal_zone": "C",
+   "target_kind": "traffic_cone",
+   "target_variant": 0,
+   "target_xy": [
+    1.149,
+    19.884
+   ],
+   "target_phrase": "witch's hat",
+   "lang_pattern": "go to the {x}",
+   "instruction": "go to the traffic cone",
+   "zone_objects": {
+    "B": "forklift",
+    "C": "traffic_cone",
+    "E": "barrel",
+    "F": "box"
+   },
+   "n_objects": 4,
+   "spawn_xy": [
+    -6.75,
+    4.9
+   ],
+   "spawn_heading_deg": 0.0
+  },
+  {
+   "name": "warehouse_2x3_langv2_0043_tB",
+   "family": "warehouse_2x3_langv2_0043",
+   "twin": "tB",
+   "sibling_names": [
+    "warehouse_2x3_langv2_0043_tA",
+    "warehouse_2x3_langv2_0043_tC",
+    "warehouse_2x3_langv2_0043_tD"
+   ],
+   "seed": 43043,
+   "goal_zone": "C",
+   "target_kind": "traffic_cone",
+   "target_variant": 0,
+   "target_xy": [
+    -0.55,
+    23.199
+   ],
+   "target_phrase": "witch's hat",
+   "lang_pattern": "go to the {x}",
+   "instruction": "go to the traffic cone",
+   "zone_objects": {
+    "B": "forklift",
+    "C": "traffic_cone",
+    "E": "box",
+    "F": "barrel"
+   },
+   "n_objects": 4,
+   "spawn_xy": [
+    -6.75,
+    4.9
+   ],
+   "spawn_heading_deg": 0.0
+  },
+  {
+   "name": "warehouse_2x3_langv2_0148_tC",
+   "family": "warehouse_2x3_langv2_0148",
+   "twin": "tC",
+   "sibling_names": [
+    "warehouse_2x3_langv2_0148_tA",
+    "warehouse_2x3_langv2_0148_tB",
+    "warehouse_2x3_langv2_0148_tD"
+   ],
+   "seed": 43148,
+   "goal_zone": "E",
+   "target_kind": "traffic_cone",
+   "target_variant": 0,
+   "target_xy": [
+    -3.475,
+    -8.744
+   ],
+   "target_phrase": "witch's hat",
+   "lang_pattern": "go to the {x}",
+   "instruction": "go to the traffic cone",
+   "zone_objects": {
+    "B": "forklift",
+    "C": "box",
+    "E": "traffic_cone",
+    "F": "barrel"
+   },
+   "n_objects": 4,
+   "spawn_xy": [
+    -6.75,
+    4.9
+   ],
+   "spawn_heading_deg": 0.0
+  },
+  {
+   "name": "warehouse_2x3_langv2_0500_tC",
+   "family": "warehouse_2x3_langv2_0500",
+   "twin": "tC",
+   "sibling_names": [
+    "warehouse_2x3_langv2_0500_tA",
+    "warehouse_2x3_langv2_0500_tB",
+    "warehouse_2x3_langv2_0500_tD"
+   ],
+   "seed": 48000,
+   "goal_zone": "E",
+   "target_kind": "traffic_cone",
+   "target_variant": 0,
+   "target_xy": [
+    -4.09,
+    -12.722
+   ],
+   "target_phrase": "witch's hat",
+   "lang_pattern": "go to the {x}",
+   "instruction": "go to the traffic cone",
+   "zone_objects": {
+    "B": "box",
+    "C": "forklift",
+    "E": "traffic_cone",
+    "F": "barrel"
+   },
+   "n_objects": 4,
+   "spawn_xy": [
+    -6.75,
+    4.9
+   ],
+   "spawn_heading_deg": 0.0
+  },
+  {
+   "name": "warehouse_2x3_langv2_0068_tC",
+   "family": "warehouse_2x3_langv2_0068",
+   "twin": "tC",
+   "sibling_names": [
+    "warehouse_2x3_langv2_0068_tA",
+    "warehouse_2x3_langv2_0068_tB",
+    "warehouse_2x3_langv2_0068_tD"
+   ],
+   "seed": 43068,
+   "goal_zone": "E",
+   "target_kind": "traffic_cone",
+   "target_variant": 0,
+   "target_xy": [
+    -4.766,
+    -11.339
+   ],
+   "target_phrase": "witch's hat",
+   "lang_pattern": "go to the {x}",
+   "instruction": "go to the traffic cone",
+   "zone_objects": {
+    "B": "barrel",
+    "C": "box",
+    "E": "traffic_cone",
+    "F": "forklift"
+   },
+   "n_objects": 4,
+   "spawn_xy": [
+    -6.75,
+    4.9
+   ],
+   "spawn_heading_deg": 0.0
+  },
+  {
+   "name": "warehouse_2x3_langv2_0045_tD",
+   "family": "warehouse_2x3_langv2_0045",
+   "twin": "tD",
+   "sibling_names": [
+    "warehouse_2x3_langv2_0045_tA",
+    "warehouse_2x3_langv2_0045_tB",
+    "warehouse_2x3_langv2_0045_tC"
+   ],
+   "seed": 43045,
+   "goal_zone": "F",
+   "target_kind": "traffic_cone",
+   "target_variant": 0,
+   "target_xy": [
+    1.695,
+    -11.807
+   ],
+   "target_phrase": "witch's hat",
+   "lang_pattern": "navigate to the {x}",
+   "instruction": "navigate to the traffic cone",
+   "zone_objects": {
+    "B": "forklift",
+    "C": "box",
+    "E": "barrel",
+    "F": "traffic_cone"
+   },
+   "n_objects": 4,
+   "spawn_xy": [
+    -6.75,
+    4.9
+   ],
+   "spawn_heading_deg": 0.0
+  },
+  {
+   "name": "warehouse_2x3_langv2_0501_tD",
+   "family": "warehouse_2x3_langv2_0501",
+   "twin": "tD",
+   "sibling_names": [
+    "warehouse_2x3_langv2_0501_tA",
+    "warehouse_2x3_langv2_0501_tB",
+    "warehouse_2x3_langv2_0501_tC"
+   ],
+   "seed": 48001,
+   "goal_zone": "F",
+   "target_kind": "traffic_cone",
+   "target_variant": 0,
+   "target_xy": [
+    2.285,
+    -12.538
+   ],
+   "target_phrase": "witch's hat",
+   "lang_pattern": "go to the {x}",
+   "instruction": "go to the traffic cone",
+   "zone_objects": {
+    "B": "barrel",
+    "C": "box",
+    "E": "forklift",
+    "F": "traffic_cone"
+   },
+   "n_objects": 4,
+   "spawn_xy": [
+    -6.75,
+    4.9
+   ],
+   "spawn_heading_deg": 0.0
+  },
+  {
+   "name": "warehouse_2x3_langv2_0510_tD",
+   "family": "warehouse_2x3_langv2_0510",
+   "twin": "tD",
+   "sibling_names": [
+    "warehouse_2x3_langv2_0510_tA",
+    "warehouse_2x3_langv2_0510_tB",
+    "warehouse_2x3_langv2_0510_tC"
+   ],
+   "seed": 48010,
+   "goal_zone": "F",
+   "target_kind": "traffic_cone",
+   "target_variant": 0,
+   "target_xy": [
+    -0.575,
+    -10.465
+   ],
+   "target_phrase": "witch's hat",
+   "lang_pattern": "navigate to the {x}",
+   "instruction": "navigate to the traffic cone",
+   "zone_objects": {
+    "B": "forklift",
+    "C": "barrel",
+    "E": "box",
+    "F": "traffic_cone"
+   },
+   "n_objects": 4,
+   "spawn_xy": [
+    -6.75,
+    4.9
+   ],
+   "spawn_heading_deg": 0.0
+  }
+ ],
+ "_note": "SYNONYM FINAL 96 (Lukas 2026-08-12): 12 balanced scenes for 'traffic cone' (3 per aisle B/C/E/F), target_phrase -> 'witch's hat'. Both synonyms of an object share the SAME 12 scenes (paired within object). Pool = test52 + parent val/test, all never-trained; seeded rng 42."
+}

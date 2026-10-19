@@ -1,0 +1,149 @@
+# ============================================================================
+# OmniVLA Isaac Sim fine-tune — EGO-ONLY baseline + CF-WINDOW UPWEIGHTED
+# SAMPLING (boost 8), CFV4 data. From scratch, 15k.
+# ============================================================================
+#
+# The NO-CCTV control for the cfv4 camembed_sepproj_cfwinboost8 arm (training
+# on kaitain, 2026-07-11): same data, same crux-upweighted sampling, no CCTV
+# input. Question: how much of the boost8 gain is the SAMPLING (seeing decision
+# windows 8x as often) vs the CCTV INPUT (being able to resolve them)? cfv4
+# makes this sharper than cfv3 would: A-only spawns + FIXED 270 deg heading
+# mean the decision windows are ego-ambiguous by construction — if this arm
+# matches the CCTV arm's val_cf anyway, something leaks.
+#
+# val_cf/* here = the cfv4 decision-window val subset -> comparable to the
+# kaitain cfv4 camembed arm's val_cf, NOT to the cfv3 arms' (different val set).
+#
+# ONLY changes vs 2026-07-08_baseline_egoonly_2x3cfv3_r16_fg50_15k (which
+# carries the rationale for every other knob):
+#   data.{train,val,test}_dir -> cfv4 EGO-ONLY split (2026-07-11_..._egoonly:
+#                                local arrakis copy of the campaign WITHOUT the
+#                                cctv_* dirs — 269G -> ~30G; same base ranges
+#                                as kaitain's split => identical membership
+#                                481 train / 46 val / 2 test).
+#   data.cf_window_balance    -> enabled, boost 8 ([t*-16, t*+8], thresh 0.75)
+#                                — verbatim the CCTV boost8 arms' block.
+#   data.cf_val_report        -> enabled (cfv4 decision-window val subset).
+#   train.batch_size/accum    -> 10 x 3 = 30 effective (was 7x4=28): matches
+#                                the CCTV arms' effective 30 and uses the free
+#                                97G card (Lukas's call, 2026-07-11).
+#   run.name / notes / tags
+# Trainer: train_omnivla_sim_cctv_v2.py (needed for both cf blocks; ego-only
+# on v2 has precedent — the 07-09 cfwin_ft baseline arm). emit_cctv=false ->
+# the loader never opens the (absent) cctv_* dirs; window mining is
+# trajectory-position-based, so the windows are identical to the CCTV arm's.
+# ============================================================================
+
+run:
+  name: "2026-07-11_baseline_egoonly_2x3cfv4_r16_fg50_cfwinboost8_15k_v0"
+  notes: "EGO-ONLY BASELINE + CF-WINDOW UPWEIGHTED sampling (boost 8) on CFV4 — the no-CCTV control for the cfv4 camembed_sepproj_cfwinboost8 arm (kaitain): isolates sampling-schedule gain from CCTV-input gain. cfv4 = A-spawn only, fixed 270deg heading, 481/46 base-grouped split of 529 reached; ego-only local copy (no cctv_* dirs). From scratch 15k, data.cf_window_balance boost 8 ([t*-16, t*+8], thresh 0.75), cf_val_report on (val_cf/* = cfv4 decision-window val subset; NOT comparable to cfv3 arms'). Ego-only (num_images 2, emit_cctv=false), r16, fg50, nobrake longgoal, nohflip, batch 10x3=30 effective (matches CCTV arms' 30), FULL val drives checkpointing. Runs on arrakis."
+
+model:
+  vla_path: "${INFRAVLA_ROOT}/omnivla-original"
+  pretrained_step: 120000
+  num_images_in_input: 2
+  num_ego_images: 2          # required by the v2 loader; all inputs are ego here
+                             # (use_cctv_encoder unset -> ego-only path).
+  use_lora: true
+  lora_rank: 16
+  lora_alpha: 8
+  lora_dropout: 0.0
+
+data:
+  # cfv4 EGO-ONLY split (2026-07-11): symlinks into the arrakis-local partial
+  # copy /mnt/localdata/data/lukas_infravla_cfv4_egoonly (cctv_* dirs excluded
+  # — never read with emit_cctv=false). Built by launch_cfwinboost8_egoonly.sh;
+  # base ranges identical to kaitain's 2026-07-11_warehouse_2x3_cfv4 split.
+  train_dir: "${INFRAVLA_ROOT}/runs/data/splits/2026-07-11_warehouse_2x3_cfv4_egoonly/train"
+  val_dir:   "${INFRAVLA_ROOT}/runs/data/splits/2026-07-11_warehouse_2x3_cfv4_egoonly/val"
+  test_dir:  "${INFRAVLA_ROOT}/runs/data/splits/2026-07-11_warehouse_2x3_cfv4_egoonly/test"
+
+  max_train_trajectories: null
+  max_val_trajectories:   null
+  max_test_trajectories:  null
+
+  num_actions_chunk: 8
+  context_size: 5
+
+  modality_list: [4, 5, 6]
+  image_only_max_distance_steps: 10
+
+  min_goal_distance_steps: 1
+  max_goal_distance_steps: 300
+
+  final_goal_prob: 0.5
+
+  predict_stop_token: true
+  metric_waypoint_spacing: 0.333
+  waypoint_spacing: 1
+  image_size: [224, 224]
+  random_hflip: false
+  goals_per_obs: 1
+
+  emit_cctv: false
+
+  # --- CCTV-pipeline knobs (let this baseline run via the cctv trainer) ---
+  # With emit_cctv=false these keep it pure 2-image ego-only.
+  use_cctv_goal: false
+  perception_dropout:     [1.0, 0.0, 0.0]
+  val_perception_dropout: [1.0, 0.0, 0.0]
+
+  # --- CF-window upweighted sampling (verbatim the CCTV boost8 arms) ---
+  # Full dataset + WeightedRandomSampler: in-window samples get weight `boost`,
+  # the rest 1.0. Mining is trajectory-position-based (twin divergence), so it
+  # is modality-independent — identical windows to the cfv4 camembed arm.
+  cf_window_balance:
+    enabled: true
+    pre_steps: 16
+    post_steps: 8
+    dev_thresh_m: 0.75
+    boost: 8.0
+
+  # --- cf-val side channel: cfv4 decision-window val subset, deterministic
+  # seeding (seed+1) -> val_cf/* comparable to the kaitain cfv4 camembed arm.
+  cf_val_report:
+    enabled: true
+    pre_steps: 16
+    post_steps: 8
+    dev_thresh_m: 0.75
+
+train:
+  batch_size: 10
+  grad_accumulation_steps: 3          # effective batch = 30 — matches the CCTV
+                                      # boost8 arms (5x6); was 7x4=28 in the
+                                      # ego-only lineage. Lukas's call 07-11.
+  learning_rate: 1.0e-4
+  num_steps_before_decay: 100000
+  lr_decay_gamma: 0.1
+  max_steps: 15000
+  weight_decay: 0.0
+  betas: [0.9, 0.999]
+  eps: 1.0e-8
+  seed: 42
+
+loss:
+  smoothness_weight: 0.1
+  obj_weight: 0.1
+
+val:
+  val_freq: 500
+  max_samples: null
+
+checkpoint:
+  save_freq: 1000
+  keep_top_k: 3
+  keep_latest: true
+  keep_every_n_steps: 5000
+
+logging:
+  wandb_entity: "cctv_vla"
+  wandb_project: "CCTV_VLA"
+  wandb_tags: ["cctv_exp", "warehouse_2x3_cfv4", "aspawn_only", "fixed_heading", "souththird_forklift", "baseline", "ego_only", "fg50", "nohflip", "r16", "cfwinboost8", "cfval", "15k"]
+  log_freq: 10
+
+extensibility:
+  extra_obs_modalities: []
+  extra_goal_modalities: []
+
+output:
+  runs_root: "${INFRAVLA_ROOT}/runs/training/runs"

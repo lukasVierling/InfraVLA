@@ -1,0 +1,401 @@
+{
+ "scenes": [
+  {
+   "name": "warehouse_2x3_langv2_0099_tA",
+   "family": "warehouse_2x3_langv2_0099",
+   "twin": "tA",
+   "sibling_names": [
+    "warehouse_2x3_langv2_0099_tB",
+    "warehouse_2x3_langv2_0099_tC",
+    "warehouse_2x3_langv2_0099_tD"
+   ],
+   "seed": 43099,
+   "goal_zone": "B",
+   "target_kind": "forklift",
+   "target_variant": 0,
+   "target_xy": [
+    -3.823,
+    20.73
+   ],
+   "target_phrase": "tow motor",
+   "lang_pattern": "move toward the {x}",
+   "instruction": "move toward the forklift",
+   "zone_objects": {
+    "B": "forklift",
+    "C": "barrel",
+    "E": "traffic_cone",
+    "F": "box"
+   },
+   "n_objects": 4,
+   "spawn_xy": [
+    -6.75,
+    4.9
+   ],
+   "spawn_heading_deg": 0.0
+  },
+  {
+   "name": "warehouse_2x3_langv2_0123_tA",
+   "family": "warehouse_2x3_langv2_0123",
+   "twin": "tA",
+   "sibling_names": [
+    "warehouse_2x3_langv2_0123_tB",
+    "warehouse_2x3_langv2_0123_tC",
+    "warehouse_2x3_langv2_0123_tD"
+   ],
+   "seed": 43123,
+   "goal_zone": "B",
+   "target_kind": "forklift",
+   "target_variant": 0,
+   "target_xy": [
+    -3.916,
+    20.885
+   ],
+   "target_phrase": "tow motor",
+   "lang_pattern": "move toward the {x}",
+   "instruction": "move toward the forklift",
+   "zone_objects": {
+    "B": "forklift",
+    "C": "barrel",
+    "E": "box",
+    "F": "traffic_cone"
+   },
+   "n_objects": 4,
+   "spawn_xy": [
+    -6.75,
+    4.9
+   ],
+   "spawn_heading_deg": 0.0
+  },
+  {
+   "name": "warehouse_2x3_langv2_0506_tA",
+   "family": "warehouse_2x3_langv2_0506",
+   "twin": "tA",
+   "sibling_names": [
+    "warehouse_2x3_langv2_0506_tB",
+    "warehouse_2x3_langv2_0506_tC",
+    "warehouse_2x3_langv2_0506_tD"
+   ],
+   "seed": 48006,
+   "goal_zone": "B",
+   "target_kind": "forklift",
+   "target_variant": 0,
+   "target_xy": [
+    -3.615,
+    20.993
+   ],
+   "target_phrase": "tow motor",
+   "lang_pattern": "go to the {x}",
+   "instruction": "go to the forklift",
+   "zone_objects": {
+    "B": "forklift",
+    "C": "barrel",
+    "E": "box",
+    "F": "traffic_cone"
+   },
+   "n_objects": 4,
+   "spawn_xy": [
+    -6.75,
+    4.9
+   ],
+   "spawn_heading_deg": 0.0
+  },
+  {
+   "name": "warehouse_2x3_langv2_0504_tB",
+   "family": "warehouse_2x3_langv2_0504",
+   "twin": "tB",
+   "sibling_names": [
+    "warehouse_2x3_langv2_0504_tA",
+    "warehouse_2x3_langv2_0504_tC",
+    "warehouse_2x3_langv2_0504_tD"
+   ],
+   "seed": 48004,
+   "goal_zone": "C",
+   "target_kind": "forklift",
+   "target_variant": 0,
+   "target_xy": [
+    -0.16,
+    23.923
+   ],
+   "target_phrase": "tow motor",
+   "lang_pattern": "navigate to the {x}",
+   "instruction": "navigate to the forklift",
+   "zone_objects": {
+    "B": "box",
+    "C": "forklift",
+    "E": "traffic_cone",
+    "F": "barrel"
+   },
+   "n_objects": 4,
+   "spawn_xy": [
+    -6.75,
+    4.9
+   ],
+   "spawn_heading_deg": 0.0
+  },
+  {
+   "name": "warehouse_2x3_langv2_0083_tB",
+   "family": "warehouse_2x3_langv2_0083",
+   "twin": "tB",
+   "sibling_names": [
+    "warehouse_2x3_langv2_0083_tA",
+    "warehouse_2x3_langv2_0083_tC",
+    "warehouse_2x3_langv2_0083_tD"
+   ],
+   "seed": 43083,
+   "goal_zone": "C",
+   "target_kind": "forklift",
+   "target_variant": 0,
+   "target_xy": [
+    1.892,
+    19.441
+   ],
+   "target_phrase": "tow motor",
+   "lang_pattern": "move toward the {x}",
+   "instruction": "move toward the forklift",
+   "zone_objects": {
+    "B": "traffic_cone",
+    "C": "forklift",
+    "E": "box",
+    "F": "barrel"
+   },
+   "n_objects": 4,
+   "spawn_xy": [
+    -6.75,
+    4.9
+   ],
+   "spawn_heading_deg": 0.0
+  },
+  {
+   "name": "warehouse_2x3_langv2_0500_tB",
+   "family": "warehouse_2x3_langv2_0500",
+   "twin": "tB",
+   "sibling_names": [
+    "warehouse_2x3_langv2_0500_tA",
+    "warehouse_2x3_langv2_0500_tC",
+    "warehouse_2x3_langv2_0500_tD"
+   ],
+   "seed": 48000,
+   "goal_zone": "C",
+   "target_kind": "forklift",
+   "target_variant": 0,
+   "target_xy": [
+    0.376,
+    19.156
+   ],
+   "target_phrase": "tow motor",
+   "lang_pattern": "move toward the {x}",
+   "instruction": "move toward the forklift",
+   "zone_objects": {
+    "B": "box",
+    "C": "forklift",
+    "E": "traffic_cone",
+    "F": "barrel"
+   },
+   "n_objects": 4,
+   "spawn_xy": [
+    -6.75,
+    4.9
+   ],
+   "spawn_heading_deg": 0.0
+  },
+  {
+   "name": "warehouse_2x3_langv2_0140_tC",
+   "family": "warehouse_2x3_langv2_0140",
+   "twin": "tC",
+   "sibling_names": [
+    "warehouse_2x3_langv2_0140_tA",
+    "warehouse_2x3_langv2_0140_tB",
+    "warehouse_2x3_langv2_0140_tD"
+   ],
+   "seed": 43140,
+   "goal_zone": "E",
+   "target_kind": "forklift",
+   "target_variant": 0,
+   "target_xy": [
+    -4.952,
+    -11.463
+   ],
+   "target_phrase": "tow motor",
+   "lang_pattern": "move toward the {x}",
+   "instruction": "move toward the forklift",
+   "zone_objects": {
+    "B": "traffic_cone",
+    "C": "barrel",
+    "E": "forklift",
+    "F": "box"
+   },
+   "n_objects": 4,
+   "spawn_xy": [
+    -6.75,
+    4.9
+   ],
+   "spawn_heading_deg": 0.0
+  },
+  {
+   "name": "warehouse_2x3_langv2_0501_tC",
+   "family": "warehouse_2x3_langv2_0501",
+   "twin": "tC",
+   "sibling_names": [
+    "warehouse_2x3_langv2_0501_tA",
+    "warehouse_2x3_langv2_0501_tB",
+    "warehouse_2x3_langv2_0501_tD"
+   ],
+   "seed": 48001,
+   "goal_zone": "E",
+   "target_kind": "forklift",
+   "target_variant": 0,
+   "target_xy": [
+    -3.735,
+    -7.847
+   ],
+   "target_phrase": "tow motor",
+   "lang_pattern": "navigate to the {x}",
+   "instruction": "navigate to the forklift",
+   "zone_objects": {
+    "B": "barrel",
+    "C": "box",
+    "E": "forklift",
+    "F": "traffic_cone"
+   },
+   "n_objects": 4,
+   "spawn_xy": [
+    -6.75,
+    4.9
+   ],
+   "spawn_heading_deg": 0.0
+  },
+  {
+   "name": "warehouse_2x3_langv2_0502_tC",
+   "family": "warehouse_2x3_langv2_0502",
+   "twin": "tC",
+   "sibling_names": [
+    "warehouse_2x3_langv2_0502_tA",
+    "warehouse_2x3_langv2_0502_tB",
+    "warehouse_2x3_langv2_0502_tD"
+   ],
+   "seed": 48002,
+   "goal_zone": "E",
+   "target_kind": "forklift",
+   "target_variant": 0,
+   "target_xy": [
+    -4.861,
+    -10.224
+   ],
+   "target_phrase": "tow motor",
+   "lang_pattern": "move toward the {x}",
+   "instruction": "move toward the forklift",
+   "zone_objects": {
+    "B": "traffic_cone",
+    "C": "box",
+    "E": "forklift",
+    "F": "barrel"
+   },
+   "n_objects": 4,
+   "spawn_xy": [
+    -6.75,
+    4.9
+   ],
+   "spawn_heading_deg": 0.0
+  },
+  {
+   "name": "warehouse_2x3_langv2_0068_tD",
+   "family": "warehouse_2x3_langv2_0068",
+   "twin": "tD",
+   "sibling_names": [
+    "warehouse_2x3_langv2_0068_tA",
+    "warehouse_2x3_langv2_0068_tB",
+    "warehouse_2x3_langv2_0068_tC"
+   ],
+   "seed": 43068,
+   "goal_zone": "F",
+   "target_kind": "forklift",
+   "target_variant": 0,
+   "target_xy": [
+    0.74,
+    -11.853
+   ],
+   "target_phrase": "tow motor",
+   "lang_pattern": "go to the {x}",
+   "instruction": "go to the forklift",
+   "zone_objects": {
+    "B": "barrel",
+    "C": "box",
+    "E": "traffic_cone",
+    "F": "forklift"
+   },
+   "n_objects": 4,
+   "spawn_xy": [
+    -6.75,
+    4.9
+   ],
+   "spawn_heading_deg": 0.0
+  },
+  {
+   "name": "warehouse_2x3_langv2_0512_tD",
+   "family": "warehouse_2x3_langv2_0512",
+   "twin": "tD",
+   "sibling_names": [
+    "warehouse_2x3_langv2_0512_tA",
+    "warehouse_2x3_langv2_0512_tB",
+    "warehouse_2x3_langv2_0512_tC"
+   ],
+   "seed": 48012,
+   "goal_zone": "F",
+   "target_kind": "forklift",
+   "target_variant": 0,
+   "target_xy": [
+    1.865,
+    -8.404
+   ],
+   "target_phrase": "tow motor",
+   "lang_pattern": "navigate to the {x}",
+   "instruction": "navigate to the forklift",
+   "zone_objects": {
+    "B": "traffic_cone",
+    "C": "barrel",
+    "E": "box",
+    "F": "forklift"
+   },
+   "n_objects": 4,
+   "spawn_xy": [
+    -6.75,
+    4.9
+   ],
+   "spawn_heading_deg": 0.0
+  },
+  {
+   "name": "warehouse_2x3_langv2_0505_tD",
+   "family": "warehouse_2x3_langv2_0505",
+   "twin": "tD",
+   "sibling_names": [
+    "warehouse_2x3_langv2_0505_tA",
+    "warehouse_2x3_langv2_0505_tB",
+    "warehouse_2x3_langv2_0505_tC"
+   ],
+   "seed": 48005,
+   "goal_zone": "F",
+   "target_kind": "forklift",
+   "target_variant": 0,
+   "target_xy": [
+    -0.026,
+    -13.397
+   ],
+   "target_phrase": "tow motor",
+   "lang_pattern": "move toward the {x}",
+   "instruction": "move toward the forklift",
+   "zone_objects": {
+    "B": "barrel",
+    "C": "box",
+    "E": "traffic_cone",
+    "F": "forklift"
+   },
+   "n_objects": 4,
+   "spawn_xy": [
+    -6.75,
+    4.9
+   ],
+   "spawn_heading_deg": 0.0
+  }
+ ],
+ "_note": "SYNONYM BRAINSTORM (2026-08-12): 'tow motor' for forklift on the same balanced 12-scene set as synfinal (cone set = patched, 2 unplannable replaced)."
+}

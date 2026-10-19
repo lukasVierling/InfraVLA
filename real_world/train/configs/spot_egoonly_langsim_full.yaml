@@ -1,0 +1,128 @@
+# ============================================================================
+# EGO-ONLY CONTROL for the 2026-08-21 session — 20-family / 5-held-out variant.
+#
+# The matched control the CCTV claim needs. Byte-identical to
+# spot_cctv_langsim_full.yaml / spot_cctv_langsim_v1 EXCEPT that the two CCTV
+# views are not fed to the model:
+#
+#     num_images_in_input  4 -> 2      (ego obs + ego goal only)
+#     emit_cctv            true -> false
+#     cctv_cam_names       [camera3, camera4] -> []
+#     cctv_downsample      removed (nothing to downsample)
+#
+# Same export, same frames, same samples, same order, same seed. The CCTV views
+# are simply not read, so any difference is attributable to the views and not
+# to data, spacing, recipe or sampling.
+#
+# Deliberately runs through train_omnivla_real_cctv.py (the SAME trainer as
+# every CCTV arm) with an empty camera list, rather than through
+# train_omnivla_real.py. Swapping trainers would swap the whole training
+# codebase and confound the comparison with a code difference.
+#
+# PURPOSE: 60-run train / 5 held-out families (05, 09, 12, 16, 23), 8000 steps
+# with val every 250 — mirrors what langsim_v1 and cfboost_est did, so the
+# ego-only stopping point is chosen by the same rule and on the same evidence.
+# The CCTV curves are flat from ~1250 (band 0.172-0.191); this run answers
+# whether ego-only is flat over the same range.
+# ============================================================================
+
+run:
+  name: "2026-08-21_spot_egoonly_langsim_full_v0"
+  notes: "EGO-ONLY control, 20-family train / 5 held-out families, 8000 steps, val every 250. Identical recipe to spot_cctv_langsim_v1 except the CCTV views are not fed (num_images_in_input 2, emit_cctv false, cctv_cam_names []). Same trainer as the CCTV arms with an empty camera list, so no training-code confound. Purpose: locate the ego-only val optimum and give a clean uncontaminated CCTV-vs-ego comparison at matched steps."
+
+model:
+  vla_path: "${INFRAVLA_ROOT}/omnivla-original"
+  pretrained_step: 120000
+  num_images_in_input: 2          # ego obs + ego goal ONLY
+  num_ego_images: 2
+  use_cctv_encoder: false
+  downsample_ego: false
+  use_lora: true
+  lora_rank: 16
+  lora_alpha: 8
+  lora_dropout: 0.0
+
+data:
+  train_dir: "${INFRAVLA_ROOT}/runs/data/real_world/spot_cctv_2026_08_21_sp019_all/train"
+  val_dir:   "${INFRAVLA_ROOT}/runs/data/real_world/spot_cctv_2026_08_21_sp019/val"
+  test_dir:  "${INFRAVLA_ROOT}/runs/data/real_world/spot_cctv_2026_08_21_sp019/val"
+
+  max_train_trajectories: null
+  max_val_trajectories:   null
+  max_test_trajectories:  null
+
+  num_actions_chunk: 8
+  context_size: 5
+
+  modality_list: [7, 4, 5, 6]
+  modality_weights: [0.8, 0.06667, 0.06667, 0.06666]
+  image_only_max_distance_steps: 10
+
+  min_goal_distance_steps: 1
+  max_goal_distance_steps: 300
+  final_goal_prob: 0.5
+
+  predict_stop_token: true
+  metric_waypoint_spacing: 0.19
+  waypoint_spacing: 1
+  image_size: [224, 224]
+  goals_per_obs: 1
+
+  emit_cctv: false
+  cctv_cam_names: []
+  no_goal_image: false
+  use_cctv_goal: false
+
+  random_hflip: false
+  perception_dropout:     [1.0, 0.0, 0.0]
+  val_perception_dropout: [1.0, 0.0, 0.0]
+  cctv_cam_dropout: 0.0
+  cctv_blockade_signal: false
+  ego_blackout: false
+  counterfactual_windows: {enabled: false}
+  cf_window_balance:      {enabled: false}
+  cf_onboard_swap:        {enabled: false}
+  cf_onboard_swap_extra:  {enabled: false}
+  curvature_balance:      {enabled: false}
+  dataset_manager:        {enabled: false}
+
+train:
+  batch_size: 5
+  grad_accumulation_steps: 6
+  learning_rate: 1.0e-4
+  num_steps_before_decay: 100000
+  lr_decay_gamma: 0.1
+  max_steps: 3000   # extended 2000 -> 3000 (20 epochs on the 75-run split)
+  weight_decay: 0.0
+  betas: [0.9, 0.999]
+  eps: 1.0e-8
+  seed: 42
+  num_workers: 4
+
+loss:
+  smoothness_weight: 0.1
+  obj_weight: 0.0
+
+val:
+  val_freq: 250
+  max_samples: null
+
+checkpoint:
+  save_freq: 250
+  keep_top_k: 3
+  keep_latest: true
+  keep_every_n_steps: 5000
+
+logging:
+  wandb_entity: "cctv_vla"
+  wandb_project: "CCTV_VLA_real"
+  wandb_tags: ["real-robot", "spot", "egoonly", "control", "2026-08-21",
+               "spacing0.19", "heldout-val", "langsim", "lang80"]
+  log_freq: 25
+
+extensibility:
+  extra_obs_modalities: []
+  extra_goal_modalities: []
+
+output:
+  runs_root: "${INFRAVLA_ROOT}/runs/training/real_world"

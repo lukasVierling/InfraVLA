@@ -1,0 +1,42 @@
+# @package _global_
+# b20 ladder N=12 @ step_17000 on gridES-72, shard 3/3 (interleaved).
+defaults:
+  - override /policy: omnivla_b20ladder_N12_step17000
+  - override /task: pose
+  - override /env/scene: warehouse_2x3_gridES_sC_gC_cfBF
+  - override /env/robot: nova_carter
+  - override /env/camera_set: with_4cctv_2x3_bigcam
+  - override /env/astar: warehouse_2x3
+  - override /controller: omnivla_default
+  - override /recorder: default
+run: {name: "eval_b20ladder_N12_s17000_p3", notes: "unified-recipe ladder"}
+control_hz: 3.0
+record_hz: 3.0
+fine_grained: {enabled: true, control_hz: 30}
+task: {max_steps: 300}
+recorder: {runs_root: "${oc.env:INFRAVLA_ROOT}/runs/evaluation/sweeps/warehouse_2x3_gridES_2026-08-13/b20ladder_N12_step17000", log_frames: false}
+runs:
+  - { name: "warehouse_2x3_gridES_sC_gC_cfBF__pose", env_scene: warehouse_2x3_gridES_sC_gC_cfBF, task: pose, policy: omnivla_b20ladder_N12_step17000, action: RELOAD }
+  - { name: "warehouse_2x3_gridES_sC_gC_cfCF__pose", env_scene: warehouse_2x3_gridES_sC_gC_cfCF, task: pose, action: KEEP_POLICY }
+  - { name: "warehouse_2x3_gridES_sC_gL_cfB__pose", env_scene: warehouse_2x3_gridES_sC_gL_cfB, task: pose, action: KEEP_POLICY }
+  - { name: "warehouse_2x3_gridES_sC_gL_cfC__pose", env_scene: warehouse_2x3_gridES_sC_gL_cfC, task: pose, action: KEEP_POLICY }
+  - { name: "warehouse_2x3_gridES_sC_gL_cfE__pose", env_scene: warehouse_2x3_gridES_sC_gL_cfE, task: pose, action: KEEP_POLICY }
+  - { name: "warehouse_2x3_gridES_sC_gR_cfBE__pose", env_scene: warehouse_2x3_gridES_sC_gR_cfBE, task: pose, action: KEEP_POLICY }
+  - { name: "warehouse_2x3_gridES_sC_gR_cfCE__pose", env_scene: warehouse_2x3_gridES_sC_gR_cfCE, task: pose, action: KEEP_POLICY }
+  - { name: "warehouse_2x3_gridES_sC_gR_cfF__pose", env_scene: warehouse_2x3_gridES_sC_gR_cfF, task: pose, action: KEEP_POLICY }
+  - { name: "warehouse_2x3_gridES_sL_gC_cfBF__pose", env_scene: warehouse_2x3_gridES_sL_gC_cfBF, task: pose, action: KEEP_POLICY }
+  - { name: "warehouse_2x3_gridES_sL_gC_cfCF__pose", env_scene: warehouse_2x3_gridES_sL_gC_cfCF, task: pose, action: KEEP_POLICY }
+  - { name: "warehouse_2x3_gridES_sL_gL_cfB__pose", env_scene: warehouse_2x3_gridES_sL_gL_cfB, task: pose, action: KEEP_POLICY }
+  - { name: "warehouse_2x3_gridES_sL_gL_cfC__pose", env_scene: warehouse_2x3_gridES_sL_gL_cfC, task: pose, action: KEEP_POLICY }
+  - { name: "warehouse_2x3_gridES_sL_gL_cfE__pose", env_scene: warehouse_2x3_gridES_sL_gL_cfE, task: pose, action: KEEP_POLICY }
+  - { name: "warehouse_2x3_gridES_sL_gR_cfBE__pose", env_scene: warehouse_2x3_gridES_sL_gR_cfBE, task: pose, action: KEEP_POLICY }
+  - { name: "warehouse_2x3_gridES_sL_gR_cfCE__pose", env_scene: warehouse_2x3_gridES_sL_gR_cfCE, task: pose, action: KEEP_POLICY }
+  - { name: "warehouse_2x3_gridES_sL_gR_cfF__pose", env_scene: warehouse_2x3_gridES_sL_gR_cfF, task: pose, action: KEEP_POLICY }
+  - { name: "warehouse_2x3_gridES_sR_gC_cfBF__pose", env_scene: warehouse_2x3_gridES_sR_gC_cfBF, task: pose, action: KEEP_POLICY }
+  - { name: "warehouse_2x3_gridES_sR_gC_cfCF__pose", env_scene: warehouse_2x3_gridES_sR_gC_cfCF, task: pose, action: KEEP_POLICY }
+  - { name: "warehouse_2x3_gridES_sR_gL_cfB__pose", env_scene: warehouse_2x3_gridES_sR_gL_cfB, task: pose, action: KEEP_POLICY }
+  - { name: "warehouse_2x3_gridES_sR_gL_cfC__pose", env_scene: warehouse_2x3_gridES_sR_gL_cfC, task: pose, action: KEEP_POLICY }
+  - { name: "warehouse_2x3_gridES_sR_gL_cfE__pose", env_scene: warehouse_2x3_gridES_sR_gL_cfE, task: pose, action: KEEP_POLICY }
+  - { name: "warehouse_2x3_gridES_sR_gR_cfBE__pose", env_scene: warehouse_2x3_gridES_sR_gR_cfBE, task: pose, action: KEEP_POLICY }
+  - { name: "warehouse_2x3_gridES_sR_gR_cfCE__pose", env_scene: warehouse_2x3_gridES_sR_gR_cfCE, task: pose, action: KEEP_POLICY }
+  - { name: "warehouse_2x3_gridES_sR_gR_cfF__pose", env_scene: warehouse_2x3_gridES_sR_gR_cfF, task: pose, action: KEEP_POLICY }

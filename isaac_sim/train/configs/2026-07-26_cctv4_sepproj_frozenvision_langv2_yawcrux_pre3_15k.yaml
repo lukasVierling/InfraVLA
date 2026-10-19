@@ -1,0 +1,172 @@
+# ============================================================================
+# OmniVLA Isaac Sim fine-tune — CFV4 DATA + PLAIN AVGPOOL64 + CF-WINDOW
+# UPWEIGHTED SAMPLING (boost 8) + cf-val side channel.
+# ============================================================================
+#
+# Byte-for-byte the 2026-07-09 cfwinboost8_15k arm (cfv3)
+# EXCEPT the data split -> cfv4 (2026-07-10 campaign, bases 1500-1774):
+#
+#   cfv4 delta vs cfv3: A-spawn ONLY (every run a full A->G traverse), FIXED
+#   270 deg start heading (decoupled from goal -> aisle choice must come from
+#   CCTV/ego, not orientation), ~2x the data: 529/550 scenes reached ->
+#   base-grouped split 1500:1750 / 1750:1775 = 481 train / 48 val traj
+#   (21 scenes lost to the C-mouth stuck pinch, see potential_bugs 2026-07-10).
+#   Split-type mix ~63% first-split (A->B/C) vs 37% second-split (D->E/F) —
+#   near-inverse of cfv3's 29/71 (D-spawns dropped).
+#
+# Arch + sampling identical to the 07-09 PLAIN cfwinboost8 arm: shared-enc
+# avgpool64, NO camembed / sepproj; cf_window_balance boost 8 (~50% gradient
+# mass on [t*-16, t*+8] decision windows, thresh 0.75).
+# cf_val_report on: val_cf/* = decision-window subset of the cfv4 val split.
+# NOTE: val_cf numbers are NOT comparable to the cfv3 arms' (different val
+# set); cross-arm comparison for this run = the cfv3-era models re-evaled on
+# gridES vs this one, or a cfv3-val --val-only pass.
+#
+# WHY (2026-07-11): cfv4 attacks the data axis: more decision density (A-only
+# spawns), no heading leak, 2x volume. PLAIN arch, not camembed — decision
+# made 2026-07-11 (this arm was originally launched as camembed, swapped
+# before training started): on cfv3, camembed showed no benefit on two
+# independent measures (cf-val plain 0.0342 < camembed 0.0411; gridES routing
+# on 32 matched cells plain 29/32 strict superset of camembed 27/32), so the
+# cfv4 factorial uses the simpler arch — cfv4-plain vs cfv3-plain isolates
+# DATA, cfv4-egoonly-boost8 vs cfv4-plain isolates CCTV. Camembed's one open
+# thread (persistently better reach@0.3m parking) stays testable via the kept
+# cfv3 camembed checkpoints.
+# ============================================================================
+
+run:
+  name: "2026-07-26_cctv4_sepproj_frozenvision_langv2_yawcrux_pre3_15k_v0"
+  notes: "FROZEN-EGO-VISION-ONLY ABLATION (Lukas 2026-07-26): identical to the frozen-backbone arm EXCEPT freeze_llm=false, so ONLY the onboard/ego vision encoder+projector are frozen; LLM (LoRA) + CCTV stream + heads all adapt. Ego-FIRST token order (no image_slot_order), same as pre3. Single-variable decomposition of the frozen-backbone collapse (0.154): does freezing ego-vision alone hurt, or was it the LLM freeze? [orig frozen-backbone notes follow] FROZEN-BACKBONE ABLATION (Lukas 2026-07-25, Option B): the 2026-07-23 langv2 yaw-crux pre=3 avgpool64 arm + FREEZE LEVEL 2 (freeze_vision + freeze_llm) + separate_cctv_projector. Ego vision encoder + Llama backbone FROZEN (no LoRA anywhere on them); trainable set = {CCTV featurizers + cctv_projector (LoRA), action_head, pose_projector}. Isolates whether the CCTV pathway + heads alone can drive the langv2 aisle task through an untouched pretrained trunk. separate_cctv_projector=true so the CCTV stream keeps a TRAINABLE vision->LLM translator under vision-freeze (else CCTV would route through the frozen shared ego projector). Everything else identical to pre3. Original pre3 notes: langv2 yaw-crux window, pre=3 / 50pc crux, FRESH single-setting run (Lukas 2026-07-23). Supersedes the pre=2 hybrid (which ran boost 8 then 20). Window = [crux-3, crux], yaw criterion eps 1.0deg: 1612 samples = 5.7pc of 28305 = t0:552 (decision #1, all twins) + t3/t4/t5/t6 (~262 each = decision #2, the C-F east pair, whose yaws stay identical through frame 6 so ALL these frames are un-leaked). pre bumped 2->3 because frame 3 already carries a real split (GT-chunk sep 0.33 m, un-leaked) — Lukat wanted the extra back-window frame; pre 4 (frame 2, 0.17 m) judged too weak. boost 16.6 solves 1612*b = 26693 for a true 50/50 crux:cruise (boost is a fixed multiplier, not a ratio; the legacy 8 only gave 50pc at cfv3s 11.4pc window). Reference: the pre=2 hybrid hit val t=0 L/S/R acc 0.979 at step 7000 AND its prediction panels showed decision #2 (C-vs-F) splitting correctly on unseen val families. This clean run is the defensible headline arm. Everything else identical to the 07-22 full-traj arm; 15k steps from scratch."
+
+model:
+  vla_path: "${INFRAVLA_ROOT}/omnivla-original"
+  pretrained_step: 120000
+  num_images_in_input: 6
+  use_cctv_encoder: true
+  num_ego_images: 2
+  cctv_downsample:
+    method: avgpool
+    out_tokens: 64
+  # CCTV gets its OWN vision->LLM translator MLP (deepcopy of the ego projector,
+  # then its own LoRA) so it stays TRAINABLE when the ego projector is frozen.
+  separate_cctv_projector: true
+  cctv_cam_embed: false
+  # FREEZE LEVEL 2: freeze the ego vision encoder + ego projector (no LoRA there)
+  # AND the Llama backbone (no LoRA anywhere on the LLM). Only the CCTV stream +
+  # heads adapt. The frozen LLM still READS the CCTV tokens; the trainable
+  # cctv_projector learns to place their content where the frozen attention looks.
+  freeze_vision: true
+  freeze_llm: false   # ABLATION vs frozen-backbone: LLM ADAPTS (isolates the LLM-freeze axis)
+  use_lora: true
+  lora_rank: 16
+  lora_alpha: 8
+  lora_dropout: 0.0
+
+data:
+  # cfv3 split (2026-07-08): symlinks into /mnt/localdata (identical path on
+  # arrakis + kaitain). Built by run_cfv3_avgpool64_pipeline.sh.
+  train_dir: "${INFRAVLA_ROOT}/runs/data/splits/2026-07-22_warehouse_2x3_langv2/train"
+  val_dir:   "${INFRAVLA_ROOT}/runs/data/splits/2026-07-22_warehouse_2x3_langv2/val"
+  test_dir:  "${INFRAVLA_ROOT}/runs/data/splits/2026-07-22_warehouse_2x3_langv2/val"  # no test split; val reused (unused during training)
+
+  max_train_trajectories: null
+  max_val_trajectories:   null
+  max_test_trajectories:  null
+
+  num_actions_chunk: 8
+  context_size: 5
+
+  modality_list: [7, 4, 5, 6]
+  # 80% language-only (id 7); id 8 excluded — the pose goal differs between
+  # twins, so language+pose would leak the answer past the instruction.
+  modality_weights: [0.8, 0.06667, 0.06667, 0.06666]
+  lang_manifest: "${INFRAVLA_ROOT}/isaac_sim/configs/experiment/datagen_2x3_langv2_all_manifest.json"
+  lang_pattern: "move toward the {x}"   # LeLaN in-distribution (run-1 single pattern)
+  image_only_max_distance_steps: 10
+
+  min_goal_distance_steps: 1
+  max_goal_distance_steps: 300
+
+  final_goal_prob: 0.5
+
+  predict_stop_token: true
+  metric_waypoint_spacing: 0.333
+  waypoint_spacing: 1
+  image_size: [224, 224]
+  random_hflip: false
+  goals_per_obs: 1
+
+  emit_cctv: true
+
+  cctv_cam_names: [cctv_NE, cctv_NW, cctv_SE, cctv_SW]
+  no_goal_image: false
+  use_cctv_goal: false
+  perception_dropout:     [1.0, 0.0, 0.0]
+  val_perception_dropout: [1.0, 0.0, 0.0]
+
+  # --- CF-window upweighted sampling ---
+  # Full dataset + WeightedRandomSampler: in-window samples get weight `boost`,
+  # the rest 1.0. Window def identical to the cfwin_ft arm (mine_cf_windows).
+  # boost 8 -> crux mass ~0.50 (window fraction 0.114). TRAIN only.
+  cf_window_balance:
+    enabled: true
+    criterion: yaw          # crux = LAST frame before the twins' headings split
+    yaw_eps_deg: 1.0        # tolerance; oracle plans carry ~1e-3 deg of noise
+    pre_steps: 3            # window = [crux-3, crux] — 4 frames, all pre-divergence
+    post_steps: 0           # >0 reaches PAST the crux into leaked frames
+    dev_thresh_m: 0.75      # unused under criterion=yaw; kept so the key exists
+    boost: 16.6        # 50/50 crux:cruise for the pre=3 window (1612 samples, see notes)
+
+  # --- cf-val side channel: report loss on the decision-window val subset ---
+  # (val_cf/* in wandb) alongside the full val each val_freq. Reporting only —
+  # best-checkpoint selection stays on the full val. Same knobs as the sampler
+  # so "crux" means the same thing in train weighting and val reporting.
+  cf_val_report:
+    enabled: true
+    pre_steps: 6
+    post_steps: 0
+    dev_thresh_m: 0.75
+
+train:
+  batch_size: 5
+  grad_accumulation_steps: 6
+  learning_rate: 1.0e-4
+  num_steps_before_decay: 100000
+  lr_decay_gamma: 0.1
+  max_steps: 15000
+  weight_decay: 0.0
+  betas: [0.9, 0.999]
+  eps: 1.0e-8
+  seed: 42
+
+loss:
+  smoothness_weight: 0.1
+  # 0.0, not LeLaN's 0.1: their obj loss asserts the FINAL waypoint lands on the
+  # target object, which holds for their short object-approach clips. Our 8-wp
+  # long-horizon chunks end mid-corridor, and obj_pose_norm is a hardcoded (0,0)
+  # dummy -> the term degenerates to a shrinkage penalty on w8's dx,dy.
+  # See the project's suspicion log.
+  obj_weight: 0.0
+
+val:
+  val_freq: 500
+  max_samples: null
+
+checkpoint:
+  save_freq: 1000
+  keep_top_k: 3
+  keep_latest: true
+  keep_every_n_steps: 5000
+
+logging:
+  wandb_entity: "cctv_vla"
+  wandb_project: "cctv_vla_thesis"
+  wandb_tags: ["cctv_exp", "warehouse_2x3_cfv4", "aspawn_only", "fixed_heading", "souththird_forklift", "bigcam", "cctv4", "avgpool64", "fg50", "nohflip", "r16", "cfwinboost8", "cfval", "15k", "yawcrux", "langv2", "lang80", "movetoward", "sepproj", "frozenvision", "freezelvl1", "egofirst"]
+  log_freq: 10
+
+extensibility:
+  extra_obs_modalities: []
+  extra_goal_modalities: []
+
+output:
+  runs_root: "${INFRAVLA_ROOT}/runs/training/runs"

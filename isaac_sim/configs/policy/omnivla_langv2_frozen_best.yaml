@@ -1,0 +1,44 @@
+# 2x3 CFV4 FREEZE LEVEL 2 (frozen ego vision + frozen LLM) eval policy. step_15000
+# (final AND best: full-val 0.0140, cf-val 0.0127 — fit cost of the frozen LLM) of
+# 2026-07-14_cctv4_sepproj_frozenvision_frozenllm_2x3cfv4_avgpool64_cfwinboost8_15k_v0
+# (trained with model.freeze_vision: NO LoRA on the ego encoder/projector — the
+# saved adapter simply has no entries for them, so this loads with the standard
+# overlay; the ego stream stays at released-OmniVLA weights, matching training).
+# sepproj ON, cam embed OFF, avgpool64, boost8 upsampling, no swap, fg50, cfv4.
+#
+# Probe verdict (2026-07-14, work-log addendum): goal-pose channel causally DEAD
+# (0.00 on all 7 factorial pairs), CCTV share first-split 0.99 / second-split
+# 0.27 (parent: 0.64 / 0.06). This eval asks whether that causal shift moves
+# CLOSED-LOOP routing — starting with the parent avgpool's 16 failed cells.
+# MUST eval with camera_set with_4cctv_2x3_bigcam.
+save_dir: "${recorder.runs_root}/${run.name}/policy"
+cameras:
+  - { obs_cam: front_cam, goal_frames: null, present: true }
+  - { obs_cam: cctv_NE,   goal_frames: null, present: true }
+  - { obs_cam: cctv_NW,   goal_frames: null, present: true }
+  - { obs_cam: cctv_SE,   goal_frames: null, present: true }
+  - { obs_cam: cctv_SW,   goal_frames: null, present: true }
+use_cctv_goal: false
+no_goal_image: false
+inference:
+  resume: true
+  vla_path: "${oc.env:INFRAVLA_ROOT}/omnivla-original"
+  resume_step: 120000
+  use_l1_regression: true
+  use_diffusion: false
+  use_film: false
+  num_images_in_input: 6
+  use_lora: true
+  lora_rank: 32
+  lora_dropout: 0.0
+finetune:
+  checkpoint_dir: "${oc.env:INFRAVLA_ROOT}/runs/training/runs/2026-07-25_cctv4_sepproj_frozenvision_frozenllm_langv2_yawcrux_pre3_15k_v0/checkpoints/step_15000"
+  step: 15000
+  use_cctv_encoder: true
+  num_ego_images: 2
+  cctv_downsample:
+    method: avgpool
+    out_tokens: 64
+  cctv_cam_embed: false
+  separate_cctv_projector: true
+  cctv_cam_names: [cctv_NE, cctv_NW, cctv_SE, cctv_SW]

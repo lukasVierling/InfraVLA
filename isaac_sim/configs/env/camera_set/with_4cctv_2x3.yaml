@@ -1,0 +1,9 @@
+# @package env.cameras
+# 4-CCTV set for the 2x3 warehouse: ego front + the 4 symmetric corner CCTVs
+# (poses authored in the base scene). Additive — existing camera_sets untouched.
+defaults:
+  - /env/camera@front_cam: carter_front
+  - /env/camera@cctv_NE: cctv_2x3_ne
+  - /env/camera@cctv_NW: cctv_2x3_nw
+  - /env/camera@cctv_SE: cctv_2x3_se
+  - /env/camera@cctv_SW: cctv_2x3_sw

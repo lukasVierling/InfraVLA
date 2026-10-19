@@ -1,0 +1,52 @@
+# ============================================================================
+# Camera: robot's first-person front RGB (the policy view)
+# ============================================================================
+#
+# This is the camera the POLICY sees - it's the "current image" that goes
+# into the VLA at every inference step. Resolution + framerate match what
+# the old server.py used.
+#
+# Robot-agnostic: the search prefix and name-hints come from the active
+# robot's yaml via ${env.robot.*} interpolation. Swapping the robot
+# (env/robot=nova_carter) automatically retargets this camera search at the
+# new robot's prim hierarchy.
+# ============================================================================
+
+name: front_cam
+
+# Strategy for locating the prim on the loaded robot USD. The env builder
+# walks all camera prims under parent_prefix and picks the first whose path
+# matches any of name_hints (case-insensitive). null prim_path => use
+# auto-discovery; set a literal path here to bypass the search.
+prim_path: null
+auto_discover:
+  parent_prefix: ${env.robot.prim_path}
+  name_hints: ${env.robot.cameras.front_hints}
+
+# Whether the env builder needs to apply a local transform on top of the
+# prim's USD pose (yes for chase cam, no for camera that's already mounted
+# correctly in the USD).
+translation_required: false
+
+# (W, H) - 640x480 matches the old server's setting. Note that the VLA
+# downsamples to 224x224 internally; capturing higher and downsampling
+# preserves more detail than capturing at 224 directly.
+resolution: [640, 480]
+frequency: 30
+
+# Whether the Recorder dumps frames from this camera to disk. The policy
+# always reads the live frame regardless of this flag.
+logging: true
+
+# Intrinsics - null fields inherit the USD prim's camera attributes (good
+# default for Isaac assets). Set explicitly when matching a real-world cam.
+intrinsics:
+  focal_length_mm: null
+  horizontal_aperture_mm: null
+  vertical_aperture_mm: null
+
+# Extrinsics on top of USD pose. Zero for carter_front (the USD already
+# places it correctly).
+extrinsics:
+  local_translate_m: [0.0, 0.0, 0.0]
+  local_rotate_euler_deg: [0.0, 0.0, 0.0]
