@@ -26,7 +26,7 @@ omnivla-edge/
 # Ignore all wandb directories everywhere
 **/wandb/
 # the upstream OmniVLA paper sources (not redistributed)
-paper/
+/paper/
 # ignore run artifacts (data, training, evaluation)
 runs/*
 runs_old/
