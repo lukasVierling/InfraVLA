@@ -26,11 +26,9 @@ class A_star_policy:
 
         # Time horizon for the (v, w) command = time to traverse to the
         # lookahead at cruise speed. The command formula below is "reach the
-        # lookahead in `horizon_s` seconds". Using 1/control_hz here (the old
-        # behaviour) meant "reach it in ONE control tick" — at the 30 Hz
-        # data-gen loop that demanded ~50 m/s and pinned w to its cap, so the
-        # tracker limit-cycled (visible zigzag). horizon_s is independent of
-        # control_hz (fix, 2026-06-15).
+        # lookahead in `horizon_s` seconds". It is deliberately independent of
+        # control_hz: using 1/control_hz ("reach it in one control tick") at the
+        # 30 Hz data-gen loop saturates w and makes the tracker limit-cycle.
         self.horizon_s = self.lookahead_m / float(self.controller.max_linear_vel_mps)
 
         self.path = None
@@ -83,9 +81,8 @@ class A_star_policy:
         finds the next node to follow for pure prusit controller.
 
         Looks along the path for the next node that is above the lookahead distance but as little as possible abvoe that.
-        Thin wrapper over the shared pure_pursuit_target (controller_utils) — kept
-        so the existing per-method tests still exercise this entry point, and so
-        the monotonic cursor lives on the policy instance.
+        Thin wrapper over the shared pure_pursuit_target (controller_utils) that
+        keeps the monotonic cursor on the policy instance.
         """
         target, cursor = pure_pursuit_target(self.path, pos, self.curr, self.lookahead_m)
         self.curr = cursor

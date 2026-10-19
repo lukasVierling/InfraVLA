@@ -1,114 +1,59 @@
+# Python / tooling
+**/__pycache__/
+**/wandb/
+OmniVLA.egg-info/
+.DS_Store
+*.bak
+*.bak-*
+
+# Upstream OmniVLA checkpoints and assets (downloaded, not redistributed)
 omnivla-finetuned-cast/
 omnivla-original/
 omnivla-original-balance/
+omnivla-edge/
 MBRA/
 MBRA_BDD/
-OmniVLA.egg-info/
-prismatic/vla/datasets/sampler/
-prismatic/vla/datasets/bdd_dataset_.py
-prismatic/vla/datasets/cast_dataset_.py
-prismatic/vla/datasets/lelan_dataset_.py
-prismatic/vla/datasets/gnm_dataset_.py
-prismatic/vla/datasets/frodobots_dataset_.py
-vla-scripts/train_omnivla_dataset_.py
-vla-scripts/train_omnivla_dataset__.py
-vla-scripts/finetune_nav_MMN_dataset_cast2.py
-config_nav/mbra_and_dataset_config_.yaml
-config_nav/mbra_and_dataset_config__.yaml
-config_nav/mbra_and_dataset_config_bellman.yaml
-config_nav/base_server_bellman.yaml
-visualization/
-runs/*
-inference/run_omnivla_edge_.py
-omnivla-edge/
-# Ignore all __pycache__ directories everywhere
-**/__pycache__/
-# Ignore all wandb directories everywhere
-**/wandb/
-# the upstream OmniVLA paper sources (not redistributed)
 /paper/
-# ignore run artifacts (data, training, evaluation)
+
+# Run artifacts (data, training, evaluation)
 runs/*
-runs_old/
-# environments 
+checkpoints/
+
+# Isaac Sim environments, goal images and scratch outputs
 isaac_sim/assets/
-# goal images
 isaac_sim/scouting/goal_graphs/
 isaac_sim/goal_images/
 isaac_sim/tmp/
-# launch-log stdout must live under runs/ next to each run's results, never in the
-# code tree (run_eval/datagen_partition.sh now route logs into recorder.runs_root/logs/)
 isaac_sim/eval_launch_logs/
 isaac_sim/datagen_launch_logs/
-# Hydra default run dirs must not pile up in the code tree — eval.yaml/data_gen.yaml
-# redirect hydra.run.dir into runs/.../_hydra/; these guard any stray hydra run here.
-# The central debug-viz home is isaac_sim/outputs/ (see isaac_sim/README.md rule 2).
 isaac_sim/outputs/
 isaac_sim/multirun/
-# throwaway exploration / one-off probes (see CONVENTIONS.md → Temporary code).
-# Prefer scratch/ over scattering _scratch_-prefixed files through the source.
+
+# Throwaway exploration and vendored external code
 scratch/
-# vendored external code (cloned, not committed; see third_party/VENDORED.md for pinned SHAs)
 third_party/
-# ---------------------------------------------------------------------------
-# Real-robot + viz bytes (added 2026-08-23). Code stays tracked; data does not.
-# Path-based rather than extension-based, so the figure sets that ARE part of
-# the results (real_world/out/, real_world/images/) keep travelling with the repo.
-# ---------------------------------------------------------------------------
 
-# merged + raw serving weights, ~74 GB. Rebuilt by real_world/train/merge_lora_for_serving.py
-checkpoints/
-
-# live-run captures: rosbags, recordings, per-step artifact dirs, logs (~5.5 GB).
-# The recorder and its zenoh/session configs live in this directory too and are
-# CODE, so they are re-included by extension. Ignore the contents, not the dir
-# itself, or git will not descend far enough for the negations to apply.
+# Real-robot data and live-run captures (rosbags, recordings, per-step artifacts).
+# Code inside real_world/live/artifacts/ is re-included by extension; ignore the
+# contents, not the dir itself, so git descends far enough for the negations.
+real_world/data/
 real_world/live/artifacts/**
 !real_world/live/artifacts/
 !real_world/live/artifacts/*.py
 !real_world/live/artifacts/*.sh
 !real_world/live/artifacts/*.json
 !real_world/live/artifacts/*.json5
+real_world/live/artifacts/_*
+real_world/live/artifacts/audit_map.json
 real_world/live/artifacts_fork/step_*/
-
-# extracted real-robot datasets (arrakis holds these; 2.3 GB of pano/cctv frames)
-real_world/data/
-
-# viz pipeline: extracted datasets, per-run checkpoints, rendered panels
-viz_data/
-viz_runs/
-viz_out_*/
-
-# arrakis-vs-caladan prediction dumps (regenerate with real_world/train/crosscheck_predictions.py)
-xcheck_*.npz
-
-# real_world/ owns its own outputs/ dir (see real_world/README.md): generated
-# bytes are gitignored by default, with a small curated canonical set kept so it
-# travels with the repo. trajectories.json stays out -- 3 MB, and
-# real_world/analysis/extract_session_trajectories.py rebuilds it from the bags.
-real_world/outputs/**
-!real_world/outputs/
-!real_world/outputs/*/
-!real_world/outputs/layout_2026_08_21/*.png
-!real_world/outputs/layout_2026_08_21/*.csv
-
-# re-runs of the language-grounding panel on other hosts. NOTE: real_world/out/
-# (and images/, infer_*.py, make_panel.py) were removed 2026-09-08 - the
-# language-grounding panel is not reported in the thesis. See CLEANUP.md 13.
-real_world/out_*/
-# ...but not the mount-shim copies of the loop: the canonical files are one level
-# up in real_world/live/, and a second copy drifts silently once it exists.
+# Mount-shim copies of the loop: the canonical files live in real_world/live/.
 real_world/live/artifacts/operator_loop.py
 real_world/live/artifacts/stitch_live.py
 
-# session scratch + editor backups (added 2026-09-04)
-real_world/live/artifacts/_*
-real_world/live/artifacts/audit_map.json
-*.bak
-*.bak-*
-*.pre_*
-*.prev-*
-*.transform_version
-
-# macOS
-.DS_Store
+# Generated real-robot outputs and visualisations
+real_world/outputs/
+real_world/out_*/
+viz_data/
+viz_runs/
+viz_out_*/
+xcheck_*.npz

@@ -2,9 +2,8 @@
 # Camera: robot's first-person front RGB (the policy view)
 # ============================================================================
 #
-# This is the camera the POLICY sees - it's the "current image" that goes
-# into the VLA at every inference step. Resolution + framerate match what
-# the old server.py used.
+# This is the camera the policy sees - the "current image" that goes
+# into the VLA at every inference step.
 #
 # Robot-agnostic: the search prefix and name-hints come from the active
 # robot's yaml via ${env.robot.*} interpolation. Swapping the robot
@@ -28,7 +27,7 @@ auto_discover:
 # correctly in the USD).
 translation_required: false
 
-# (W, H) - 640x480 matches the old server's setting. Note that the VLA
+# (W, H). Note that the VLA
 # downsamples to 224x224 internally; capturing higher and downsampling
 # preserves more detail than capturing at 224 directly.
 resolution: [640, 480]

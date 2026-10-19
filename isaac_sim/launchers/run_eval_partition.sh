@@ -2,7 +2,8 @@
 ROOT="${INFRAVLA_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"; export INFRAVLA_ROOT="$ROOT"
 EXP="${1:?usage: run_eval_partition.sh <experiment_name>}"
 
-# CAP=1 queue gate — see the Notes block at the end of this file.
+# Queue gate: while runs/evaluation/EVAL_QUEUE_PAUSED exists, wait before
+# starting (pause queued evals). Set EVAL_GATE_BYPASS=1 to skip the wait.
 GATE="$ROOT/runs/evaluation/EVAL_QUEUE_PAUSED"
 if [ -z "${EVAL_GATE_BYPASS:-}" ]; then
   while [ -f "$GATE" ]; do

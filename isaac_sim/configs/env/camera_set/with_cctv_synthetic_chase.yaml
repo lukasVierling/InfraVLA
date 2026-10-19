@@ -1,12 +1,12 @@
 # @package env.cameras
 # ============================================================================
-# Camera-set: ego front + synthetic top-down chase + CCTV
+# Camera-set: ego front + synthetic chase + CCTV
 # ============================================================================
 #
 # For Nova Carter (or any robot without a built-in third-person prim). The
 # `chase_cam` is the synthetic camera defined in env/camera/nova_carter_chase
-# — a Camera prim parented under /World/NovaCarter/chassis_link at +8 m up,
-# inheriting the chassis pose so it tracks the robot top-down.
+# — a Camera prim parented under /World/NovaCarter/chassis_link, behind and
+# above the robot, inheriting the chassis pose so it tracks the robot.
 #
 # Use as:
 #     python eval_policy.py env/robot=nova_carter \

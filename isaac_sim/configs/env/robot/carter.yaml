@@ -6,10 +6,8 @@
 # # @package env.robot mounts these fields at cfg.env.robot, which is exactly
 # what Robot(env_config.robot_config) in robot.py pulls apart.
 #
-# Values mirror isaac_sim/helper/constants.py (the canonical source for the
-# *trained* model's robot geometry). If you ever change wheel_base or
-# wheel_radius here you also need to retrain — the controller's twist solve
-# assumes these values.
+# If you change wheel_base or wheel_radius, policies trained on this robot
+# need retraining — the controller's twist solve assumes these values.
 # ============================================================================
 
 robot_name: "Carter"
@@ -17,10 +15,10 @@ controller: "Differential"
 
 # Stage path the robot is instantiated under. Single source of truth for any
 # other code that needs to locate the robot in the USD stage (camera auto-
-# discovery walks under this; scouting's obstacle reader excludes this).
+# discovery walks under this; the A* obstacle reader excludes this).
 prim_path: "/World/Carter"
 
-# USD asset path, RELATIVE to the Isaac Sim assets_root (Nucleus). The Robot
+# USD asset path, relative to the Isaac Sim assets_root (Nucleus). The Robot
 # constructor prepends assets_root before passing to WheeledRobot.
 usd_rel: "/Isaac/Robots/NVIDIA/Carter/carter_v1.usd"
 
@@ -29,7 +27,7 @@ usd_rel: "/Isaac/Robots/NVIDIA/Carter/carter_v1.usd"
 # startup is the right place to look.
 wheel_dof_names: ["left_wheel", "right_wheel"]
 
-# Carter v1 physical geometry. Same numbers as constants.CARTER_V1_*.
+# Carter v1 physical geometry.
 wheel_radius: 0.24
 wheel_base: 0.54
 
@@ -38,7 +36,7 @@ wheel_base: 0.54
 # ~0.27 m; 0.4 m here adds ~0.13 m buffer for control error and goal-prop
 # AABB slop. Lower it only if A* starts claiming "no path" in tight aisles.
 # Single source of truth — env/astar/default.yaml interpolates this via
-# ${env.robot.inflation_m}; do NOT also set robot_inflation_m there.
+# ${env.robot.inflation_m}; do not also set robot_inflation_m there.
 inflation_m: 0.4
 
 # Camera prim-discovery hints, consumed by env/camera/*.yaml via

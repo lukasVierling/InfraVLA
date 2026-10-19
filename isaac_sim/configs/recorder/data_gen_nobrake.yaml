@@ -1,8 +1,8 @@
 # ============================================================================
-# Recorder — data-generation runs, NO-BRAKE variant
+# Recorder — data-generation runs, no-brake variant
 # ============================================================================
 #
-# Identical to data_gen.yaml EXCEPT runs_root points at a separate folder so
+# Identical to data_gen.yaml except runs_root points at a separate folder so
 # brake-free trajectories never co-mingle with braked ones in runs/data_gen/.
 # Used by the no-brake data-gen experiments (paired with policy
 # astar_oracle_nobrake). Keeping them in their own root means a split built

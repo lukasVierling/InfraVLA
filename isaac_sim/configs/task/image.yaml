@@ -1,5 +1,5 @@
 # Task: single goal-image (modality = {"image"} -> mode 6).
-# Paper's "<=3 m" case from root.tex:300. For longer-range image goals
+# OmniVLA's "<=3 m" image-goal case. For longer-range image goals
 # use image_graph.yaml (topological memory).
 
 name: image

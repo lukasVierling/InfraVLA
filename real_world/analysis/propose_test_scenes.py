@@ -116,17 +116,12 @@ def main() -> None:
     p.add_argument("--x-lo", type=float, default=-4.4); p.add_argument("--x-hi", type=float, default=3.5)
     p.add_argument("--y-lo", type=float, default=-0.4); p.add_argument("--y-hi", type=float, default=2.4)
     p.add_argument("--sep-min", type=float, default=1.5)
-    # FOV is DERIVED, not typed. FrontStitcher builds its remap on a 110 deg
-    # canvas (width 768 -> f = 384/tan(55 deg) = 268.9 px) and then crops to the
-    # valid region; the delivered images measure 599x449 px, so the real
-    # horizontal field is 2*atan(599/2/268.9) = 96.2 deg. The 110 in
-    # operator_loop's hfov_deg param is the canvas, NOT the field of view.
-    # Derivation: delivered HFOV 96.2 deg (f = 384/tan55 = 268.9 px over 599 px),
-    # half-FOV 48.1; dead-band +-15% = [40.9, 55.3], ROUNDED to [40, 55] for
-    # legibility. Free rounding: training visibility counts are identical at
-    # 40 vs 40.9 (9/75 objects, scenes 17/7/1/0) and 55 vs 55.3 (21/75, 10/9/6/0).
-    # The margin exists because an object centred exactly on the FOV edge is half
-    # out of frame and sits where the plane projection is worst.
+    # FOV is derived, not typed. FrontStitcher remaps onto a 110 deg canvas
+    # (width 768 -> f = 268.9 px) and crops to the valid 599 px, so the real
+    # horizontal field is 2*atan(599/2/268.9) = 96.2 deg (the 110 in
+    # operator_loop's hfov_deg is the canvas). Half-FOV 48.1 deg with a +-15%
+    # dead-band = [40.9, 55.3], rounded to [40, 55]: an object centred on the
+    # FOV edge is half out of frame and sits where the projection is worst.
     p.add_argument("--th-in", type=float, default=40.0,
                    help="visible if |bearing| <= this (deg)")
     p.add_argument("--th-out", type=float, default=55.0,

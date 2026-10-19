@@ -1,14 +1,12 @@
 #!/usr/bin/env bash
-# Experiment-1 paper table: closed-loop langv2 TEST eval (52 scenes) for the four
-# arms that lack a complete result — A0 (re-run FULL 52; the old sweep covered only
-# 37, unequal denominators), B1 cctvfirst, C1 sharedenc, E1 no-upsampling.
-# A1 avgpool16 and D3 frozen-backbone already have complete 52/52 sweeps.
+# Experiment-1 paper table: closed-loop langv2 TEST eval (52 scenes) for arms
+# A0 (avgpool64), B1 (cctvfirst), C1 (shared encoder) and E1 (no upsampling);
+# A1 (avgpool16) and D3 (frozen backbone) are read from existing sweeps.
 #
-# 12 jobs (4 arms x 3 shards) run STRICTLY SEQUENTIALLY (CAP=1): a single langv2
-# eval proc reaches 38-53 GB, so 2+ concurrent OOM the 95 GB card and every rollout
-# returns outcome=exception (voided a whole sweep 2026-08-08, see potential_bugs).
-# Each shard's overlay line is checked against the arm's checkpoint — the RELOAD
-# trap (.claude/potential_bugs.md 2026-08-04) silently evaluated the WRONG model once.
+# 12 jobs (4 arms x 3 shards) run sequentially (CAP=1): one langv2 eval process
+# reaches 38-53 GB, so concurrent shards OOM a 95 GB GPU and every rollout
+# returns outcome=exception. Each shard's overlay log line is checked against
+# the arm's checkpoint, since a stale model reload fails silently.
 set -uo pipefail
 ROOT="${INFRAVLA_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"; export INFRAVLA_ROOT="$ROOT"
 export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
@@ -85,7 +83,7 @@ for name, root in arms:
     (root / "REACH_summary.json").write_text(json.dumps(
         {"arm": name, "n": n, "reach_at_0.3": r03 / n, "reach_at_1.0": r10 / n,
          "reached": r03, "outcomes": dict(oc)}, indent=1))
-# stability check: A0 rerun vs the OLD partial sweep (same model, same scenes)
+# stability check: A0 vs an earlier partial sweep (same model, same scenes)
 old = load("runs/evaluation/sweeps/langv2test_eval_v4")
 new = load(SW / "A0full")
 common = sorted(set(old) & set(new))

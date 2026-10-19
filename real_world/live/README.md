@@ -23,9 +23,9 @@ the only real one.
 ## Pipeline
 
 ```
-/camera/frontleft/image/compressed  ─┐
+/camera/frontleft/compressed        ─┐
                                      ├─ stitch ─ onboard.png ─[ZMQ]─ OmniVLA ─ 8-waypoint chunk
-/camera/frontright/image/compressed ─┘                                            │
+/camera/frontright/compressed       ─┘                                            │
                                                                      waypoint[4] ─┤
                      artifacts on disk ── you review ── printed ros2 command ──────┘
                                                     │
@@ -53,11 +53,10 @@ the only real one.
    `step.json` as `max_step_cap_m` / `max_step_cap_source`. Set `max_step_m > 0`
    to override with a fixed value.
 
-   It used to be a flat 0.75 m, chosen when spacing was 0.09 -- where it fired on
-   0.00% of steps. At spacing 0.19 that same 0.75 m truncated **21.8%** of the
-   ground-truth chunks (p50 step 0.611 m, p90 0.772, max 0.868), so it had
-   silently become a systematic under-step rather than a guard. The derived cap
-   clamps 0.00% and rescales correctly if `waypoint_index` changes.
+   A fixed cap does not scale with the spacing: at spacing 0.19 a flat 0.75 m
+   would truncate ~22% of ground-truth chunks (p90 step 0.772 m), turning the
+   guard into a systematic under-step. The derived cap clamps none of them and
+   rescales correctly if `waypoint_index` changes.
 
 ## Stitching
 

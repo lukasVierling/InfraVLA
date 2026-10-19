@@ -185,8 +185,8 @@ def render_path_map(
     if handles:
         # Legend OUTSIDE the axes (to the right), vertically centred, so it never
         # overlaps the trajectory/map. bbox_to_anchor is axes-relative: (1.02, 0.5)
-        # sits just past the right edge. (style["legend_loc"] is unused here now —
-        # the outside placement is unconditional so the plot view is never clipped.)
+        # sits just past the right edge. style["legend_loc"] is not used: the
+        # outside placement is unconditional so the plot view is never clipped.
         ax.legend(loc="center left", bbox_to_anchor=(1.02, 0.5),
                   fontsize=float(style["legend_fontsize"]),
                   framealpha=float(style["legend_framealpha"]))
@@ -223,7 +223,7 @@ def save_planning_viz(env, out_path, style) -> _PathlibPath:
     Kept as a named function because data_gen calls it with an `env`; the actual
     drawing lives in render_path_map so the planning and rollout views can't
     drift apart. Headings are sampled at `style.astar_sample_spacing_m` and drawn
-    as the production headings a future `_record_image_graph` would attach
+    as the headings `_record_image_graph` would attach
     (analytic tangent interior / next-node secant at endpoints — see SplinePath
     in a_star/planner.py). The A* path is drawn SOLID here (it's the subject —
     no rollout to compare against yet), per style.astar_linestyle.

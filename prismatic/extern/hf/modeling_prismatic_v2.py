@@ -864,12 +864,11 @@ class PrismaticForConditionalGeneration_MMNv1(PrismaticPreTrainedModel):
         # swapping the encoder is purely a call-site indirection. See vision_encoder.py.
         self.vision_encoder = LocalDinoSigLipEncoder(self.vision_backbone, self.projector)
         # EncodedVision stashed by _process_vision_features so the CCTV mask builder
-        # can read per_block_widths (single-threaded today; async-race caveat noted
-        # in the project's suspicion log).
+        # can read per_block_widths (assumes single-threaded forward calls).
         self._last_encoded = None
 
         # Optional per-image token-block permutation (cfg `image_slot_order`), applied
-        # AFTER encoding so the encode-routing stays untouched. None => identity => legacy.
+        # AFTER encoding so the encode-routing stays untouched. None => identity order.
         # Set from train/eval model-build via set_image_block_order(resolve_image_slot_perm(...)).
         self._block_perm = None
 
@@ -1008,8 +1007,8 @@ class PrismaticForConditionalGeneration_MMNv1(PrismaticPreTrainedModel):
             camera_params=camera_params,
         )
         # Config-driven reorder of per-image token blocks (e.g. ego-last: CCTV first,
-        # ego nearest the action readout). Identity when _block_perm is None -> byte-
-        # identical to legacy. block_present rides a SEPARATE arg into forward(), so it
+        # ego nearest the action readout). Identity when _block_perm is None (unchanged
+        # token order). block_present rides a SEPARATE arg into forward(), so it
         # is reordered there with the SAME perm (it never reaches this method).
         if self._block_perm is not None:
             tokens, widths = permute_token_blocks(enc.tokens, enc.per_block_widths, self._block_perm)

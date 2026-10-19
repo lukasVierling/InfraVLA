@@ -2,13 +2,13 @@
 # Task: language-only goal (modality = {"lang"} -> mode 7)
 # ============================================================================
 #
-# Mirrors experiments.TASKS["lang"]. Task(...) in task.py validates the
+# Task(...) in task.py validates the
 # modality combo against MODALITY_TO_ID — only the 9 combos in that table
 # are legal.
 #
 # The full prompt the tokenizer sees is
 #   "What action should the robot take to {lang_instruction}?"
-# (See LeLan's training pattern in prismatic/vla/datasets/lelan_dataset.py:433.)
+# (the LeLan training prompt pattern).
 # ============================================================================
 
 name: lang
@@ -30,6 +30,5 @@ max_steps: 200
 
 # Tight default — the server returns the *standoff* position (compute_effective_goal:
 # prop AABB + parking buffer), which already parks the robot in open space.
-# 0.3 m is "image-localisation slop". Wider thresholds were needed back when
-# goal_xy was the prop centre.
+# 0.3 m is "image-localisation slop".
 success_dist: 0.3

@@ -130,9 +130,8 @@ class MapBuilder:
         fix_prims = _get_world_fix_prims(stage)
         prims = added_prims + fix_prims
 
-        # Yaml-sourced size cap (env/astar/*.yaml). wall_layout scenes need
-        # 3.5 — the stock 6 m wall composes to half-extent 3.000002 m and
-        # vanishes at the historical 3.0 default.
+        # Yaml-sourced size cap (env/astar/*.yaml): prims with a larger
+        # half-extent are treated as building structure and skipped.
         max_half = float(self.cfg.max_obstacle_half_extent_m)
 
         origin, shape = self._world_bounds(prims, bc, max_half)
@@ -214,10 +213,9 @@ def _world_aabb(prim, bc, max_half_extent_m=_MAX_OBSTACLE_HALF_EXTENT_M):
         return None
     if xmax < xmin or ymax < ymin:
         # USD's EMPTY-range sentinel is (+FLT_MAX, -FLT_MAX): geometry-less
-        # Imageables (e.g. a "Looks" Scope under a referenced prop). The
-        # negative half-extent sneaked past the size cap below and blew the
-        # world bounds to ±3.4e38 -> every map silently clamped to 200 m
-        # (confirmed in all datagen logs, 2026-06-10).
+        # Imageables (e.g. a "Looks" Scope under a referenced prop). Its
+        # negative half-extent would slip past the size cap below and blow the
+        # world bounds up to ±3.4e38.
         return None
     cx, cy = 0.5 * (xmin + xmax), 0.5 * (ymin + ymax)
     hx, hy = 0.5 * (xmax - xmin), 0.5 * (ymax - ymin)

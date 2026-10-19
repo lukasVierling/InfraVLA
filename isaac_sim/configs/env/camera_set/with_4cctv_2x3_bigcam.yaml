@@ -1,8 +1,8 @@
 # @package env.cameras
-# "Adjusted bigcam" 4-CCTV set for the 2x3 warehouse (Lukas, 2026-07-07): ego
-# front + four 16mm/24x24 CCTVs, each focused on its own part while the set
-# still covers almost the entire warehouse. ADOPTED for v3 data-gen runs.
-# Same camera NAMES as with_4cctv_2x3 -> all downstream conventions unchanged.
+# "Adjusted bigcam" 4-CCTV set for the 2x3 warehouse: ego front + four
+# 16mm/24x24 CCTVs, each focused on its own part while the set still covers
+# almost the entire warehouse. Used for the 2x3 data-gen and eval runs.
+# Same camera names as with_4cctv_2x3, so downstream conventions are shared.
 defaults:
   - /env/camera@front_cam: carter_front
   - /env/camera@cctv_NE: cctv_2x3_ne_bigcam

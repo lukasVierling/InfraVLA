@@ -46,11 +46,10 @@ fi
 
 # ---------------------------------------------------------------------------
 # CONTRACT CHECK. num_images_in_input / cctv_cam_names / spacing live only in the
-# training config, so serving them meant re-typing values that fail SILENTLY when
-# wrong: on 2026-08-24 this checkpoint was served with no --cctv at all, through
-# OnboardOnlyPolicy, and produced plausible-looking chunks from a misaligned
-# action slice. merge_lora_for_serving now writes serving.json beside the merged
-# weights; this refuses any launch that contradicts it.
+# training config, and wrong values fail silently (e.g. serving a CCTV checkpoint
+# without --cctv yields plausible-looking chunks from a misaligned action slice).
+# merge_lora_for_serving writes serving.json beside the merged weights; this
+# refuses any launch that contradicts it.
 # ---------------------------------------------------------------------------
 SIDE="$REAL/serving.json"
 if [ -f "$SIDE" ]; then

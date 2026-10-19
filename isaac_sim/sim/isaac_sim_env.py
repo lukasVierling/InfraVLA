@@ -9,7 +9,7 @@ for _p in (_REPO_ROOT, f"{_REPO_ROOT}/isaac_sim", os.path.dirname(__file__)):
         sys.path.insert(0, _p)
 
 # NOTE: anything importing omni / pxr / isaacsim must be imported AFTER
-# SimulationApp boots — those are deferred to inside __init__. See notes at EOF.
+# SimulationApp boots — those are deferred to inside __init__.
 from isaac_sim.planning.a_star.planner import A_star
 from isaacsim import SimulationApp
 from scenes import _common as env_common
@@ -17,18 +17,19 @@ from scenes.templates import REGISTRY as TEMPLATE_REGISTRY
 from omegaconf import OmegaConf
 import math
 
-# Process-level singletons — see notes at EOF for why these are module-scope.
+# Process-level singletons: Kit can only be booted once per process, so the
+# app and the last env are kept at module scope and reused on RELOAD.
 _SIM_APP = None   # SimulationApp; boot once, reuse across all envs.
 _LAST_ENV = None  # most-recent IsaacSimEnv, for ordered teardown on RELOAD.
 
 
 def _ensure_sim_app(headless=True):
-    """Starts the simulation app and rewrites cache since we have Sudo issues."""
+    """Starts the simulation app with Kit caches redirected to user-writable dirs."""
     global _SIM_APP
     if _SIM_APP is not None:
         return _SIM_APP
     # Redirect Kit caches to user-writable dirs (/isaacsim is root-owned).
-    # OV_CACHE_DIR gives parallel data-gen instances separate caches; see EOF.
+    # OV_CACHE_DIR gives parallel data-gen instances separate caches.
     _ov_cache = os.path.expanduser(os.environ.get("OV_CACHE_DIR", "~/.cache/ov-isaacsim"))
     _ov_logs = os.path.join(_ov_cache, "logs")
     _ov_shaderdb = os.path.join(_ov_cache, "shaderdb")
@@ -83,8 +84,8 @@ class IsaacSimEnv:
         from isaac_sim.sim.camera import Camera
 
         if is_reload:
-            # Teardown order is load-bearing — see notes at EOF. Release the OLD
-            # env's Kit resources, drop the World singleton, then wipe the stage.
+            # Teardown order matters: release the OLD env's Kit resources,
+            # drop the World singleton, then wipe the stage.
             if _LAST_ENV is not None:
                 _LAST_ENV._release_kit_resources()
             World.clear_instance()
@@ -97,8 +98,8 @@ class IsaacSimEnv:
         # If the scene config names a `base_usda`, open it AS the stage instead of
         # building the warehouse procedurally — loads a pre-authored layout
         # (reshape + manual tile fixes + CCTV cameras) verbatim from the file.
-        # GATED: `base_usda` is unset for every existing scene, so their behaviour
-        # is byte-identical. World() then wraps whatever stage is current.
+        # Scenes without `base_usda` are unaffected. World() then wraps whatever
+        # stage is current.
         try:
             base_usda = env_cfg.get("base_usda", None)
         except AttributeError:
@@ -142,16 +143,14 @@ class IsaacSimEnv:
         self.effective_goal_pose = None
         self.resolve_effective_start_and_goal_pose()
 
-        # TWO-PASS PLANNING (2026-07-20, Lukas's standoff design + graze fix):
-        # pass 1 above ignored the /World/Goal target (needed: its centre IS the
-        # goal), which left the driven path with no clearance guarantee from the
-        # target itself — measured 0.37 m surface / ~7 cm chassis margin on a
-        # forklift target (potential_bugs 2026-07-20). Fix: after the effective
-        # (standoff) goal is fixed, swap the PUBLIC planner to a target-aware
-        # map, so the start->effective-goal plan (data_gen.py pass 2) avoids the
-        # target like any other obstacle. Requires standoff_buffer_m >
-        # robot_inflation_m, else the effective goal sits inside the inflated
-        # target and pass 2 cannot plan (warehouse_2x3.yaml: 0.5 > 0.35).
+        # Two-pass planning: pass 1 above ignores the /World/Goal target (its
+        # centre IS the goal), so the driven path has no clearance guarantee
+        # from the target itself. Once the effective (standoff) goal is fixed,
+        # swap the public planner to a target-aware map so the
+        # start->effective-goal plan (data_gen.py pass 2) avoids the target like
+        # any other obstacle. Requires standoff_buffer_m > robot_inflation_m,
+        # else the effective goal sits inside the inflated target and pass 2
+        # cannot plan (warehouse_2x3.yaml: 0.5 > 0.35).
         goal_prim = omni.usd.get_context().get_stage().GetPrimAtPath("/World/Goal")
         if goal_prim.IsValid():
             from pxr import Usd, UsdGeom
@@ -281,8 +280,8 @@ class IsaacSimEnv:
                                    p_forward[0] - p_start[0])
 
         # Mode dispatch (start_heading_mode: astar | fixed | random). Default
-        # "astar" reproduces legacy behavior exactly; "fixed"/"random" stop
-        # the A* answer from leaking into the spawn yaw (eval probes).
+        # "astar" faces along the planned path; "fixed"/"random" stop the A*
+        # answer from leaking into the spawn yaw (eval probes).
         mode = getattr(self.template_cfg, "start_heading_mode", "astar")
         start_heading = env_common.resolve_start_heading_rad(
             mode,
@@ -302,7 +301,7 @@ class IsaacSimEnv:
         goal_heading = math.atan2(p_end[1] - p_back[1],
                                   p_end[0] - p_back[0])
 
-        # No-prop scenes (template1 with goal_kinds=[]) skip the standoff —
+        # No-prop scenes (goal_kinds=[]) skip the standoff —
         # the goal is a point in space, robot drives straight to it.
         stage = omni.usd.get_context().get_stage()
         if stage.GetPrimAtPath("/World/Goal").IsValid():
@@ -316,16 +315,12 @@ class IsaacSimEnv:
         eff_gx = gx - standoff * math.cos(goal_heading)
         eff_gy = gy - standoff * math.sin(goal_heading)
 
-        # Goal-pose heading FED TO THE POLICY. The A* approach tangent
-        # (goal_heading) encodes the detour side — an L-wall forces the route
-        # around the OPEN end, so its sign is the which-way-around answer.
-        # Handing that to the pose input leaks the solution (the ego-only
-        # baseline solved L purely off this sign). Wherever the spawn yaw is
-        # de-leaked (start_heading_mode != "astar" — the eval probes), de-leak
-        # the goal yaw the SAME way: point it "straight", i.e. at the start
-        # heading, so the goal pose carries NO side information and the policy
-        # must see the route. The physical standoff (eff_gx/eff_gy above) still
-        # uses the true approach tangent; legacy "astar" scenes are unchanged.
+        # Goal-pose heading fed to the policy. The A* approach tangent encodes
+        # the detour side, so passing it to the pose input leaks the route.
+        # Wherever the spawn yaw is de-leaked (start_heading_mode != "astar"),
+        # de-leak the goal yaw the same way: set it to the start heading so the
+        # goal pose carries no side information. The physical standoff
+        # (eff_gx/eff_gy above) still uses the true approach tangent.
         goal_pose_heading = goal_heading if mode == "astar" else start_heading
         self.effective_start_pose = {"xy": (sx, sy),
                                      "heading_rad": start_heading}
@@ -357,43 +352,18 @@ class IsaacSimEnv:
         capture_images is forwarded to get_observations(): data-gen passes False
         on non-recording ticks to skip the camera readback.
 
-        RENDER: we MUST call world.step(render=True) on every physics tick.
+        Rendering: world.step(render=True) is called on every physics tick.
+        Rendering only right before the readback looks like a large saving
+        (images are read at 3 Hz, the loop runs at 30 Hz) but returns stale
+        frames: Isaac's camera annotators need more than one render pass to
+        refresh, so the policy would silently observe the world one control
+        step (~333 ms) late.
 
-        !! DO NOT "OPTIMISE" THIS BY RENDERING ONLY BEFORE THE READBACK !!
-        Tried and REVERTED 2026-07-13. The RTX render is the dominant GPU cost of
-        a sim-in-the-loop eval (4x 720x720 CCTV + 640x480 ego ~= 2.4M px/frame)
-        and images are only read back at 3 Hz while this loop runs at 30 Hz, so
-        gating the render on `capture_images` looks like a free ~20x saving.
-        It is not: Isaac's camera annotators need MORE THAN ONE render pass to
-        refresh, so a single render before the readback hands back the PREVIOUS
-        tick's frame. Measured (tests/test_render_gating.py): the gated frame at
-        step N was 6x closer to the legacy frame at step N-1 than to its own
-        step N (mean|diff| 1.8 vs 11.1) => the policy silently observes a world
-        one control step (~333 ms) STALE. It does not crash and does not look
-        wrong; it would just quietly corrupt every eval and every generated
-        dataset.
-
-        The sanctioned retry is ISAAC_RENDER_FLUSH_K=K: skip the render on
-        every physics tick and instead issue K physics-free World.render()
-        passes (playSimulations off -> app.update -> on) immediately before
-        the readback, flushing the annotator pipeline at the CURRENT state.
-        (A "render the last K ticks" variant does NOT work: the 30 Hz loops
-        call env.step with n_physics_ticks=2, so per-call gating saturates at
-        2 renders — and K=2 measured STALE, the pipeline is >=2 frames deep.)
-        Any K MUST pass tests/test_render_gating.py, which compares each frame
-        against the reference's CURRENT vs PREVIOUS frame (a plain pixel-diff
-        cannot see staleness: the sim is nondeterministic, so even
-        legacy-vs-legacy is 0/100 pixel-identical). Default (unset/0) = legacy.
-
-        MEASURED 2026-07-20 (outputs/render_gate_verdict*.txt): K=3 and K=4
-        -> STALE (early frames match reference N-1); K=8 -> 5 fresh / 14
-        ambiguous, while the legacy-vs-legacy CONTROL is 19/19 fresh with 0
-        ambiguous — so K=8 is NOT observation-equivalent either (partially
-        refreshed annotator state, not clean staleness). K=16 would save only
-        ~20% of renders. VERDICT: flush-K FAILED validation at every useful K;
-        leave ISAAC_RENDER_FLUSH_K unset. Wall-clock speed for big campaigns
-        comes from parallel data-gen lanes (4x validated 2026-07-20, 5.2 GB
-        VRAM/instance), not render gating.
+        ISAAC_RENDER_FLUSH_K=K is an experimental alternative: physics ticks
+        run unrendered and K physics-free World.render() passes flush the
+        annotator pipeline right before the readback. In our measurements no
+        useful K (3, 4, 8) produced frames equivalent to every-tick rendering,
+        so leave it unset (default 0 = render every tick).
         """
         # Default (n_physics_ticks=None) → one recording tick (STEPS_PER_TICK
         # physics ticks = one 3 Hz VLA-inference interval). Eval uses the default.
@@ -403,12 +373,10 @@ class IsaacSimEnv:
         if n_physics_ticks is None:
             n_physics_ticks = self.STEPS_PER_TICK
         self.robot.apply_action(actions)
-        # ISAAC_RENDER_FLUSH_K (see banner above): 0/unset = legacy every-tick
-        # render; K>=1 = physics ticks run UNrendered, then K physics-free
-        # World.render() passes flush the annotator pipeline at the current
-        # state right before the readback (no renders at all on
-        # capture_images=False calls). Any K must pass
-        # tests/test_render_gating.py before real use.
+        # ISAAC_RENDER_FLUSH_K (see docstring): 0/unset = render every tick;
+        # K>=1 = physics ticks run unrendered, then K physics-free
+        # World.render() passes flush the annotator pipeline right before the
+        # readback (no renders at all on capture_images=False calls).
         flush_k = int(os.environ.get("ISAAC_RENDER_FLUSH_K", "0"))
         for _ in range(n_physics_ticks):
             self.world.step(render=(flush_k <= 0))
@@ -421,7 +389,7 @@ class IsaacSimEnv:
                        start_heading_mode=None):
         """Re-pose the robot's START without rebuilding the env ("fast grid").
 
-        For pose sweeps over a FIXED scene (wall_layout grids), recreating
+        For pose sweeps over a fixed scene, recreating
         the whole env per run costs ~8 min while only the spawn changes.
         This updates the three places the spawn pose lives, so the next
         env.reset() (every eval run begins with one) places the robot at the
@@ -436,9 +404,9 @@ class IsaacSimEnv:
           3. robot.initial_pos / initial_ori — what Robot.reset() teleports
              to (world.reset alone would restore the construction pose).
 
-        Only meaningful for explicit-spawn templates (wall_layout, t1/t2,
-        random_open). Driven by eval_policy.py for KEEP_ENV/KEEP_BOTH runs
-        that carry pose-override keys.
+        Only meaningful for explicit-spawn templates. Driven by
+        eval_policy.py for KEEP_ENV/KEEP_BOTH runs that carry pose-override
+        keys.
         """
         import numpy as np
 

@@ -2,14 +2,8 @@
 # Policy-side controller knobs
 # ============================================================================
 #
-# These used to live as class constants on Policy in policy.py (THRES_DIST,
-# WAYPOINT_*, STUCK_*, maxv/maxw, DT). Promoting them into a config group so
-# they're swept-over-able and defendable in the thesis. Each value below
-# carries a justification — that's the point of the config.
-#
-# Consumed by Policy via cfg.controller.*. If you add a knob, also add a
-# justifying comment for *why* the default is what it is — silent numerical
-# choices are the thing this config exists to prevent.
+# Consumed by Policy via cfg.controller.*. Each value below carries a short
+# justification; please keep that convention when adding knobs.
 # ============================================================================
 
 # --- Goal handling ----------------------------------------------------------
@@ -17,17 +11,15 @@
 # Clamp goal-pose radius (in metres) before encoding. Paper's run_omnivla.py
 # uses 30.0 — goals farther away than this are pulled in along the same
 # bearing so the encoded value stays in-distribution for the pose embedder.
-# 2026-07-02 (Lukas): DISABLED (.inf -> the policy.py:313 `radius > thres`
-# branch never fires). The paper's 30 m cap protected the PRETRAIN pose
-# distribution; our 2x3 fine-tune data feeds UNCAPPED goal poses up to ~50 m
-# (max_goal_distance_steps 300, no Euclidean clamp in the dataset), so the cap
-# was a train/inference inconsistency — eval saturated at 30 m while training
-# saw the true distance. Paper value kept above for provenance.
+# Disabled here (.inf -> the clamp never fires): the 30 m cap protected the
+# pretraining pose distribution, but our 2x3 fine-tune data uses uncapped goal
+# poses up to ~50 m, so clamping at inference would be inconsistent with
+# training.
 thres_dist_m: .inf
 
 # --- Waypoint controller ----------------------------------------------------
 
-# Note: waypoint_spacing_m and dt_s are DERIVED in policy.py from the top-
+# Note: waypoint_spacing_m and dt_s are derived in policy.py from the top-
 # level `control_hz` and `max_linear_vel_mps`:
 #     waypoint_spacing_m = max_linear_vel_mps / control_hz
 #     dt_s               = 1 / control_hz
@@ -59,7 +51,7 @@ stuck_grace_steps: 10
 
 # --- Velocity limits (diff-drive twist saturation) --------------------------
 
-# Hard caps on linear and angular velocity, applied AFTER the unconstrained
+# Hard caps on linear and angular velocity, applied after the unconstrained
 # PD-style solve. Lower than Carter's mechanical limits — chosen so the
 # robot doesn't outpace the inference cadence (3 Hz) and overshoot waypoints.
 max_linear_vel_mps: 1.0

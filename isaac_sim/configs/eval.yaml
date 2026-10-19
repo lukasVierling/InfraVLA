@@ -2,37 +2,22 @@
 # OmniVLA Isaac Sim closed-loop evaluation — top-level Hydra config
 # ============================================================================
 #
-# Consumed by:  isaac_sim/eval/new_server_client/eval_policy.py
+# Consumed by:  isaac_sim/eval_policy.py
 #
-# Mental model — one run = a triple (policy, task, env) plus the controller
-# constants and the recorder. The `defaults:` list picks one option from each
-# config group; CLI overrides swap any of them per-invocation:
-#
-#   python eval_policy.py task=image_graph env/scene=template3_medium
-#   python eval_policy.py policy=omnivla_finetuned_sim env/camera_set=with_cctv
-#
-# Group layout mirrors how eval_policy.py consumes the configs:
-#   Policy(policy_conf)        <-  cfg.policy
-#   Task(task_conf)            <-  cfg.task
-#   IsaacSimEnv(env_conf)      <-  cfg.env       (scene fields directly +
-#                                                 env.robot + env.cameras)
-#   Recorder(...)              <-  cfg.recorder
-#   Policy controller knobs    <-  cfg.controller   (was hardcoded constants
-#                                                    in policy.py)
+# One run = (policy, task, env) plus controller constants and the recorder.
+# The `defaults:` list picks one option per config group; CLI overrides swap
+# any of them, e.g.
+#   python eval_policy.py task=image_graph env/camera_set=with_4cctv_2x3
 # ============================================================================
 
 defaults:
   - policy: omnivla_original
   - task: pose
   - env/scene: warehouse_2x3        # mounts scene fields at cfg.env.*
-  - env/robot: nova_carter           # Nova Carter (Isaac Sim 5.x default).
-                                     # Distribution shift vs Carter-v1-trained
-                                     # policy — see env/robot/nova_carter.yaml
-                                     # CAVEAT block. Expect degraded outcomes.
-  - env/camera_set: with_cctv_synthetic_chase  # Nova-Carter-compatible:
-                                     # synthetic top-down chase prim parented
+  - env/robot: nova_carter           # Nova Carter (Isaac Sim 5.x default)
+  - env/camera_set: with_cctv_synthetic_chase  # synthetic chase prim parented
                                      # under /World/NovaCarter/chassis_link
-                                     # since Nova Carter ships no chase prim.
+                                     # (Nova Carter ships no chase prim)
   - env/astar: default               # mounts A* planner knobs at cfg.env.astar
   - controller: omnivla_default
   - recorder: default
@@ -52,7 +37,7 @@ run:
 # Put Hydra's per-invocation working dir INSIDE this run's own output dir under
 # runs/ (recorder.runs_root is always set via `recorder: default`), so the
 # resolved-config snapshot (.hydra/) + hydra log sit WITH the run's results —
-# never accumulating in the code tree. See runs/README → Housekeeping.
+# never accumulating in the code tree.
 hydra:
   searchpath:
     - pkg://isaac_sim.configs._generated
@@ -63,10 +48,9 @@ hydra:
 # Paper-pinned to 3 Hz because action chunks are tokenised at 3 Hz; changing
 # this requires retraining the action head.
 #
-# SOT for waypoint_spacing and the policy's internal dt_s — Policy derives:
+# Single source of truth for waypoint_spacing and the policy's dt_s:
 #     waypoint_spacing_m = max_linear_vel_mps / control_hz
 #     dt_s               = 1 / control_hz
-# That's why neither lives in the controller yaml anymore.
 control_hz: 3.0
 
 # Cadence at which the recorder saves frames + log rows. Independent of
@@ -76,10 +60,9 @@ control_hz: 3.0
 record_hz: 3.0
 
 # Inner PhysX integrator rate — sets World(physics_dt = 1 / physics_hz) and,
-# via record_hz, STEPS_PER_TICK. This is NOT a tuning knob: 60 Hz is the Isaac
+# via record_hz, STEPS_PER_TICK. This is not a tuning knob: 60 Hz is the Isaac
 # Sim default, and changing it would require re-validating PhysX behaviour
-# under the trained dynamics. It lives here (not as a stray constants.py) so
-# it's the single source of truth; isaac_sim_env derives physics_dt from it.
+# under the trained dynamics. isaac_sim_env derives physics_dt from it.
 # Kept identical to data_gen.yaml's physics_hz.
 physics_hz: 60
 
@@ -87,9 +70,8 @@ physics_hz: 60
 # Fine-grained (decoupled) control for rollouts
 # ---------------------------------------------------------------------------
 # The VLA forward is slow (~200 ms) so it can only be queried at control_hz
-# (3 Hz). The legacy loop collapses each prediction into ONE (v, w) held for
-# 0.33 s — a coarse lunge that overshoots on heading-change scenes (built-up
-# angular momentum can't reverse within one 0.33 s tick -> spin-stuck).
+# (3 Hz). The default loop collapses each prediction into one (v, w) held for
+# 0.33 s, which can overshoot on heading-change scenes.
 #
 # When enabled, the VLA is still queried at control_hz to predict the waypoint
 # chunk, and a high-rate follower (WaypointFollower) steers toward the predicted
@@ -98,8 +80,7 @@ physics_hz: 60
 # each ~3 Hz query. This high-rate recompute (mirroring data_gen.py's 30 Hz
 # oracle loop) is what stops ω from staying pinned at the cap for a full 0.33 s.
 #
-# Default DISABLED -> legacy single-twist-per-query behaviour; every existing
-# eval config is byte-unchanged.
+# Disabled by default (single twist per query).
 fine_grained:
   enabled: false
   # Follower tick rate. Mirrors data_gen.yaml's control_hz (30) so deploy-time
@@ -108,7 +89,6 @@ fine_grained:
   control_hz: 30
 
 runs:
-  # 2x3 warehouse smoke — the only template still registered (cleanup batch 15
-  # retired template1-5 / random_open / wall_layout; the thesis reports 2x3 only).
+  # 2x3 warehouse smoke runs.
   - { name: "smoke_2x3_pose",  env_scene: warehouse_2x3, task: pose,        action: RELOAD }
   - { name: "smoke_2x3_graph", env_scene: warehouse_2x3, task: image_graph, action: RELOAD }

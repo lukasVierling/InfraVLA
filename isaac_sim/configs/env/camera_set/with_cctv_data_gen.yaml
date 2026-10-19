@@ -1,10 +1,10 @@
 # @package env.cameras
 # ============================================================================
-# Camera-set: ego front + carter chase + CCTV — DATA-GEN naming
+# Camera-set: ego front + carter chase + CCTV — data-gen naming
 # ============================================================================
 #
 # Same three cameras as `with_cctv.yaml`, but mounted under keys that
-# match what `prismatic.vla.datasets.isaac_sim_dataset` expects on disk:
+# match what the training dataloader expects on disk:
 #
 #   env.cameras.front_cam     → frames/NNN.png  (renamed by DataGenRecorder)
 #   env.cameras.chase_cam     → chase_cam/NNN.png  (not read by training; visual review only)
@@ -12,7 +12,7 @@
 #
 # Note the key `cctv:` instead of `cctv_topdown:` (which is what
 # with_cctv.yaml uses). The DataGenRecorder writes one subdir per camera
-# *key*; the training dataloader (isaac_sim_dataset.py:111) looks for the
+# *key*; the training dataloader looks for the
 # literal path `traj_dir/cctv`. So we rename at the camera_set level — same
 # underlying camera config (cctv_topdown.yaml) just mounted under a
 # different key.

@@ -26,7 +26,7 @@ from omegaconf import OmegaConf
 
 
 def load_model(policy_cfg, inference_config):
-    """ loads the model based on whether we have LoRA adapters in the checkpoint or not"""
+    """Load the model; applies the fine-tune overlay (LoRA adapter + heads) when policy_cfg.finetune is set."""
     finetune = OmegaConf.select(policy_cfg, "finetune")
     # define_model only sees inference_config, but the CCTV-downsample knobs live in the
     # finetune block (with the other architecture knobs). Resolve them and bridge a single
@@ -52,7 +52,7 @@ def load_model(policy_cfg, inference_config):
 def _assert_adapter_matches_cctv_flag(adapter_dir, use_cctv_encoder):
     """Fail loudly when the adapter and the use_cctv_encoder flag disagree.
 
-    PEFT does NOT raise on either mismatch (verified 2026-06-09): it silently
+    PEFT does not raise on either mismatch: it silently
     skips adapter weights with no matching module (dual-stream adapter, flag
     off) and silently leaves un-targeted modules adapter-less (old adapter,
     flag on). Both produce a model that runs but is not the one trained.
@@ -73,7 +73,7 @@ def _assert_adapter_matches_cctv_flag(adapter_dir, use_cctv_encoder):
 
 
 def _apply_finetune_overlay(model, finetune):
-    """Appleis finetune overlay on the model."""
+    """Applies the fine-tune overlay (CCTV encoder, LoRA adapter, heads) on the model."""
     vla, action_head, pose_projector, device_id, num_patches, action_tokenizer, processor = model
 
     from peft import PeftModel
@@ -161,9 +161,9 @@ def _apply_finetune_overlay(model, finetune):
 
     # --- Optional image-slot order (e.g. ego-last): permute the LLM token blocks so
     # the DEPLOYED token order matches training EXACTLY (a mismatch silently scrambles
-    # the model's view). SAME resolver as train_omnivla_sim_cctv_v2.py — single source
-    # of truth. Absent => identity => legacy ego-first order, every existing config
-    # unaffected. predict_action() reorders via _process_vision_features once this is set.
+    # the model's view). Same resolver as train_omnivla_sim_cctv_v2.py — single source
+    # of truth. Absent => identity => default ego-first order. predict_action()
+    # reorders via _process_vision_features once this is set.
     slot_order = OmegaConf.select(finetune, "image_slot_order", default=None)
     if slot_order is not None:
         from prismatic.extern.hf.vision_encoder import resolve_image_slot_perm
@@ -211,13 +211,12 @@ class VLAPolicy:
         self.waypoint_spacing = float(self.controller.max_linear_vel_mps) / float(control_hz)
 
         # Multi-view (CCTV) path is opt-in via a `cameras` list in the policy
-        # cfg. Absent -> legacy single-camera path (cur_image_cam_name), so all
-        # existing eval configs keep working unchanged.
+        # cfg. Absent -> single-camera path (cur_image_cam_name).
         self.cameras = OmegaConf.select(self.cfg, "cameras", default=None)
         self.use_cctv_goal = bool(OmegaConf.select(self.cfg, "use_cctv_goal", default=False))
         # 4-CCTV pose-only path: drop ALL goal-image slots (goal = pose token).
         # Slots become [ego_obs, cctv_obs...] + pose, matching how the 4-CCTV
-        # model was trained (no_goal_image=true). Default false = legacy behaviour.
+        # model was trained (no_goal_image=true). Default false keeps goal slots.
         self.no_goal_image = bool(OmegaConf.select(self.cfg, "no_goal_image", default=False))
         # Ablation escape hatch: when true, allow cameras[0] (the onboard ego view)
         # to be dropped (present: false) so a single-stream ablation eval can mask
@@ -235,7 +234,7 @@ class VLAPolicy:
         # crop each CCTV frame to its camera's fixed box (ref-size coords, scaled to
         # the live frame) BEFORE the transformer resize — mirrors the dataset's
         # crop-then-resize exactly. A crop-trained model fed uncropped frames would
-        # be train/test mismatched. None => no-op (every existing config unchanged).
+        # be train/test mismatched. None => no-op.
         _crop = OmegaConf.select(self.cfg, "finetune.cctv_crop", default=None)
         self._cctv_crop = (
             {c: tuple(int(v) for v in box) for c, box in
@@ -361,8 +360,8 @@ class VLAPolicy:
 
     def _cctv_goal_dirs(self, graph_path):
         """Map each non-ego view's `goal_frames` name to its sibling frame dir
-        under the goal-graph dir, when use_cctv_goal. Returns None in the legacy
-        / no-cctv-goal case so SubgoalSelector behaves exactly as before."""
+        under the goal-graph dir, when use_cctv_goal. Returns None in the
+        single-camera / no-cctv-goal case (ego-only SubgoalSelector)."""
         if self.cameras is None or not self.use_cctv_goal:
             return None
         dirs = {}
@@ -377,7 +376,7 @@ class VLAPolicy:
     def _forward(self, observations):
         """Run one VLA forward pass on `observations`.
 
-        Shared by __call__ (legacy single-waypoint twist) and predict_world_path
+        Shared by __call__ (single-waypoint twist) and predict_target_waypoint
         (high-rate follower). Returns (chunk, trace):
           chunk: np.ndarray (num_chunk, 4) — predicted waypoints in NORMALIZED
                  units (cols 0,1 = fwd/left in waypoint_spacing units; cols 2,3 =
@@ -407,7 +406,7 @@ class VLAPolicy:
         cur_x = observations["x"]
         cur_y = observations["y"]
         cur_yaw = observations["heading_rad"]
-        # Ego "current image": the configured single cam (legacy) or the first
+        # Ego "current image": the configured single cam or the first
         # view in the CCTV camera list. This is the image goal_pose is anchored to.
         ego_cam_name = self.cameras[0].obs_cam if self.cameras is not None else self.cfg.cur_image_cam_name
         cur_img = Image.fromarray(cameras[ego_cam_name])
@@ -431,7 +430,7 @@ class VLAPolicy:
 
         # Absolute-pose token: world-frame [x, y, cos(yaw), sin(yaw), goal_x, goal_y]
         # with xy normalised to [-1,1] by abs_pose_bounds — mirrors the dataset
-        # (cctv_isaac_sim_dataset.py:593-602). Uses the RAW world goal (unclamped,
+        # (cctv_isaac_sim_dataset.py). Uses the RAW world goal (unclamped,
         # like training), not the clamped relative goal_pose above. Built only when
         # the abspose model is loaded (else None -> forward passes abs_proprio=None).
         abs_pose_vec = None
@@ -455,7 +454,7 @@ class VLAPolicy:
         cctv_img = None
         cctv_goal_img = None
         if self.cameras is None:
-            # --- Legacy single-view path (unchanged) ---
+            # --- Single-view path ---
             batch = self.inference.data_transformer_omnivla(
                 current_image_PIL=cur_img,
                 lan_inst=lan_inst,
@@ -529,7 +528,7 @@ class VLAPolicy:
                 action_tokenizer=self.action_tokenizer,
                 processor=self.processor,
             )
-        # Attach the abs-pose token to the batch (both the legacy and cctv paths
+        # Attach the abs-pose token to the batch (both the single-view and cctv paths
         # built `batch` above); run_forward_pass forwards abs_proprio iff the
         # projector is set AND "abs_pose" is present.
         if abs_pose_vec is not None:
@@ -556,7 +555,7 @@ class VLAPolicy:
             "goal_pose_loc_norm": goal_pose_loc_norm,
             "waypoints": waypoints[0],
             "modality_id": _modality_id.cpu().numpy(),
-            # CCTV multi-view extras (None on the legacy path).
+            # CCTV multi-view extras (None on the single-view path).
             "cctv_img": cctv_img,
             "cctv_goal_img": cctv_goal_img,
         }
@@ -569,7 +568,7 @@ class VLAPolicy:
 
         The follower steers toward this single fixed point at high rate
         (recomputed from the live pose) until the next ~3 Hz query refreshes it.
-        We pick the SAME chunk index the legacy controller used (waypoint_select)
+        We pick the same chunk index the single-waypoint controller uses (waypoint_select)
         and transform it to world so the high-rate loop can re-aim as the robot
         moves. Why a fixed point and not pure-pursuit over the whole chunk: at
         3 Hz the robot travels ~one waypoint-spacing (0.333 m) per query, so
@@ -590,10 +589,10 @@ class VLAPolicy:
         return (tx, ty), trace
 
     def __call__(self, observations, step):
-        """Legacy single-waypoint controller: VLA forward -> pick waypoint
+        """Single-waypoint controller: VLA forward -> pick waypoint
         `waypoint_select` from the chunk -> one (v, w) twist held until the next
         query. Returns (linear_vel_limited, angular_vel_limited, trace). The
-        high-rate follower path uses predict_world_path instead (see
+        high-rate follower path uses predict_target_waypoint instead (see
         waypoint_follower.py / eval_policy fine_grained loop).
         """
         chunk, trace = self._forward(observations)

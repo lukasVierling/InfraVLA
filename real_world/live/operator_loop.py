@@ -149,7 +149,7 @@ class Perception(Node):
             # send a verbatim instruction (e.g. to test a non-canonical phrasing).
             ("instruction", ""),
             ("artifact_dir", "/artifacts"),
-            # TOPIC NAMES — pinned against the live graph on mag005 (2026-08-17).
+            # TOPIC NAMES as published by the Spot ROS 2 driver.
             # NOTE the compressed topic is "<base>/compressed", NOT
             # "<base>/image/compressed": the driver builds it as
             # image_topic_name + "/compressed" where image_topic_name is
@@ -158,17 +158,15 @@ class Perception(Node):
             ("right_topic", "/camera/frontright/compressed"),
             ("left_info_topic", "/camera/frontleft/camera_info"),
             ("right_info_topic", "/camera/frontright/camera_info"),
-            # External CCTV cameras for the langsim checkpoints. Comma-separated,
+            # External CCTV cameras for the CCTV checkpoints. Comma-separated,
             # in TRAINING slot order; empty string disables. NOTE the externals
             # publish "<cam>/image_raw/compressed", unlike Spot's "<base>/compressed".
             ("cctv_cams", "camera3,camera4"),
             # REFERENCE-FRAME DIAGNOSTIC (measurement, never an intervention).
-            # A canonical spawn view saved once per evaluation session. On step 1
-            # the loop runs a SECOND inference with this ego frame in place of the
-            # live one (live CCTV kept, since CCTV contributes ~0 to the rotation
-            # variance: measured ego_t+cctv_0 = 18.07 deg vs live 18.24 deg while
-            # ego_0+cctv_t = 0.63 deg). The robot is ALWAYS driven by the live
-            # prediction; the reference prediction is logged only, to quantify how
+            # A canonical spawn view saved once per evaluation run. On step 1 the
+            # loop runs a second inference with this ego frame in place of the
+            # live one (live CCTV kept). The robot is always driven by the live
+            # prediction; the reference prediction is only logged, to quantify how
             # much this trial's spawn imprecision moved the aim.
             ("reference_frame", ""),        # path to main_frame.png; "" = disabled
             ("save_reference_frame", False),  # True: write this run's step-1 view
@@ -192,11 +190,9 @@ class Perception(Node):
             #     max_speed_mps * (waypoint_index + 1) / tick_hz.
             # Beyond that the prediction is not a long stride, it is claiming the
             # robot teleported -- which is the only thing a clamp should catch.
-            # The old fixed 0.75 m was chosen when spacing was 0.09, where it
-            # fired on 0.00% of steps. At spacing 0.19 it truncated 21.8% of the
-            # ground-truth chunks (p50 step 0.611 m, p90 0.772, max 0.868), so it
-            # had quietly become a systematic under-step rather than a guard.
-            ("max_speed_mps", 0.578),     # measured max over the 2026-08-21 session
+            # A fixed cap would not scale with the spacing and can silently
+            # truncate ground-truth-sized steps.
+            ("max_speed_mps", 0.578),     # measured max over the recorded demonstrations
             ("tick_hz", 3.0),             # chunk waypoints are 1 tick apart
             ("max_step_m", 0.0),          # >0 overrides the derived cap; 0 = derive
             ("precise_positioning", False),
@@ -266,8 +262,8 @@ class Perception(Node):
 
         self.stitcher: FrontStitcher | None = None
         self.sock = zmq.Context().socket(zmq.REQ)
-        # 15 s, not 120: a wrong --server port used to look like a two-minute
-        # hang before zmq.error.Again finally surfaced.
+        # 15 s, not 120: a wrong --server port should fail fast with
+        # zmq.error.Again rather than look like a long hang.
         self.sock.setsockopt(zmq.RCVTIMEO, 15000)
         self.sock.setsockopt(zmq.LINGER, 0)
         self.sock.connect(self.p("server"))

@@ -36,7 +36,7 @@ from isaac_sim.sim.isaac_sim_env import IsaacSimEnv
 from isaac_sim.sim.recorder import RunRecorder
 from isaac_sim.utils.controller_utils import is_stuck  # shared with data_gen.py
 
-from enum import Enum  # was `ENUM` — that name doesn't exist in the enum module
+from enum import Enum
 
 # Stuck-detection knobs live in cfg.controller.stuck_*; see
 # configs/controller/omnivla_default.yaml for the justifications.
@@ -66,10 +66,9 @@ def _base_overrides_from_hydra() -> list:
     `+experiment=...`), for re-application in per-run compose() calls.
 
     Without these, per-run configs silently revert to base-config defaults
-    for everything the experiment set (recorder root, astar group, ...) —
-    found 2026-06-11 when sweep recordings landed in the default runs_root
-    and the wall_layout astar cap reverted to 3.0. Falls back to [] when no
-    hydra app context exists (unit tests drive evaluate() via compose()).
+    for everything the experiment set (recorder root, astar group, ...).
+    Falls back to [] when no hydra app context exists (unit tests drive
+    evaluate() via compose()).
     """
     try:
         from hydra.core.hydra_config import HydraConfig
@@ -79,9 +78,8 @@ def _base_overrides_from_hydra() -> list:
 
 def _write_summary_md(rows, dest):
     """Render the live sweep summary as Markdown. Rewritten in full after every
-    row so Ctrl-C mid-sweep still leaves a usable artifact. Same shape as the
-    old sweep.py's table — env | task | seed | outcome | steps | final_dist |
-    wall_s | run_dir. Keep cheap (small file, idempotent write)."""
+    row so Ctrl-C mid-sweep still leaves a usable artifact. Columns: env |
+    task | seed | outcome | steps | final_dist | wall_s | run_dir."""
     lines = ["# Sweep summary", ""]
     lines.append(f"Total runs: {len(rows)}")
     by_outcome = {}
@@ -118,9 +116,9 @@ def evaluate(cfg):
     env = None
 
     # Sweep-level summary dir: every `python eval_policy.py` invocation (even
-    # a single-run one) writes a _sweep_<ts>/ subdir under recorder.runs_root.
-    # Same shape as the old sweep.py's runs/sweep_<ts>/ output: summary.jsonl
-    # (one line per run) + summary.md (full table, rewritten per-row).
+    # a single-run one) writes a _sweep_<ts>/ subdir under recorder.runs_root:
+    # summary.jsonl (one line per run) + summary.md (full table, rewritten
+    # per-row).
     #
     # OmegaConf.select with a default lets the unit tests (which stub a
     # minimal cfg lacking the recorder block) reach the validators that
@@ -177,25 +175,23 @@ def evaluate(cfg):
                 # has its own target phrase, from the data-gen manifest).
                 overrides.append(f'task.lang_instruction="{run.lang_instruction}"')  # double quotes — apostrophes ("witch's hat") break single-quoted Hydra overrides
             if "seed" in run:
-                # Override the scene yaml's baked-in env.seed. Equivalent to
-                # the old sweep.py's --seed-override (server-side) — same
-                # purpose: re-roll obstacle placement / bearing sampling
-                # without writing a duplicate scene yaml per seed.
+                # Override the scene yaml's baked-in env.seed: re-roll
+                # obstacle placement / bearing sampling without writing a
+                # duplicate scene yaml per seed.
                 overrides.append(f"env.seed={int(run.seed)}")
             if "fine_grained_enabled" in run:
                 # Per-run toggle of the fine-grained (decoupled high-rate
                 # follower) rollout loop. Affects ONLY the rollout control law,
                 # never env/policy construction, so it composes freely with
                 # KEEP_* actions (no validator needed) — e.g. an A/B that runs
-                # the SAME scene legacy-then-fine_grained from one env boot.
+                # the same scene with both rollout loops from one env boot.
                 overrides.append(f"++fine_grained.enabled={bool(run.fine_grained_enabled)}")
             if "goal_graph_path" in run:
                 # Per-run goal_graph_path override — required for parallel
                 # sweeps. The default `task/image_graph.yaml` hardcodes a
                 # single path; multiple processes running image_graph runs
                 # in parallel would race on the same JSON + PNG outputs.
-                # Each (env_scene, seed) gets a unique file under
-                # isaac_sim/scouting/goal_graphs/. Pose tasks ignore the
+                # Each (env_scene, seed) should get a unique file. Pose tasks ignore the
                 # field (env.set_task checks `if task.goal_graph_path:`),
                 # so passing it for pose runs is harmless.
                 overrides.append(f"task.goal_graph_path={run.goal_graph_path}")
@@ -213,9 +209,9 @@ def evaluate(cfg):
             if action in (Action.KEEP_ENV, Action.KEEP_BOTH):
                 # Scene/seed/jitter NEED env reconstruction — reject. The
                 # exact-pose keys are fine: they are applied to the kept env
-                # via env.set_start_pose() below ("fast grid" repose path,
-                # 2026-06-12 — saves the ~8 min/run rebuild when only the
-                # spawn changes). Jitter keys are config-time (template
+                # via env.set_start_pose() below ("fast grid" repose path —
+                # saves the ~8 min/run rebuild when only the spawn changes).
+                # Jitter keys are config-time (template
                 # __post_init__) so they can't re-roll on a kept env; an
                 # explicit 0.0 is allowed (means "exact pose"), nonzero
                 # would be silently ignored — reject it.
@@ -349,7 +345,7 @@ def evaluate_one_run(policy, task, env, run_cfg, run_name):
 
     # recorder.finalize renders <run_dir>/rollout_viz.png from the path it
     # accumulated + the map/A*-plan we handed it via set_map/set_astar_path
-    # (gated on recorder.path_viz.enabled). The eval loop no longer owns viz.
+    # (gated on recorder.path_viz.enabled).
     recorder.finalize(outcome, dist)
 
     return {
@@ -377,7 +373,7 @@ def _rollout_legacy(policy, task, env, recorder, controller_cfg, effective_goal_
     stuck_grace = int(controller_cfg.stuck_grace_steps)
     recent_poses = collections.deque(maxlen=stuck_window)
 
-    # Wall-clock pacing DISABLED (2026-07-07): sim time is synthetic — env.step
+    # No wall-clock pacing: sim time is synthetic — env.step
     # advances a fixed number of physics ticks per query, so the sim-time cadence
     # is exact regardless of wall clock. Sleeping to control_hz only matters on a
     # real robot; in sim it just wastes eval wall time.

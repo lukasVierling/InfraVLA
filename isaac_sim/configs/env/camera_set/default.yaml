@@ -3,7 +3,7 @@
 # Camera-set selector: front cam only (the policy's view)
 # ============================================================================
 #
-# A camera_set yaml's job is to compose a DICT of camera configs that the
+# A camera_set yaml's job is to compose a dict of camera configs that the
 # IsaacSimEnv builder iterates. The defaults list below packages the chosen
 # /env/camera/* yamls under env.cameras.<key>.
 #

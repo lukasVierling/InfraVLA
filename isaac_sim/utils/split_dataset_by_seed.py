@@ -5,9 +5,9 @@ trajectory dir whose result.json outcome == "reached" (so restart-duplicates
 and failed/timeout/stuck runs are skipped), and symlinks it into the right
 split. Reports any seeds with no successful trajectory.
 
-  python utils/split_dataset_by_seed.py --date-tag 2026-05-31 --out 2026-05-31_random_open_braked
+  python utils/split_dataset_by_seed.py --date-tag <YYYY-MM-DD> --out <split_name>
 
-Defaults reproduce run2's split: train 0-199, val 200-219, test 220-239.
+Default split: train 0-199, val 200-219, test 220-239.
 """
 from __future__ import annotations
 import argparse, json
@@ -17,7 +17,7 @@ _REPO_ROOT = Path(__file__).resolve().parents[2]
 DATA_GEN = _REPO_ROOT / "runs/data/sweeps/data_gen"
 TRAINING_DATA = _REPO_ROOT / "runs/data/splits"
 
-# Default seed -> split mapping (matches run2). Disjoint, contiguous, 200/20/20.
+# Default seed -> split mapping. Disjoint, contiguous, 200/20/20.
 # Specs are half-open 'START:STOP' strings (Python range() convention), overridable
 # on the CLI via --train/--val/--test. e.g. the 500-traj sweep uses
 # --train 0:500 --val 500:550 --test 550:600.

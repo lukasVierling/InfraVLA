@@ -46,8 +46,9 @@ The repository is a fork of [OmniVLA](https://github.com/NHirose/OmniVLA).
 | `prismatic/vla/datasets/` | Datasets and counterfactual upsampling. |
 | `vla-scripts/train_omnivla_sim_cctv_v2.py` | Training script. |
 | `isaac_sim/` | Simulation: data generation, evaluation, recovery mining, configs. |
+| `isaac_sim/analysis/` | Metrics reported in the paper, computed from evaluation outputs. |
 | `real_world/` | Spot robot: fine-tuning and deployment. |
-| `scripts/` | Launch scripts for the reported runs. |
+| `scripts/` | Example launch scripts for training and evaluation. |
 
 Data, checkpoints and outputs are written to `runs/` (git-ignored).
 
@@ -103,7 +104,6 @@ python isaac_sim/utils/split_dataset_cf.py --manifest isaac_sim/configs/experime
 python vla-scripts/train_omnivla_sim_cctv_v2.py --config isaac_sim/train/configs/2026-07-23_cctv4_avgpool64_langv2_yawcrux_pre3.yaml
 ```
 
-Training configs for every experiment are in `isaac_sim/train/configs/`.
 
 **4. Mine recovery data** with the stage-1 policy (one process per shard):
 
@@ -132,7 +132,19 @@ python vla-scripts/train_omnivla_sim_cctv_v2.py --config isaac_sim/train/configs
 bash isaac_sim/launchers/run_eval_partition.sh lv2t_A0full_p1
 ```
 
-Results are written to `runs/evaluation/`, one line per rollout in `summary.jsonl`.
+Results are written to `runs/evaluation/`, one folder per rollout.
+
+**7. Compute the metrics.** A rollout counts as a success if it comes within 1 m of the goal.
+
+```bash
+python isaac_sim/analysis/reach_stats.py <runs_root> [...]        # success rate (both tasks)
+python isaac_sim/analysis/route_optimality.py <runs_root> [...]   # spatial task: share of shortest routes
+python isaac_sim/analysis/shelf_clearance.py                      # semantic task: success rate and shelf clearance
+python isaac_sim/analysis/bench_inference_latency.py --all        # inference time per model
+```
+
+Training configs are in `isaac_sim/train/configs/` and evaluation configs in
+`isaac_sim/configs/experiment/`, one set per result in the paper.
 
 For the real robot, see [real_world/train/README.md](real_world/train/README.md) and
 [real_world/live/README.md](real_world/live/README.md).

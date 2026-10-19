@@ -4,8 +4,7 @@ build_onboard_swap_map   — in-place probabilistic swap inside decision windows
 build_onboard_swap_extra — forced-swap EXTRA samples (diagonal-invisible gate)
 
 Both attach state to an existing IsaacSimDataset (onboard_swap_map /
-onboard_swap_p / onboard_swap_extra) that its __getitem__ consumes. See the
-notes block at the end of this file for the gate-design rationale.
+onboard_swap_p / onboard_swap_extra) that its __getitem__ consumes.
 """
 
 from __future__ import annotations
@@ -60,7 +59,7 @@ def build_onboard_swap_map(
     diff below the threshold. Returns a diagnostics dict (per-pair gate
     results + counts). Window definition matches mine_cf_windows exactly.
 
-    first_frames (real-robot mode, 2026-08-21): bypass decision-frame mining and
+    first_frames (real-robot mode): bypass decision-frame mining and
     junction gates entirely - swap is allowed ONLY at t in [0, first_frames),
     i.e. the spawn frames where the twins are physically interchangeable. The
     per-frame gate becomes graft_err_cap_m: an estimate of the grafted label's

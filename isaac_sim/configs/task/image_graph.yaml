@@ -1,6 +1,6 @@
 # Task: topological-graph goal (modality = {"image"} -> mode 6).
-# Paper's ">3 m" case from root.tex:301 — the graph is produced by
-# isaac_sim/scouting/oracle_scout at server startup.
+# OmniVLA's ">3 m" image-goal case: the goal is a topological graph of
+# images recorded along the route.
 
 name: image_graph
 modality: ["image"]
@@ -18,7 +18,6 @@ goal_graph_sampling_mode: static_arclength
 goal_xy: null
 goal_heading_deg: 0.0
 
-# Timeout cap. Lowered 200 -> 100 on 2026-05-30 (see task/pose.yaml for the
-# step-distribution rationale): successes finished in <=61 steps.
+# Timeout cap (see task/pose.yaml for the rationale).
 max_steps: 100
 success_dist: 0.3

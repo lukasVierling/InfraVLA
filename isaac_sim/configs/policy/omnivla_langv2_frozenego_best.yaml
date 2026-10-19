@@ -1,16 +1,6 @@
-# 2x3 CFV4 FREEZE LEVEL 2 (frozen ego vision + frozen LLM) eval policy. step_15000
-# (final AND best: full-val 0.0140, cf-val 0.0127 — fit cost of the frozen LLM) of
-# 2026-07-14_cctv4_sepproj_frozenvision_frozenllm_2x3cfv4_avgpool64_cfwinboost8_15k_v0
-# (trained with model.freeze_vision: NO LoRA on the ego encoder/projector — the
-# saved adapter simply has no entries for them, so this loads with the standard
-# overlay; the ego stream stays at released-OmniVLA weights, matching training).
-# sepproj ON, cam embed OFF, avgpool64, boost8 upsampling, no swap, fg50, cfv4.
-#
-# Probe verdict (2026-07-14, work-log addendum): goal-pose channel causally DEAD
-# (0.00 on all 7 factorial pairs), CCTV share first-split 0.99 / second-split
-# 0.27 (parent: 0.64 / 0.06). This eval asks whether that causal shift moves
-# CLOSED-LOOP routing — starting with the parent avgpool's 16 failed cells.
-# MUST eval with camera_set with_4cctv_2x3_bigcam.
+# Semantic task, ablation with frozen ego vision only (separate CCTV projector):
+# step_13000 of 2026-07-26_cctv4_sepproj_frozenvision_langv2_yawcrux_pre3_15k_v0.
+# Evaluate with env/camera_set=with_4cctv_2x3_bigcam (set by the experiment shards).
 save_dir: "${recorder.runs_root}/${run.name}/policy"
 cameras:
   - { obs_cam: front_cam, goal_frames: null, present: true }

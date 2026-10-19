@@ -160,7 +160,7 @@ def aisle_sealed(aisle_rects, blocker_rect, p_below, p_above, cfg) -> bool:
 def path_length(rects, p_from, p_to, cfg) -> float | None:
     """Arc length (m) of the planned path, or None if unsolvable.
 
-    For the DESIGN §10 elongation statistic
+    For the path-elongation statistic
     (`path_length(obstacles) / path_length(empty)`), pass the SAME cfg for both
     calls so the ratio is consistent. The 2x3 generator uses its gate cfg
     (search-only) — robust and a fine relative measure; pass a full-pipeline cfg

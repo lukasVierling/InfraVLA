@@ -6,7 +6,7 @@
 # The Recorder dumps the task/env config snapshots + per-step log + per-cam
 # image frames into <runs_root>/<task.name>__<timestamp>/.
 #
-# Per-camera logging is OPT-IN inside each camera config (env/camera/*.yaml
+# Per-camera logging is opt-in inside each camera config (env/camera/*.yaml
 # has a `logging:` boolean); this file only owns the root path + the global
 # video framerate.
 # ============================================================================
@@ -14,19 +14,19 @@
 # Root directory under which every eval run gets its own subdir.
 runs_root: "${oc.env:INFRAVLA_ROOT}/runs/evaluation/runs"
 
-# Master switch for writing per-camera RAW frame sequences to disk. When true
+# Master switch for writing per-camera raw frame sequences to disk. When true
 # (default), each camera is still gated by its own `logging` flag (env/camera/*).
-# When false, NO raw frames are written for ANY camera regardless of their
+# When false, no raw frames are written for any camera regardless of their
 # `logging` flag — behaviour panels, rollout_viz, log.jsonl and result.json are
 # unaffected. Set false for disk-constrained eval sweeps (reached-count only).
 log_frames: true
 
-# Per-run path-visualisation BEHAVIOUR toggles (when/whether to render). The
+# Per-run path-visualisation behaviour toggles (when/whether to render). The
 # cosmetics (colours, sizes, backdrop, A* sampling, crop pad) live in the
 # shared viz group — configs/viz/default.yaml (cfg.viz.path_map) — so
 # they're defined once for both eval and data-gen.
 path_viz:
-  # Gates ONLY the finalize <run_dir>/rollout_viz.png. The map + A* plan are
+  # Gates only the finalize <run_dir>/rollout_viz.png. The map + A* plan are
   # always handed to the recorder (eval), so the per-step behaviour-panel map
   # works regardless of this flag.
   enabled: true

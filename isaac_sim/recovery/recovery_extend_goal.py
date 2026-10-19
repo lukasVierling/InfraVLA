@@ -1,4 +1,4 @@
-"""Extend stitched recovery trajectories to the ORIGINAL goal (Lukas 2026-07-17).
+"""Extend stitched recovery trajectories to the original goal.
 
 Takes a recovery output root (rec_* dirs from recovery.py) and writes a new
 root <root>_extgoal/ where each trajectory = the stitched run + the SOURCE

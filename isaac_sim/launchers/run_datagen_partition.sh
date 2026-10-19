@@ -13,5 +13,5 @@ export PYTHONEXE="/lib64/ld-linux-x86-64.so.2 ${ISAACSIM_PATH:-/isaacsim}/kit/py
 LOG="${LOGDIR}/${EXP}.log"
 echo "[launch] $(date '+%F %T')  experiment=${EXP}  log=${LOG}"
 ${ISAACSIM_PATH:-/isaacsim}/python.sh data_gen.py +experiment="${EXP}" 2>&1 | tee "${LOG}"
-# PIPESTATUS[0] is data_gen's exit; expected 1 due to the shutdown crash above.
+# PIPESTATUS[0] is data_gen's exit; 1 is expected from a benign Kit shutdown crash.
 echo "[launch] $(date '+%F %T')  DONE experiment=${EXP}  data_gen_exit=${PIPESTATUS[0]} (1 = benign shutdown crash)"

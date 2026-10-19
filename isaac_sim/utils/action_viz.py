@@ -5,13 +5,9 @@ robot-local normalized frame: the predicted waypoints (blue) and, when available
 the ground-truth / target chunk (red), in the paper's "forward up, left left"
 convention. It draws onto a caller-provided matplotlib `ax` (both call sites
 embed it in a multi-panel figure), the way `planning_viz.render_path_map` is the
-single source for the world-frame map.
-
-Callers:
-  • RunRecorder.save_robot_behavior (eval) — predicted only (no GT closed-loop),
-    plus the goal-pose star for pose-conditioned steps. style = cfg.viz.action_chunk.
-  • inspect_val_disagreement.plot_action_panel (val debug) — predicted vs GT,
-    passes its own literal style dict (debug tooling, training config tree).
+single source for the world-frame map. Used by RunRecorder.save_robot_behavior
+(eval: predicted only, plus the goal-pose star for pose-conditioned steps;
+style = cfg.viz.action_chunk).
 
 Pure numpy + matplotlib; no Isaac Sim deps. ALL cosmetics come from the `style`
 mapping — no hardcoded colours/sizes/fonts here. Structural constants (marker
@@ -94,7 +90,7 @@ def plot_action_chunk(
                 markersize=float(style["goal_star_size"]), zorder=6, label="goal")
 
     if modality_label is not None:
-        # Bottom-right annotation (matches the old save_robot_behavior placement).
+        # Bottom-right annotation.
         ax.annotate(modality_label, xy=(1.0, 0.0), xycoords="axes fraction",
                     xytext=tuple(style["annotate_offset"]), textcoords="offset points",
                     ha="right", fontsize=float(style["annotate_fontsize"]))

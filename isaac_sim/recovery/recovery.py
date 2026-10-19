@@ -14,7 +14,7 @@ from omegaconf import OmegaConf, open_dict
 
 _REPO_ROOT = os.path.abspath(next(
     p for p in pathlib.Path(__file__).resolve().parents
-    if (p / "pyproject.toml").exists()))  # depth-independent (CLEANUP.md R9)
+    if (p / "pyproject.toml").exists()))  # depth-independent repo-root lookup
 for _p in (_REPO_ROOT, os.path.dirname(__file__)):
     if _p not in sys.path:
         sys.path.insert(0, _p)
@@ -40,7 +40,7 @@ def seal_of(scene_name: str) -> str:
 
 
 def _snippet_end(window_steps: set, t: int) -> int:
-    """return the end of the snippet"""
+    """Return the last step of the contiguous window run starting at t."""
     hi = t
     while (hi + 1) in window_steps:
         hi += 1
@@ -49,91 +49,71 @@ def _snippet_end(window_steps: set, t: int) -> int:
 
 def _model_rollout(policy, env, run_cfg, task_kwargs, spawn_xy, spawn_yaw,
                    budget_steps, run_name, astar_path=None):
-    """do a model rollout given a polcy and an env"""
+    """Roll out the VLA policy from the given spawn pose; returns (run_dir, outcome)."""
     from isaac_sim.task import Task
     from isaac_sim.eval_policy import _rollout_legacy, _rollout_fine_grained
     from isaac_sim.sim.recorder import DataGenRecorder
 
-    #new recovorder that doesn't save any visualizations
+    # Recorder variant that skips per-step visualizations.
     class _NoVizRecorder(DataGenRecorder):
         def save_robot_behavior(self, *args, **kwargs):
             pass
-    #set the start pose of the env provided thorugh arguments
+    # Re-pose the spawn on the kept env.
     env.set_start_pose(tuple(spawn_xy),
                        start_heading_deg=math.degrees(spawn_yaw),
                        start_heading_mode="fixed")
-    #reset the environment
     obs = env.reset()
-    #colculated the effective goal pose
     effective_goal_pose = env.get_effective_goal_pose()
-    #get the task for hte robot
     task = Task(**{**task_kwargs, "max_steps": int(budget_steps)})
-    #set the task of the policy
     policy.set_task(task, effective_goal_pose)
-    #idk what this is? 
-    policy.prime_blockade_signal(run_cfg.env.name)
+    policy.prime_blockade_signal(run_cfg.env.name)  # no-op unless policy.blockade_signal
 
-    #instantiate the reocrder
     recorder = _NoVizRecorder(run_cfg, run_name)
     recorder.set_map(env.a_star.map, tuple(spawn_xy),
                      tuple(effective_goal_pose["xy"]))
     if astar_path is not None:
         recorder.set_astar_path([(float(q[0]), float(q[1])) for q in astar_path])
-    #find out whether fine grained control frequency
     fine_grained = bool(OmegaConf.select(run_cfg, "fine_grained.enabled",
                                          default=False))
-    #get a rollout function
     rollout = _rollout_fine_grained if fine_grained else _rollout_legacy
-    #do the rollout ge the result and the final step which we don't use here
     outcome, _final_step, dist = rollout(
         policy, task, env, recorder, run_cfg.controller, effective_goal_pose,
         run_cfg, obs)
-    #wrap up recording 
     recorder.finalize(outcome, dist)
-    #return the run directory where the run is saved and the outcome of the run
     return recorder.run_dir, outcome
 
 
 def _oracle_rollout(env, run_cfg, task_kwargs, spawn_xy, spawn_yaw, goal_xy,
                     run_name, path_points):
-    """does a policy rollout from a givne startpoint to a given endpoint,
-    following the GIVEN path (the original route, trimmed at the spawn) —
-    never a fresh A* plan (wrong-turn lock-in risk, Lukas 2026-07-17)."""
+    """Oracle rollout from a spawn to a goal, following the given path (the
+    original route, trimmed at the spawn). Never replans with A*: a fresh plan
+    from a wrong-aisle-leaning spawn can lock in the failure."""
     from isaac_sim.policies.a_star_policy import A_star_policy
     from isaac_sim.sim.recorder import DataGenRecorder
     from isaac_sim.task import Task
-    #create an oracle rollout where the oracle is the GT so we have no policy
     rcfg = run_cfg.recovery
-    #also set the task
     task = Task(**{**task_kwargs, "max_steps": int(rcfg.oracle_max_record_steps)})
-    #set the starting pose
     env.set_start_pose(tuple(spawn_xy),
                        start_heading_deg=math.degrees(spawn_yaw),
                        start_heading_mode="fixed")
-    #reset the env
     obs = env.reset()
-    #use the provided (original-route) path — no replanning here.
-    #plain python floats: numpy scalars break _sign() in solve_twist.
+    # Plain python floats: numpy scalars break _sign() in solve_twist.
     path = [(float(p[0]), float(p[1])) for p in path_points]
-    #instantiate the oracle as a star policy
     oracle = A_star_policy(run_cfg.policy_oracle, run_cfg.controller,
                            control_hz=rcfg.oracle_control_hz)
-    #set the path of the oracle
     oracle.set_path(path)
 
-    #start the data recorder
     recorder = DataGenRecorder(run_cfg, run_name)
     recorder.set_map(env.a_star.map, tuple(spawn_xy), tuple(goal_xy))
-    #set the a start path for the data recorder, why does hte recorder need the a star path
+    # Persisted to astar_path.json, which downstream consumers read.
     recorder.set_astar_path(path)
 
-    #some params
     control_hz = float(rcfg.oracle_control_hz)
     physics_dt = 1.0 / float(run_cfg.physics_hz)
     steps_per_control = round(1.0 / (control_hz * physics_dt))
     decimation = round(control_hz / float(run_cfg.record_hz))
 
-    #whole control loop write up with oracle
+    # Oracle control loop (same decimation scheme as data_gen.py).
     gx, gy = float(goal_xy[0]), float(goal_xy[1])
     outcome = "timeout"
     dist = float("inf")
@@ -150,15 +130,13 @@ def _oracle_rollout(env, run_cfg, task_kwargs, spawn_xy, spawn_yaw, goal_xy,
         capture_next = ((control_step + 1) % decimation == 0)
         obs = env.step((v, w), n_physics_ticks=steps_per_control,
                        capture_images=capture_next)
-    #wrap up after run
     recorder.finalize(outcome, dist)
     return recorder.run_dir, outcome
 
 
 def _stitch(failure_dir, recovery_dir, out_dir, cut_idx):
-    """function that takes a failure and recovery dir and an idx and stiteches them together"""
+    """Stitch failure frames [0, cut_idx) and all recovery frames into out_dir."""
     from isaac_sim.planning.a_star.goal_graph import GoalGraph, GraphNode
-    #get the fail and reocvery data
     g_fail = GoalGraph.load(failure_dir / "frames.json")
     g_rec = GoalGraph.load(recovery_dir / "frames.json")
 
@@ -205,8 +183,7 @@ def _stitch(failure_dir, recovery_dir, out_dir, cut_idx):
     return len(nodes)
 
 
-# config_path is relative to THIS file; configs/ sits one level up since the
-# recovery scripts moved into isaac_sim/recovery/ (2026-09-07).
+# config_path is relative to this file; configs/ sits one level up.
 @hydra.main(version_base=None, config_path="../configs", config_name="recovery")
 def main(cfg):
     from prismatic.vla.datasets.dataset_utils import mine_cf_windows
@@ -242,7 +219,7 @@ def main(cfg):
         criterion=str(rcfg.criterion),
         traj_yaws=[s[1] for s in streams],
         yaw_eps_deg=float(rcfg.yaw_eps_deg))
-    # Replay mode (Lukas 2026-07-17): instead of the random sample stream,
+    # Replay mode: instead of the random sample stream,
     # roll exactly the DERAILED (scene, t) records of an earlier campaign's
     # manifest — "did the fine-tune fix the known failure states?".
     if rcfg.replay_manifest:
@@ -300,7 +277,7 @@ def main(cfg):
         gt_pos, gt_yaws, _ = streams[ti][0], streams[ti][1], None
         hi = _snippet_end(mining["windows_by_traj"][ti], t)
 
-        # Fresh env per sample — no cross-sample reuse (see notes).
+        # Fresh env per sample (each sample may come from a different scene).
         src_cfg = OmegaConf.load(src_dir / "config.yaml")
         run_cfg = OmegaConf.merge(cfg)
         with open_dict(run_cfg):
@@ -356,11 +333,11 @@ def main(cfg):
             for e in exc:
                 e["gt_band"] = [int(js[e["last_aligned_idx"]]),
                                 int(js[e["onset_idx"]])]
-                # RECORDED, not gating (2026-08-24): the cf window is anchored
-                # on the twins' FIRST divergence, which for 65% of this split
-                # is the spawn itself — it cannot see the zone-D south-aisle
-                # decision where the policy actually fails. Kept in the
-                # manifest so the window-vs-severity choice stays auditable.
+                # Recorded, not gating: the cf window is anchored on the
+                # twins' first divergence, which is often the spawn itself and
+                # can miss the later decision where the policy actually fails.
+                # Kept in the manifest so the window-vs-severity choice stays
+                # auditable.
                 e["in_window"] = not (e["gt_band"][1] < wlo
                                       or e["gt_band"][0] > whi)
             bands = [(e["last_aligned_idx"], e["onset_idx"])
@@ -408,13 +385,13 @@ def main(cfg):
             continue
 
         # Spawns: n_spawns random points between last-aligned and divergence
-        # onset, DISTINCT per derailment (Lukas 2026-07-17: the band IS the
-        # hard initiate-the-correction zone — more draws there = more of the
+        # onset, distinct per derailment (the band is the hard
+        # initiate-the-correction zone — more draws there = more of the
         # scarce transition supervision; capped by the band's width).
-        # Recovery = follow the ORIGINAL route (source astar_path trimmed at
-        # the spawn-nearest node) to the ORIGINAL goal — never a fresh A*
+        # Recovery = follow the original route (source astar_path trimmed at
+        # the spawn-nearest node) to the original goal — never a fresh A*
         # plan, which a wrong-aisle-leaning spawn could tip into locking in
-        # the failure (Lukas 2026-07-17). Non-reaching runs are filtered.
+        # the failure. Non-reaching runs are filtered.
         src_path = np.array(json.loads(
             (src_dir / "astar_path.json").read_text())["path_xy"])
         spawn_draws = []          # (band_idx, spawn_idx, band_onset)
@@ -438,7 +415,7 @@ def main(cfg):
             rec_k = dict(rec, spawn=k, spawn_idx=spawn_idx, band=b,
                          recovery_outcome=rec_outcome)
             if rec_outcome == "reached":
-                # legacy name for spawn 0; _s<k> suffix for extras (t stays
+                # plain name for spawn 0; _s<k> suffix for extras (t stays
                 # parseable — consumers use recovery_analysis.parse_rec_dirname).
                 # Spawn mode: t would be 0 for every band -> use the band's
                 # ONSET rollout index as the unique, meaningful t.

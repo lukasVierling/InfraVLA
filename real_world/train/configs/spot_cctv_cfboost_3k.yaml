@@ -1,54 +1,36 @@
 # ============================================================================
-# REAL-ROBOT CCTV, 2026-08-21 SESSION - SIM LANGUAGE RECIPE.
+# Real-robot CCTV arm (InfraVLA): ego + two fixed CCTV views (camera3, camera4).
 #
-# This arm deliberately mirrors the simulation language experiment
-# (runs/training/runs/2026-07-27_cctv4_avgpool64_langv2_sharedenc_15k_v0) so
-# the real-robot result is comparable to it. Every knob below that differs
-# from our earlier real-robot arms was changed BECAUSE sim sets it that way.
-#
-# Copied from the sim lang arm:
+# Mirrors the simulation language recipe so the real-robot result is
+# comparable to it:
 #   * modality_list [7, 4, 5, 6] + modality_weights [0.8, ...] -> language is
-#     80% of samples. Our earlier arms were uniform over 5 ids, which gave
-#     language ~40% (and language-only just 18%). NOTE: SpotRealDataset used to
-#     REFUSE modality_weights (ValueError); it now implements a weighted draw,
-#     renormalising when the image-only guard drops modality 6.
-#   * final_goal_prob 0.5 - half the samples use the take's LAST frame as the
-#     goal, i.e. the robot standing at the target. Also newly implemented;
-#     previously refused. This is what teaches goal-reaching rather than
-#     short-horizon continuation.
-#   * max_goal_distance_steps 300 - sim's value. Our takes are only ~60 frames,
-#     so in practice this means "any frame in the take", which is the intent.
-#   * cctv_downsample avgpool -> 64 tokens per CCTV view. Sim ran FOUR cams
-#     this way (4x64 = 256 tokens); undownsampled our two cams cost 2x256 = 512
-#     and peaked at 90% of the 95 GB card. This is the knob that buys it back.
-#   * use_cctv_encoder FALSE - sim puts CCTV through the SHARED ego encoder.
-#     Our earlier arms added a parallel CCTV stream with its own LoRA.
-#   * batch 5 x accum 6 = 30 effective, matching sim (our earlier arms: 8x2=16).
-#   * modality 8 is absent from sim's list, so it is absent here too.
+#     80% of samples (a flat draw over the ids would give language ~40%).
+#   * final_goal_prob 0.5 - half the samples use the take's last frame as the
+#     goal (the robot standing at the target); this teaches goal-reaching
+#     rather than short-horizon continuation.
+#   * max_goal_distance_steps 300 - takes are only ~60 frames, so this means
+#     "any frame in the take".
+#   * cctv_downsample avgpool -> 64 tokens per CCTV view; two undownsampled
+#     views (2x256 tokens) nearly fill a 95 GB GPU.
+#   * use_cctv_encoder false - CCTV goes through the shared ego encoder.
+#   * batch 5 x accum 6 = 30 effective.
 #
-# DELIBERATELY NOT copied: counterfactual upsampling. Sim runs
-# cf_window_balance with boost 16.6 and yaw_eps_deg 1.0, but 1.0 deg sits below
-# this rig's physical repeatability (twin headings differ by 1.9 deg median,
-# 4.1 deg p90 at t=0), and the family-grouping regex only parses sim run names.
-# Until that is worked out for real data, every emphasis knob stays off and is
-# written out explicitly below.
+# Counterfactual-window upsampling (cf_window_balance) uses yaw_eps_deg 8.0
+# instead of sim's 1.0: twin headings on the real rig differ by 1.9 deg median
+# and 4.1 deg p90 at t=0, so 1.0 deg is below the hardware's repeatability.
 #
-# SPACING 0.19, recomputed from THESE rosbags at the max recorded speed:
-# per-tick (1/3 s) displacement peaks at 0.1928 m -> 0.19 x 3 Hz = 0.57 m/s,
-# which matches the median per-run peak speed (0.571 m/s). The old 0.09 came
-# from the 2026-08-19 session's MEAN speed (0.264 m/s) and left targets running
-# to 2.1x the unit waypoint (max |xy| 14.28). At 0.19 max |xy| is 6.83, close
-# to sim's ~8. DEPLOYMENT MUST MATCH: deploy/serve_spot_ft.sh pins --spacing
-# 0.09 and has to be changed in lockstep for any checkpoint from this run.
+# Spacing 0.19 m: per-tick (1/3 s) displacement peaks at ~0.19 m, i.e. the
+# max recorded speed (~0.57 m/s). Serving must use the same spacing;
+# merge_lora_for_serving.py records it in serving.json and serve_spot_ft.sh
+# enforces it.
 #
-# HELD-OUT VAL: 5 complete families (05, 09, 12, 16, 23), 15 bags / 920 samples
-# against 60 bags / 3607 in train. Families held out whole so no val take has a
-# sibling of the same object from the same spot in train.
+# Held-out val: 5 complete families (05, 09, 12, 16, 23), held out whole so no
+# val take has a sibling of the same object from the same spot in train.
 # ============================================================================
 
 run:
   name: "2026-08-21_spot_cctv_cfboost_v0"
-  notes: "STAGE 1 - counterfactual-window upsampling on the full 75-run set. Same recipe as langsim_full_v0 (spacing 0.19, cam3+cam4, lang80, avgpool64, 2000 steps) plus cf_window_balance: criterion yaw, eps 8 deg (sim used 1.0; ours is the measured hardware repeatability floor 4.1 deg p90 x2), pre 3 post 0 (sim values), boost 4 (~28pct effective gradient mass on ~9pct window samples). Pair-wise crux mining via the sim miner - _SCENE_RE_SPOT regex added for NN_a/b/c names."
+  notes: "Real-robot CCTV arm (camera3 + camera4, avgpool64, 80% language, spacing 0.19) with counterfactual-window upsampling, resumed from step 2000 to 3000."
 
 model:
   vla_path: "${INFRAVLA_ROOT}/omnivla-original"
@@ -96,7 +78,7 @@ data:
   no_goal_image: false
   use_cctv_goal: false
 
-  # --- emphasis knobs: all OFF, written out so the intent is auditable ------
+  # --- emphasis knobs, written out explicitly ---------------------------------
   random_hflip: false             # REQUIRED off with fixed external cameras
   perception_dropout:     [1.0, 0.0, 0.0]
   val_perception_dropout: [1.0, 0.0, 0.0]
@@ -107,7 +89,7 @@ data:
   cf_window_balance:
     enabled: true
     criterion: yaw
-    yaw_eps_deg: 8.0      # sim 1.0 is below our 4.1 deg p90 twin repeatability
+    yaw_eps_deg: 8.0      # sim uses 1.0; real twin heading repeatability is ~4.1 deg p90
     pre_steps: 3          # sim values: window = [t*-3 .. t*], per pair, unioned
     post_steps: 0
     dev_thresh_m: 0.75    # unused by the yaw criterion; key required
@@ -123,8 +105,7 @@ train:
   learning_rate: 1.0e-4
   num_steps_before_decay: 100000
   lr_decay_gamma: 0.1
-  max_steps: 3000   # extended 2000 -> 3000 (20 epochs on the 75-run split)
-                                  # here is ~66 epochs of 3607 samples.
+  max_steps: 3000
   weight_decay: 0.0
   betas: [0.9, 0.999]
   eps: 1.0e-8
@@ -136,8 +117,7 @@ loss:
   obj_weight: 0.0                 # obj_pose_norm is zeros in this export
 
 val:
-  val_freq: 250                   # finer than sim's 500 - small val set, and we
-                                  # want the overfit knee located precisely
+  val_freq: 250                   # finer than sim's 500 to locate the overfit knee
   max_samples: null
 
 checkpoint:
@@ -147,8 +127,8 @@ checkpoint:
   keep_every_n_steps: 5000
 
 logging:
-  wandb_entity: "cctv_vla"
-  wandb_project: "CCTV_VLA"
+  wandb_entity: ""
+  wandb_project: "infravla"
   wandb_tags: ["real-robot", "spot", "cctv", "camera3", "camera4", "2026-08-21",
                "spacing0.19", "heldout-val", "langsim", "lang80", "avgpool64"]
   log_freq: 25

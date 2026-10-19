@@ -4,18 +4,14 @@
 # ============================================================================
 #
 # Same as `with_cctv`, minus the chase cam. Use this for any robot whose USD
-# lacks a third-person camera prim (Nova Carter is the case driving this — it
-# ships 12 onboard cameras but none of them is mounted external to the robot
-# looking back at it). Run as:
+# lacks a third-person camera prim (e.g. Nova Carter). Run as:
 #
 #     python eval_policy.py env/robot=nova_carter env/camera_set=with_cctv_no_chase
 #
 # Result: env.cameras = {front_cam: ..., cctv_topdown: ...}
 #
-# Loses the recorder's third-person video (the chase view), keeps everything
-# CCTV-experiment-relevant. If you later add a synthetic chase prim to Nova
-# Carter (CCTV-style external prim parented to the robot), promote it into
-# the regular `with_cctv` set and delete this file.
+# Loses the recorder's third-person video (the chase view); see
+# with_cctv_synthetic_chase for a Nova Carter set with a chase view.
 # ============================================================================
 
 defaults:

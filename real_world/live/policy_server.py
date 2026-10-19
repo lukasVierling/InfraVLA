@@ -17,10 +17,9 @@ from PIL import Image
 def _find_repo_root(start: str) -> str:
     """Walk up until we find the InfraVLA checkout.
 
-    Located by marker rather than by a fixed number of `..` hops: this file has
-    already moved once (realrobot/ -> real_world/live/) and a hardcoded depth
-    silently resolved to the wrong directory, giving an unhelpful
-    "No module named 'run_omnivla'".
+    Located by marker rather than by a fixed number of `..` hops, so moving
+    this file does not silently resolve to the wrong directory (which shows up
+    only as an unhelpful "No module named 'run_omnivla'").
     """
     d = os.path.abspath(start)
     while True:
@@ -272,8 +271,8 @@ def main() -> None:
     args = ap.parse_args()
 
     # Bind BEFORE loading the model: the checkpoint takes ~60 s, and discovering
-    # an "Address already in use" after that wastes the whole load. caladan is a
-    # shared box, so port clashes with other users are routine.
+    # an "Address already in use" after that wastes the whole load (port
+    # clashes are common on shared GPU machines).
     sock = zmq.Context().socket(zmq.REP)
     try:
         sock.bind(args.bind)

@@ -67,5 +67,5 @@
    "spawn_heading_deg": 0.0
   }
  ],
- "_note": "PATCH: replaces the 2 unplannable cone scenes (goal inside inflated rack margin) with same-aisle plannable ones; keeps the 4x3 balance at n=12."
+ "_note": "Replaces the 2 unplannable cone scenes (goal inside inflated rack margin) with same-aisle plannable ones; keeps the 4x3 balance at n=12."
 }

@@ -1,11 +1,11 @@
 # @package env.cameras
 # ============================================================================
-# Camera-set: ego front + synthetic chase + CCTV — Nova Carter, DATA-GEN naming
+# Camera-set: ego front + synthetic chase + CCTV — Nova Carter, data-gen naming
 # ============================================================================
 #
 # Identical to with_cctv_data_gen.yaml except the chase camera is the
 # Nova-Carter synthetic chase (Nova Carter has no built-in chase prim, see
-# nova_carter_chase.yaml for the synthetic-camera-prim trick). All three
+# nova_carter_chase.yaml). All three
 # cameras are mounted under the keys the training dataloader expects on disk:
 #
 #   env.cameras.front_cam → frames/NNN.png  (renamed by DataGenRecorder)

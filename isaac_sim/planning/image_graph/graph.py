@@ -1,8 +1,8 @@
 """Goal-graph data structures + JSON serialization.
 
 A GoalGraph is a sequence of (pose, image) nodes the robot follows to reach
-a far goal in image-conditioned mode. Written once per run (by
-env.record_image_graph at data-gen / rollout time) into the run dir as:
+a far goal in image-conditioned mode. Written once per run (at data-gen /
+rollout time) into the run dir as:
 
   <run_dir>/frames.json   — manifest (GoalGraph.load reads this)
   <run_dir>/frames/       — sibling PNG dir: 000.png, 001.png, ...
@@ -10,11 +10,10 @@ env.record_image_graph at data-gen / rollout time) into the run dir as:
 The SubgoalSelector consumes a loaded graph at rollout time and returns the
 current subgoal image based on the robot's pose.
 
-Closest-node estimator: pose-based. The paper (root.tex:301) uses image
+Closest-node estimator: pose-based. OmniVLA's deployment recipe uses image
 embeddings (NoMaD/ViNT-style); we substitute Euclidean pose distance because
-sim hands us ground-truth pose for free. Sim-only simplification — when we
-move to real-world or want sim-to-real parity, swap SubgoalSelector for an
-embedding-based one. See work-log 2026-05-10_topological-goal-graph-impl.md.
+sim provides ground-truth pose. For real-world use, swap SubgoalSelector for
+an embedding-based one.
 """
 
 from __future__ import annotations
@@ -32,8 +31,8 @@ class GraphNode:
     yaw_rad: float
     image_filename: str   # basename inside the graph's image_dir
     # Latest (v, w) controller command at sample time. Bonus telemetry — not
-    # used as a training label (we derive actions from inter-node pose deltas
-    # to match the paper's gnm_dataset._compute_actions). Useful for sanity
+    # used as a training label (actions are derived from inter-node pose
+    # deltas, as in upstream OmniVLA's GNM dataset). Useful for sanity
     # checks (does ∫(v,w)dt ≈ node delta?) and failure analysis.
     cmd_v: float | None = None    # m/s, forward velocity command
     cmd_w: float | None = None    # rad/s, yaw rate command
@@ -45,22 +44,16 @@ class GoalGraph:
     env_config_hash: str           # truncated sha1 of env_config.to_dict(); detects drift
     node_spacing_m: float
     robot_inflation_m: float
-    # Goal-object geometry the scout used. Recorded so downstream consumers
-    # (success detection, pose-mode goal pose) can reuse the same "where to
-    # stop" semantics — see work-log 2026-05-10_topological-goal-graph-impl.md.
-    # Defaults keep older JSONs loadable.
+    # Goal-object geometry. Recorded so downstream consumers (success
+    # detection, pose-mode goal pose) can reuse the same "where to stop"
+    # semantics. Defaults keep JSONs without these fields loadable.
     goal_radius_m: float = 0.0     # max XY half-extent of /World/Goal AABB
     standoff_m: float = 0.0        # distance the A* terminus is short of object centre
-    # How the nodes were sampled. Two modes today:
+    # How the nodes were sampled, e.g.:
     #   "static_arclength" — teleport-and-snap at uniform `node_spacing_m`
-    #                        spacing along the smoothed A* path (the original
-    #                        scout). node_spacing_m is the relevant knob.
-    #   "realtime"         — closed-loop pure-pursuit drive of the same path
-    #                        at `target_speed_mps`, sampling at `sample_hz`
-    #                        wall-clock. node_spacing_m is meaningless (set 0);
-    #                        spacing is what the controller's actual motion
-    #                        produced — matches the paper's training-data
-    #                        sampling regime (~1 Hz × 0.5 m/s).
+    #                        spacing along the smoothed A* path.
+    #   "policy_rollout"   — closed-loop drive sampled at `sample_hz`;
+    #                        node_spacing_m is 0 (spacing follows the motion).
     sampling_mode: str = "static_arclength"
     target_speed_mps: float = 0.0
     sample_hz: float = 0.0
@@ -101,7 +94,7 @@ def _sq_dist(a: tuple[float, float], b: tuple[float, float]) -> float:
 class SubgoalSelector:
     """Position-based forward-only node tracker for a GoalGraph.
 
-    Algorithm (paper root.tex:301):
+    Algorithm (OmniVLA's topological-graph deployment):
         1. Estimate the *current* location as the closest node (within a
            forward window — never picks a node behind us).
         2. Hand the policy the image from `look_ahead` nodes further along

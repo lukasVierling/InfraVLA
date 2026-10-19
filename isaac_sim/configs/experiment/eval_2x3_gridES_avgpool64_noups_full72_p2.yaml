@@ -1,6 +1,6 @@
 # @package _global_
-# cfv4 avgpool64 WITHOUT cf-window upsampling — step 2 of the progression table.
-# Full gridES 72, shard 2/2 (CAP=2: 4 shards OOM on the shared card).
+# Closed-loop eval of omnivla_finetuned_cctv4_2x3cfv4_avgpool64_noups_step15000 (policy: spatial no-upsampling ablation)
+# on the 72-cell gridES grid (spatial task), shard 2/2.
 defaults:
   - override /policy: omnivla_finetuned_cctv4_2x3cfv4_avgpool64_noups_step15000
   - override /task: pose
@@ -10,7 +10,7 @@ defaults:
   - override /env/astar: warehouse_2x3
   - override /controller: omnivla_default
   - override /recorder: default
-run: {name: "eval_2x3_gridES_avgpool64_noups_full72_p2", notes: "cfv4 avgpool64 no-upsampling control, full 72, shard 2/2."}
+run: {name: "eval_2x3_gridES_avgpool64_noups_full72_p2", notes: "spatial no-upsampling ablation, shard 2/2"}
 control_hz: 3.0
 record_hz: 3.0
 fine_grained: {enabled: true, control_hz: 30}

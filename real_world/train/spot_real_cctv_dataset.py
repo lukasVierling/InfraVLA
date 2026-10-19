@@ -7,14 +7,14 @@ cctv branch) and `_build_multimodal_attention_cctv` all work UNMODIFIED. Lives
 under real_world/train/; nothing in the sim pipeline is touched.
 
 Sample contract mirrored from the sim dataset (order is load-bearing):
-  1 cam  -> legacy single-cctv path: `cctv_pixel_values` tensor;
+  1 cam  -> single-cctv path: `cctv_pixel_values` tensor;
             collator stacks [ego_obs, ego_goal, cctv]           (n_img = 3)
             block_present = [ego, ego_goal, cctv, pose]
   >=2 cams -> multi path: `cctv_pixel_values_list`;
             collator stacks [ego_obs, ego_goal, cctv_0..N-1]    (n_img = 2+N)
             block_present = [ego, ego_goal, cctv_0.., pose]
 
-Data source: export_spot_cctv_2026_08_19 runs, whose dataset.npz carries
+Data source: exported real-robot CCTV runs, whose dataset.npz carries
 `cctv_cams` and per-cam `cctv_<cam>` basename arrays parallel to `images`
 ("" = no aligned frame -> zeros + block_present 0, same as a sim trajectory
 with no cctv/ dir). A run missing a configured cam entirely behaves the same.
@@ -181,7 +181,7 @@ class SpotRealCCTVDataset(SpotRealDataset):
         sample["dataset_name"] = self.DATASET_NAME
 
         if len(self.cctv_cam_names) == 1:
-            sample["cctv_pixel_values"] = stack[0]        # legacy 3-image path
+            sample["cctv_pixel_values"] = stack[0]        # single-cctv 3-image path
         else:
             sample.pop("cctv_pixel_values", None)
             sample["cctv_pixel_values_list"] = stack      # multi-cctv path

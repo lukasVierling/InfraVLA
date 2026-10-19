@@ -160,7 +160,7 @@ class DataGenerator:
 
     def _sample_point_in_zone(self, zone: str, rng: random.Random, clearance: float,
                               avoid: tuple = ()):
-        """function that samples a point in a zone for goal or start."""
+        """Sample a free point in a zone (for start or goal); None if no valid point is found."""
         #get the warehouse zones
         z = WAREHOUSE_2X3_ZONES[zone]
         #get the placmeen point margin m
@@ -179,7 +179,7 @@ class DataGenerator:
             #check whether coordinates are free
             if self._clearance_at(x, y) <= clearance:
                 continue
-            #if too close to points that should be avoided then don;t use the point
+            # Reject points too close to the `avoid` circles.
             if any(math.hypot(x - ax, y - ay) < clearance + ar for ax, ay, ar in avoid):
                 continue
             return (round(x, 3), round(y, 3))
@@ -219,7 +219,7 @@ class DataGenerator:
         return o
 
     def _seals_aisle(self, zone: str, blocker: dict) -> bool:
-        """Returns true if the object successfully sealed the aisle i.e. A star walked aorund the aisle."""
+        """True iff the blocker seals the aisle (no A* path past it inside the walled-in aisle)."""
         z = WAREHOUSE_2X3_ZONES[zone]
         x0, x1 = z.x_range
         y0, y1 = z.y_range
@@ -227,8 +227,10 @@ class DataGenerator:
         seg = self.gate_cfg.max_obstacle_half_extent_m   # < 2*cap -> a rail isn't dropped
         rails = []
         s = y0 - t
-        # Add rails to avoid the robot escaping through other aisles and a start will say it is solvable -> robot locked in aisle so has to either get around the blocker if not then we succeeded)
-        #these rails fit into the a start setup that currently ignores large then objects like falls os they have to be chopped in smaller pieces to be recognized
+        # Wall the aisle in with rails so the only way from below to above the
+        # blocker is past it: if A* then finds no path, the blocker seals the
+        # aisle. Rails are tiled into pieces below the map's obstacle size cap,
+        # which would otherwise drop them as building-scale geometry.
         while s < y1 + t - 1e-9:
             e = min(s + seg, y1 + t)
             rails.append((x0 - t, s, x0, e))         # left rail (tiled)
@@ -484,7 +486,7 @@ runs:
 
 def _emit_experiments(scene_names: list, parts: int, runs_root: str, max_steps: int,
                       label: str = "part", contiguous: bool = False) -> None:
-    """exists a given experiment."""
+    """Write the partitioned data-gen experiment yamls for the given scenes."""
     buckets = {k: [] for k in range(parts)}
     if contiguous:
         per = math.ceil(len(scene_names) / parts)
@@ -543,6 +545,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-
-
-# ---------------------------------------------------------------------------

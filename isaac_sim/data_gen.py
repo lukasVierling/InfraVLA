@@ -49,7 +49,7 @@ def generate(cfg):
 
     task = None
     env = None
-    policy = None  # was unbound under KEEP_ENV if a later run reused it without an explicit recreate
+    policy = None
     for run in cfg.runs:
         overrides = list(cli_overrides)
         # `controller` is here too — the A* policy reads controller.dt_s,
@@ -64,7 +64,7 @@ def generate(cfg):
             overrides.append(f"env.seed={int(run.seed)}")
         if "goal_graph_path" in run:
             overrides.append(f"task.goal_graph_path={run.goal_graph_path}")
-        run_cfg = compose(config_name="data_gen", overrides=overrides)  # was "eval" — would silently load eval.yaml defaults instead of data_gen.yaml's
+        run_cfg = compose(config_name="data_gen", overrides=overrides)
         action = Action[run.get("action", "RELOAD").upper()]
         if action == Action.KEEP_ENV:
             for k in ("env_scene", "seed"):

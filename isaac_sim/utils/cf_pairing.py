@@ -1,10 +1,10 @@
 """Counterfactual (cf0 vs cfX) pairing + decision-frame geometry.
 
-Pure numpy / filesystem helpers for the paired-counterfactual probe
-(`vla-scripts/cf_counterfactual_probe.py`). Kept model-free and torch-free so
-the logic is unit-testable on CPU without loading a VLA.
+Pure numpy / filesystem helpers for counterfactual-window mining and paired
+probes. Kept model-free and torch-free so the logic is unit-testable on CPU
+without loading a VLA.
 
-Background — the cfv2fwd counterfactual construction (build_2x3.py::generate_cf):
+Background — the counterfactual construction (build_2x3.py::generate_cf):
 from one base scene the generator emits a family of
 variants that share start / goal / heading / distractors *byte-for-byte* and
 differ ONLY in which transit aisles a forklift seals. `<base>_cf0` is the
@@ -43,14 +43,12 @@ from isaac_sim.planning.image_graph.graph import GoalGraph  # noqa: E402
 # "warehouse_2x3_<4-digit base>_cf<suffix>". "0" = unblocked twin, otherwise a
 # subset of the transit aisles B/C/E/F.
 _SCENE_RE = re.compile(r"^(warehouse_2x3_\d{4})_cf([A-Z0]+)__pose__")
-# Language-task twins (build_2x3_lang.py, 2026-07-21): same family semantics,
-# suffix tA/tB instead of a seal pattern. Deliberately a separate regex so the
-# seal parser stays byte-identical for the cfv3/cfv4 splits.
-# 2026-07-22: widened for the v2 campaign — prefix warehouse_2x3_langv2_ and
-# up to four twins tA..tD (one per aisle object). v1 names parse unchanged.
+# Language-task twins (build_2x3_lang.py): same family semantics, suffix
+# tA..tD (one per aisle object) instead of a seal pattern; optional langvN
+# prefix. A separate regex so the seal parser above is unaffected.
 _SCENE_RE_LANG = re.compile(r"^(warehouse_2x3_lang(?:v\d+)?_\d{4})_t([A-D])__pose__")
-# Real-robot Spot families (2026-08-21 session): NN_a / NN_b / NN_c takes from a
-# shared spawn (verified 0.14 m / 3 deg median), letter = target object. Same
+# Real-robot Spot families: NN_a / NN_b / NN_c takes from a shared spawn
+# (0.14 m / 3 deg median spread), letter = target object. Same
 # family semantics as the sim variants, so the miner works unchanged.
 _SCENE_RE_SPOT = re.compile(r"^(\d{2})_([abc])_\d{4}_")
 
@@ -66,7 +64,7 @@ def _parse_run_dir(name: str) -> tuple[str, str] | None:
 
 
 def find_cf_pairs(split_dir: str | Path) -> list[dict]:
-    """find counterfactual pairs and returns them"""
+    """Find (cf0, cfX) pairs in a split directory."""
     split_dir = Path(split_dir)
     by_base: dict[str, dict[str, Path]] = {}
     #parse the names and add them into a dictionary that contains another dict per suffix
@@ -170,7 +168,7 @@ def decision_frame_yaw(
     # Wrap the DIFFERENCE into [-pi, pi] — not each stream separately. Two
     # headings of +pi and -pi are identical, but unwrapping each stream on its
     # own leaves them 2pi apart and reports a bogus 360 deg divergence at frame
-    # 0 (caught by test_wrap_seam_not_a_divergence).
+    # 0.
     diff = yaw_a[:n] - yaw_b[:n]
     diff = (diff + np.pi) % (2.0 * np.pi) - np.pi
     dev = np.abs(np.degrees(diff))
@@ -226,26 +224,23 @@ def family_decision_windows_yaw(
 # ---------------------------------------------------------------------------
 # Counterfactual FAMILIES (generalisation of the cf0/cfX pairs above).
 #
-# cfv3 (build_2x3 balanced datagen, 2026-07-08) emits each base as a pair of
-# BLOCKED variants with different sealed sets (e.g. cfCE vs cfCF) and no cf0
-# control — find_cf_pairs() returns nothing on such a split. A "family" is the
-# general unit: every variant sharing one base, pairwise-comparable because the
+# The balanced build_2x3 datagen emits each base as a pair of BLOCKED variants
+# with different sealed sets (e.g. cfCE vs cfCF) and no cf0 control —
+# find_cf_pairs() returns nothing on such a split. A "family" is the general
+# unit: every variant sharing one base, pairwise-comparable because the
 # generator gives all of them byte-identical start/goal/distractors. Consumed by
-# prismatic/vla/datasets/counterfactual_dataset.py (decision-window training)
-# and vla-scripts/inspect_counterfactual_dataset.py (eyeball vis).
+# the decision-window mining in prismatic/vla/datasets/dataset_utils/.
 # ---------------------------------------------------------------------------
 
 def group_cf_families(run_dir_names: list[str]) -> tuple[dict[str, dict[str, int]], list[int]]:
-    """group the counterfactual families and return which ones didn't succeed in parsing"""
+    """Group run dirs into cf families {base: {suffix: index}}; also return indices that did not parse."""
     families: dict[str, dict[str, int]] = {}
     non_cf: list[int] = []
     for i, name in enumerate(run_dir_names):
-        #iterate over the run names and parse them
         parsed = _parse_run_dir(name)
         if parsed is None:
             non_cf.append(i)
             continue
-        # get the base and suffix
         base, suffix = parsed\
         #add base to the family dict and then add another entry for the suffix with index of trajectory
         families.setdefault(base, {})[suffix] = i
@@ -260,25 +255,18 @@ def family_decision_windows(
     post_steps: int,
     max_start_offset_m: float = 0.5,
 ) -> tuple[dict[str, set[int]], list[dict]]:
-    """returns the pairs with their decision windows"""
+    """Per-variant decision windows from every pair in a family, plus a per-pair log."""
     suffixes = sorted(positions_by_variant)
     windows: dict[str, set[int]] = {s: set() for s in suffixes}
     pair_log: list[dict] = []
     for ai in range(len(suffixes)):
-        #iterate through the suffixes
         for bi in range(ai + 1, len(suffixes)):
-            #take the next suffix
-            #get both entries
             a, b = suffixes[ai], suffixes[bi]
-            #get the positions
             pos_a, pos_b = positions_by_variant[a], positions_by_variant[b]
-            #find the decision frame for the two runs
             t_star, dev, start_off = decision_frame(
                 pos_a, pos_b, n_chunk=n_chunk, dev_thresh_m=dev_thresh_m)
-            #create an entry for the decision frame between the trajectories
             entry = {"a": a, "b": b, "t_star": t_star, "dev_m": dev,
                      "start_offset_m": start_off}
-            #create an entry informing about what kind of match we have
             if start_off > max_start_offset_m:
                 entry["status"] = "start_mismatch"
             elif t_star is None:
@@ -286,7 +274,7 @@ def family_decision_windows(
             else:
                 entry["status"] = "ok"
                 lo = max(0, t_star - pre_steps)
-                hi = t_star + post_steps                   # inclusive #this one should also be capped at min no? 
+                hi = t_star + post_steps                   # inclusive; capped to the trajectory length below
                 for suffix, pos in ((a, pos_a), (b, pos_b)):
                     windows[suffix].update(range(lo, min(hi, len(pos) - 1) + 1))
             pair_log.append(entry)
@@ -304,27 +292,27 @@ def family_decision_windows(
 # ---------------------------------------------------------------------------
 
 def final_wp_lateral(chunk: np.ndarray) -> float:
-    """returnd dy of final waypoint"""
+    """Return dy (lateral) of the final waypoint."""
     return float(chunk[-1, 1])
 
 
 def final_wp_forward(chunk: np.ndarray) -> float:
-    """returns dx of final waypoint"""
+    """Return dx (forward) of the final waypoint."""
     return float(chunk[-1, 0])
 
 
 def final_wp_heading(chunk: np.ndarray) -> float:
-    """returns the heading as degree in final waypoint"""
+    """Return the bearing (radians) of the final waypoint."""
     return math.atan2(chunk[-1, 1], chunk[-1, 0])
 
 
 def wrap_pi(angle: float) -> float:
-    """returns the angle expressed in py"""
+    """Wrap an angle to [-pi, pi)."""
     return (angle + math.pi) % (2 * math.pi) - math.pi
 
 
 def lateral_separation(chunk_x: np.ndarray, chunk_0: np.ndarray) -> float:
-    """returns the difference between two chunks at their final waypoint"""
+    """Lateral difference between two chunks at their final waypoint."""
     return final_wp_lateral(chunk_x) - final_wp_lateral(chunk_0)
 
 

@@ -1,14 +1,6 @@
-# DAgger JUNCTION-ONLY N=30 arm, step_18000 (2026-08-25).
-# Recovery data mined with anchor_mode=spawn (full episode from the scene's own
-# spawn, so failures are the policy's OWN compounding error) and selected by
-# excursion severity (peak >= 2.5 m = half the aisle pitch), NOT cf-window
-# membership. Then filtered to the 30 MID-ROUTE junction failures: the other 18
-# were late-route, 7 of them post-arrival drift (robot reached the goal, then
-# wandered, and find_excursions has no arrival cutoff).
-# step_18000 is the ONLY dagger-trained checkpoint to evaluate: this arm's
-# best-VAL is the parent (recovery ft raises val loss), and val is not a valid
-# selector here -- the wstart arm had better val (0.00646) and still failed 5/9
-# cfBE closed-loop.
+# Spatial task, held-out blocking patterns, stage 2 (30 mid-route junction
+# recovery trajectories): step_18000 of 2026-08-25_holdout_E_CF_dagger_N30junction_ft18k_v0.
+# Evaluate with env/camera_set=with_4cctv_2x3_bigcam (set by the experiment shards).
 save_dir: "${recorder.runs_root}/${run.name}/policy"
 cameras:
   - { obs_cam: front_cam, goal_frames: null, present: true }

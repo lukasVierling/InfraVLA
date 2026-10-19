@@ -1,7 +1,6 @@
-# Loose-tolerance variant of `lang`. Sweep mode uses these for no-obstacle
-# envs where the policy commonly oscillates at ~0.35 m near the goal — the
-# strict 0.3 m disc misreports those as "stuck" when they're effectively at
-# the goal. Harder templates keep the strict threshold (see lang.yaml).
+# Loose-tolerance variant of `lang`, for scenes where the policy commonly
+# oscillates at ~0.35 m near the goal — the strict 0.3 m disc misreports those
+# as "stuck" when they're effectively at the goal.
 
 defaults:
   - lang

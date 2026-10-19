@@ -397,5 +397,5 @@
    "spawn_heading_deg": 0.0
   }
  ],
- "_note": "SYNONYM FINAL 96 (Lukas 2026-08-12): 12 balanced scenes for 'barrel' (3 per aisle B/C/E/F), target_phrase -> 'oil drum'. Both synonyms of an object share the SAME 12 scenes (paired within object). Pool = test52 + parent val/test, all never-trained; seeded rng 42."
+ "_note": "Synonym test set: 12 balanced scenes for 'barrel' (3 per aisle B/C/E/F), target_phrase -> 'oil drum'. Both synonyms of an object share the same 12 scenes (paired within object). Pool = test52 + parent val/test, all never-trained; seeded rng 42."
 }

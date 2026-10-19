@@ -2,7 +2,7 @@
 # OmniVLA Isaac Sim training-data generation — top-level Hydra config
 # ============================================================================
 #
-# Consumed by:  isaac_sim/eval/new_server_client/data_gen.py
+# Consumed by:  isaac_sim/data_gen.py
 #
 # Structural parallel to eval.yaml — same config groups, same `runs:` list
 # pattern, same compose-with-overrides per-run mechanism. The differences:
@@ -18,12 +18,11 @@
 #
 # Launch examples:
 #   python data_gen.py                                         # uses defaults
-#   python data_gen.py env/scene=template3_medium              # single override
-#   python data_gen.py +experiment=data_gen_pose_template1_easy  # one-flag run
+#   python data_gen.py --config-name datagen_2x3               # 2x3 recipe
 # ============================================================================
 
 defaults:
-  - policy: astar_oracle_nobrake       # A* oracle, NO arrival brake — DEFAULT training-data regime (full speed to goal; arrival handled downstream by the stop token). Override to astar_oracle for braked data.
+  - policy: astar_oracle_nobrake       # A* oracle, no arrival brake (full speed to goal; arrival handled downstream by the stop token)
   - task: pose                         # pose-goal mode; A* doesn't need lang/image
   - env/scene: warehouse_2x3          # mounts scene fields at cfg.env.*
   - env/robot: nova_carter                  # mounts at cfg.env.robot
@@ -53,14 +52,14 @@ run:
 # Put Hydra's per-invocation working dir INSIDE this dataset's own output dir under
 # runs/ (recorder.runs_root is always set via `recorder: data_gen`), so the
 # resolved-config snapshot (.hydra/) + hydra log sit WITH the generated data —
-# never accumulating in the code tree. See runs/README → Housekeeping.
+# never accumulating in the code tree.
 hydra:
   searchpath:
     - pkg://isaac_sim.configs._generated
   run:
     dir: ${recorder.runs_root}/_hydra/${now:%Y-%m-%d_%H-%M-%S}
 
-# Sample cadence (training-data sample rate). MUST match eval.yaml's record_hz
+# Sample cadence (training-data sample rate). Must match eval.yaml's record_hz
 # — it's paper-pinned to 3 Hz by the action-chunk tokenisation.
 record_hz: 3.0
 # Inner control-loop rate. Faster than record_hz so (v, w) updates between
@@ -70,11 +69,10 @@ record_hz: 3.0
 control_hz: 30.0
 
 # Inner PhysX integrator rate — sets World(physics_dt = 1 / physics_hz) and the
-# steps_per_control decimation. NOT a tuning knob: 60 Hz is the Isaac Sim
+# steps_per_control decimation. Not a tuning knob: 60 Hz is the Isaac Sim
 # default, and changing it would require re-validating PhysX behaviour under
-# the trained dynamics. Single source of truth (replaces the old helper/
-# constants.py); isaac_sim_env + data_gen derive physics_dt from it. Kept
-# identical to eval.yaml's physics_hz.
+# the trained dynamics. isaac_sim_env + data_gen derive physics_dt from it.
+# Kept identical to eval.yaml's physics_hz.
 physics_hz: 60
 
 # ---------------------------------------------------------------------------

@@ -1,5 +1,6 @@
 # @package _global_
-# b20 ladder N=12 @ step_17000 on gridES-72, shard 2/3 (interleaved).
+# Closed-loop eval of omnivla_b20ladder_N6_step20000 (policy: spatial stage 2, recovery ladder K=6)
+# on the 72-cell gridES grid (spatial task), shard 2/3.
 defaults:
   - override /policy: omnivla_b20ladder_N6_step20000
   - override /task: pose
@@ -9,7 +10,7 @@ defaults:
   - override /env/astar: warehouse_2x3
   - override /controller: omnivla_default
   - override /recorder: default
-run: {name: "eval_b20L_N6_p2", notes: "unified-recipe ladder"}
+run: {name: "eval_b20L_N6_p2", notes: "spatial stage 2, recovery ladder K=6, shard 2/3"}
 control_hz: 3.0
 record_hz: 3.0
 fine_grained: {enabled: true, control_hz: 30}

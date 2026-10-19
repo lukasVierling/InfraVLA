@@ -25,49 +25,40 @@ class Task:
     name: str
     modality: frozenset[str]
 
-    # goal_xy is OPTIONAL — leave as None to auto-resolve from the env (the
-    # standoff position computed by scouting.compute_effective_goal, which
-    # accounts for the goal prop's AABB + parking buffer, or the raw goal
-    # point when no prop is placed). Set explicitly to override for debugging
-    # ("drive to this exact (x, y) regardless of env"). The override path
-    # also recomputes the approach heading from start_xy, so success
-    # detection and the pose-channel both target the override correctly.
+    # goal_xy is optional and currently not read by the sim loop: the goal is
+    # the env's effective (standoff) goal pose, which accounts for the goal
+    # prop's AABB + parking buffer, or the raw goal point when no prop is
+    # placed.
     goal_xy: tuple[float, float] | None = None
 
-    # Default mirrors LeLan's "move toward X" training pattern
-    # (prismatic/vla/datasets/lelan_dataset.py:433). The full prompt seen by
-    # the tokenizer is "What action should the robot take to {lang}?".
-    # Override per-task in experiments.py to match the goal prop actually
-    # placed by the env. CAST-style diverse prompts live in
-    # prismatic/vla/datasets/cast_dataset.py:101-103 for further inspiration.
+    # Default mirrors the LeLaN "move toward X" training pattern (as in
+    # upstream OmniVLA). The full prompt seen by the tokenizer is
+    # "What action should the robot take to {lang}?". Override per task / per
+    # run (lang_instruction) to match the goal prop placed by the env.
     lang_instruction: str = "move toward the goal"
 
-    # Currently unread — the runtime goal heading is the server-computed
-    # `effective_goal_heading_rad` (which accounts for aisle approach
-    # direction etc.). Kept on the dataclass for a future "manual goal
-    # heading override" feature; if you set it today, nothing happens.
+    # Currently unread — the runtime goal heading comes from the env's
+    # effective goal pose. Setting it has no effect.
     goal_heading_deg: float = 0.0
 
     # For "image" modality, set EXACTLY ONE of these:
-    #   goal_image_path  — single goal image, paper's ≤3 m case (root.tex:300)
-    #   goal_graph_path  — JSON manifest of a topological graph, paper's >3 m
-    #                      case via topological memory (root.tex:301). The
-    #                      graph is produced by isaac_sim/scouting/oracle_scout
-    #                      at server startup.
+    #   goal_image_path  — single goal image (OmniVLA's ≤3 m case)
+    #   goal_graph_path  — JSON manifest of a topological graph (OmniVLA's
+    #                      >3 m case). Recorded by IsaacSimEnv.set_task at
+    #                      run start.
     goal_image_path: str | None = None
     goal_graph_path: str | None = None
 
-    # Graph-recording knobs consumed by IsaacSimEnv.record_image_graph.
+    # Graph-recording knobs consumed by IsaacSimEnv._record_image_graph.
     goal_graph_node_spacing_m: float = None
     goal_graph_node_spacing_freq: float = 1 
     goal_graph_camera_name: str = "front_cam"  # Hydra dict key, not the camera's internal .name
     goal_graph_sampling_mode: str = "static_arclength"
 
     max_steps: int = 200
-    # Tight — the goal we measure against is the *standoff* position (server's
-    # compute_effective_goal), which already parks the robot in open space in
-    # front of the prop. 0.3 m is "image-localisation slop". Wider thresholds
-    # were needed back when goal_xy was the prop centre.
+    # Tight — the goal we measure against is the *standoff* position, which
+    # already parks the robot in open space in front of the prop. 0.3 m is
+    # "image-localisation slop".
     success_dist: float = 0.3
 
     def __post_init__(self) -> None:
@@ -123,7 +114,7 @@ class Task:
             if not p.is_absolute():
                 p = (repo_root / val).resolve()
                 setattr(self, attr, str(p))
-            # goal_graph_path is created by env.record_image_graph at runtime, so
+            # goal_graph_path is created by the env at runtime, so
             # existence is NOT a precondition. goal_image_path must exist upfront.
             if attr == "goal_image_path" and not Path(getattr(self, attr)).exists():
                 raise FileNotFoundError(

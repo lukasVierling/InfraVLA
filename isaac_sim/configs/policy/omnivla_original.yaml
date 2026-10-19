@@ -1,10 +1,10 @@
 # ============================================================================
-# Policy: paper's released OmniVLA checkpoint (step 120k)
+# Policy: the released OmniVLA checkpoint (step 120k), no fine-tuning
 # ============================================================================
 #
 # Consumed by Policy(cfg.policy) in policy.py. Fields under `inference:` are
 # poured straight into the InferenceConfig dataclass that define_model() in
-# inference/run_omnivla.py:486 reads. Top-level fields are consumed by
+# inference/run_omnivla.py reads. Top-level fields are consumed by
 # Policy itself (save_dir for logging the run).
 # ============================================================================
 
@@ -15,8 +15,8 @@
 save_dir: "${recorder.runs_root}/${run.name}/policy"
 
 # Which key in env.cameras the policy reads as its "current image" each step.
-# Must match a dict key in the active env/camera_set (default / with_chase /
-# with_cctv all use "front_cam" for Carter's onboard ego cam). If you swap to
+# Must match a dict key in the active env/camera_set (all sets here use
+# "front_cam" for the robot's onboard ego cam). If you swap to
 # a camera_set that names the ego cam differently, override this here too.
 cur_image_cam_name: front_cam
 
@@ -28,28 +28,27 @@ inference:
 
   # Local clone of the pretrained model from HuggingFace
   # (`git clone https://huggingface.co/NHirose/omnivla-original`).
-  # Paper's loader expects a local dir, not an HF hub path.
+  # The loader expects a local dir, not an HF hub path.
   vla_path: "${oc.env:INFRAVLA_ROOT}/omnivla-original"
 
   # Step number of the pretrained checkpoint files inside vla_path. Module
-  # files are named `{module}--{step}_checkpoint.pt`. 120000 is the paper's
-  # released checkpoint (see train_omnivla.py:725).
+  # files are named `{module}--{step}_checkpoint.pt`. 120000 is the released
+  # OmniVLA checkpoint.
   resume_step: 120000
 
   # Action-head mode flags — these must match the head that was trained.
-  # Paper's release ships an L1-regression head; the other two are alternate
-  # heads from the paper's ablation study.
+  # The OmniVLA release ships an L1-regression head; the other two are
+  # alternate heads from its ablation study.
   use_l1_regression: true
   use_diffusion: false
   use_film: false
 
   # Number of images in the VLA input: current + goal. Locked at 2 — the
-  # pretrained vision backbone expects this. A future CCTV stream is wired
-  # in via a different code path, NOT by bumping this number.
+  # pretrained vision backbone expects this.
   num_images_in_input: 2
 
-  # LoRA was used in fine-tuning but the released paper checkpoint still
-  # carries the LoRA adapters. Kept truthful here so define_model loads them.
+  # The released checkpoint carries LoRA adapters; keep this true so
+  # define_model loads them.
   use_lora: true
-  lora_rank: 32                # paper, root.tex §3.2
-  lora_dropout: 0.0            # paper default
+  lora_rank: 32                # OmniVLA default
+  lora_dropout: 0.0            # OmniVLA default

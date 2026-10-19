@@ -1,8 +1,6 @@
 """Real-Spot trajectory dataset for OmniVLA fine-tuning.
 
-Reads the bags collected on 2026-08-19 (exported by export_trainset.py, removed
-2026-09-08 — recover from tag pre-cleanup-2026-09-04 if that session is revisited) and
-emits samples field-for-field identical to `IsaacSimDataset`, so the existing
+Reads real-robot takes exported to one `dataset.npz` per run and emits samples field-for-field identical to `IsaacSimDataset`, so the existing
 trainer, `PaddedCollatorForActionPrediction_Nav_MMN`, and checkpoints all work
 UNMODIFIED. Lives under real_world/train/ so nothing in the sim pipeline is
 touched.
@@ -18,7 +16,7 @@ Differences from IsaacSimDataset, and why:
     action timestep, which is wrong — deployment replans at 3 Hz.
   * Language modalities (7 = language only, 8 = language + pose) are
     available: every take was driven toward a named object. The prompt is
-    formatted exactly as lelan_dataset and inference-side run_omnivla do:
+    formatted exactly as upstream OmniVLA's LeLaN dataset and run_omnivla do:
         "What action should the robot take to {instruction}?"
   * Goal sampling is done in TIME (3 Hz ticks ahead), then snapped to the
     nearest recorded frame, because our frames are 15.6 Hz, not tick-aligned.
@@ -269,7 +267,7 @@ class SpotRealDataset(Dataset):
         c, s = math.cos(yaw0), math.sin(yaw0)
         goal_fwd = (dx * c + dy * s) / self.metric_waypoint_spacing
         goal_left = (-dx * s + dy * c) / self.metric_waypoint_spacing
-        # De-leak (mirrors isaac_sim_dataset 2026-06-17): the goal heading is the
+        # De-leak (mirrors cctv_isaac_sim_dataset): the goal heading is the
         # RUN-START heading, not the recorded heading at the goal step, so the
         # pose channel cannot hand the route to the policy.
         goal_yaw_local = src.pose[0][2] - yaw0

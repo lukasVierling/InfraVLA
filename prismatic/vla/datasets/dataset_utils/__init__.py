@@ -4,10 +4,8 @@
                     consume it (index filter / sampler mask)
     onboard_swap  — counterfactual onboard-bundle swap builders
 
-Split out of the retired counterfactual_dataset.py (2026-07-15): the
-CounterfactualDataset subclass was replaced by DatasetManager views
-(counterfactual_dataset_2.py) + apply_cf_window_filter; the free functions
-live on here.
+Counterfactual sampling views themselves live in counterfactual_dataset_2.py
+(DatasetManager).
 """
 
 from prismatic.vla.datasets.dataset_utils.cf_windows import (

@@ -1,34 +1,16 @@
 # ============================================================================
-# EGO-ONLY CONTROL for the 2026-08-21 session — 20-family / 5-held-out variant.
+# Real-robot ego-only control (baseline for the CCTV arm).
 #
-# The matched control the CCTV claim needs. Byte-identical to
-# spot_cctv_langsim_full.yaml / spot_cctv_langsim_v1 EXCEPT that the two CCTV
-# views are not fed to the model:
-#
-#     num_images_in_input  4 -> 2      (ego obs + ego goal only)
-#     emit_cctv            true -> false
-#     cctv_cam_names       [camera3, camera4] -> []
-#     cctv_downsample      removed (nothing to downsample)
-#
-# Same export, same frames, same samples, same order, same seed. The CCTV views
-# are simply not read, so any difference is attributable to the views and not
-# to data, spacing, recipe or sampling.
-#
-# Deliberately runs through train_omnivla_real_cctv.py (the SAME trainer as
-# every CCTV arm) with an empty camera list, rather than through
-# train_omnivla_real.py. Swapping trainers would swap the whole training
-# codebase and confound the comparison with a code difference.
-#
-# PURPOSE: 60-run train / 5 held-out families (05, 09, 12, 16, 23), 8000 steps
-# with val every 250 — mirrors what langsim_v1 and cfboost_est did, so the
-# ego-only stopping point is chosen by the same rule and on the same evidence.
-# The CCTV curves are flat from ~1250 (band 0.172-0.191); this run answers
-# whether ego-only is flat over the same range.
+# Same data, recipe, trainer and seed as spot_cctv_cfboost*.yaml, except that
+# the CCTV views are not fed to the model (num_images_in_input 2, emit_cctv
+# false, cctv_cam_names [], no cctv_downsample) and no counterfactual-window
+# upsampling is applied. It runs through train_omnivla_real_cctv.py with an
+# empty camera list so the comparison carries no training-code difference.
 # ============================================================================
 
 run:
   name: "2026-08-21_spot_egoonly_langsim_full_v0"
-  notes: "EGO-ONLY control, 20-family train / 5 held-out families, 8000 steps, val every 250. Identical recipe to spot_cctv_langsim_v1 except the CCTV views are not fed (num_images_in_input 2, emit_cctv false, cctv_cam_names []). Same trainer as the CCTV arms with an empty camera list, so no training-code confound. Purpose: locate the ego-only val optimum and give a clean uncontaminated CCTV-vs-ego comparison at matched steps."
+  notes: "Real-robot ego-only control: same data and recipe as the CCTV arm without the CCTV views, 3000 steps."
 
 model:
   vla_path: "${INFRAVLA_ROOT}/omnivla-original"
@@ -92,7 +74,7 @@ train:
   learning_rate: 1.0e-4
   num_steps_before_decay: 100000
   lr_decay_gamma: 0.1
-  max_steps: 3000   # extended 2000 -> 3000 (20 epochs on the 75-run split)
+  max_steps: 3000
   weight_decay: 0.0
   betas: [0.9, 0.999]
   eps: 1.0e-8
@@ -114,8 +96,8 @@ checkpoint:
   keep_every_n_steps: 5000
 
 logging:
-  wandb_entity: "cctv_vla"
-  wandb_project: "CCTV_VLA_real"
+  wandb_entity: ""
+  wandb_project: "infravla"
   wandb_tags: ["real-robot", "spot", "egoonly", "control", "2026-08-21",
                "spacing0.19", "heldout-val", "langsim", "lang80"]
   log_freq: 25

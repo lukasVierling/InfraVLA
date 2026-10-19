@@ -1,39 +1,22 @@
 """Swappable vision-encoder seam for the OmniVLA fork.
 
-WHY THIS EXISTS
----------------
-Today the model's `forward()` calls the vision backbone + projector inline and
-the CCTV attention-mask builder *recomputes* the per-view token count as a
-hardcoded ``[P] * n_img`` (P == 256). That hardcoding is the single thing that
-blocks swapping the encoder: a pixel-shuffled CCTV stream emits 64 tokens/view,
-VGGT emits a variable patch grid, a map encoder emits something else entirely.
+Upstream, `forward()` calls the vision backbone + projector inline and the CCTV
+attention-mask builder assumes a fixed ``[P] * n_img`` token layout (P == 256).
+This module makes the encoder a config choice instead:
 
-This module introduces one explicit boundary so the encoder becomes a config
-choice instead of inline code:
+  * ``EncodedVision``  — what the LLM-assembly side gets back: projected
+                         ``tokens`` plus ``per_block_widths``, so an encoder may
+                         emit a different token count per view (e.g. 64 for a
+                         downsampled CCTV view) without touching the mask builder.
+  * ``VisionEncoder``  — a transport-neutral Protocol shared by all impls.
+  * ``LocalDinoSigLipEncoder`` — default in-process impl; a thin facade over the
+                         existing backbone + projector. Not an ``nn.Module``, so
+                         it adds no state_dict keys or LoRA targets, and its
+                         output stays attached to the autograd graph.
+  * ``PixelShuffleDinoSigLipEncoder`` plus ``CCTVAvgPool`` / ``CCTVConv`` —
+                         CCTV token downsampling.
 
-  * ``EncodedVision``      — the struct the LLM-assembly side gets back. The only
-                            load-bearing field today is ``tokens`` (identical to
-                            what ``_process_vision_features`` returned before).
-                            ``per_block_widths`` *replaces* the hardcoded
-                            ``[P]*n_img`` so a swapped-in encoder may emit a
-                            different token count per view with NO edit to the
-                            mask builder.
-  * ``VisionEncoder``      — a transport-neutral Protocol. In-process and (future)
-                            remote impls share this signature, so the VLA forward
-                            never branches on transport.
-  * ``LocalDinoSigLipEncoder`` — the default in-process impl. A thin facade over
-                            the EXISTING backbone + projector. It is NOT an
-                            ``nn.Module`` and owns no parameters, so it adds no
-                            state_dict keys and no LoRA targets — the seam is
-                            byte-identical to the pre-seam code path.
-
-Design decisions locked with Lukas (2026-06-21):
-  * In-process default returns an *attached* tensor → autograd intact →
-    LoRA-on-cctv_featurizer keeps training. Remote/frozen is a separate opt-in
-    impl behind this same Protocol, inference-only.
-  * ``camera_params`` enters the contract now (optional) but the default encoder
-    IGNORES it — turning on per-camera extrinsics injection later needs no
-    signature change.
+``camera_params`` is part of the contract but ignored by the current encoders.
 """
 
 from __future__ import annotations
@@ -68,7 +51,7 @@ class EncodedVision:
     block_present : (B, num_blocks + 1) or None
         Pass-through of the per-block presence mask (image blocks + the trailing
         pose flag) so the downstream CCTV attention builder consumes it unchanged.
-        None on the legacy non-CCTV path.
+        None on the non-CCTV path.
     metadata : open dict
         Channel for encoder-specific extras a future encoder may surface without
         changing this dataclass: e.g. VGGT's predicted camera poses / depth maps.
@@ -83,8 +66,8 @@ class EncodedVision:
     def __post_init__(self) -> None:
         # Cheap invariant: the token count must equal the widths the mask builder
         # will expand over. Catches a desynced encoder BEFORE it silently
-        # corrupts the attention mask / label fill. Mirrors the existing assert
-        # at modeling_prismatic.py (the cctv builder).
+        # corrupts the attention mask / label fill. Mirrors the assert in the
+        # CCTV mask builder.
         n_tokens = self.tokens.shape[1]
         n_widths = int(self.per_block_widths.sum())
         assert n_tokens == n_widths, (
@@ -331,7 +314,7 @@ def resolve_image_slot_perm(image_slot_order, num_ego_images, cctv_cam_names):
         ["ego_obs","ego_goal"][:num_ego_images] + list(cctv_cam_names)
 
     Returns perm where perm[k] = canonical block index that lands at output pos k,
-    or None when image_slot_order is None (=> identity => legacy behaviour).
+    or None when image_slot_order is None (identity order).
     Raises (NO silent fallback) if image_slot_order isn't an exact permutation of
     the canonical names — a typo'd / missing / extra cam must fail loudly.
     """

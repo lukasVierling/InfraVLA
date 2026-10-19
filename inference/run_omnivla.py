@@ -589,7 +589,7 @@ def define_model(cfg: InferenceConfig) -> None:
     if getattr(cfg, "use_cctv_downsample", False):
         # v2 model: only it has the swappable vision_encoder seam + install_pixel_shuffle_encoder
         # (used for BOTH pixelshuffle and avgpool downsamplers). Load the class DIRECTLY
-        # (mirror train_omnivla_sim_cctv_v2.py:180) — the shared base checkpoint's config.json
+        # (mirrors train_omnivla_sim_cctv_v2.py) — the shared base checkpoint's config.json
         # auto_map points at v1, so we bypass AutoModelForVision2Seq.
         from prismatic.extern.hf.modeling_prismatic_v2 import OpenVLAForActionPrediction_MMNv1 as _V2Cls
         print("[define_model] use_cctv_downsample=True -> loading v2 model class")

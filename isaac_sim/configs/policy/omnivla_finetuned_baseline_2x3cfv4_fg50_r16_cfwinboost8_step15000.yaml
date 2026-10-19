@@ -1,10 +1,6 @@
-# 2x3 CFV4 (A-spawn only, fixed 270deg heading, south-third forklifts, bigcam)
-# EGO-ONLY baseline + CF-WINDOW BOOST8 eval policy. step_15000 (final; full val
-# 0.0080, cf-val 0.0130) of 2026-07-11_baseline_egoonly_2x3cfv4_r16_fg50_
-# cfwinboost8_15k_v0 (batch 10x3=30). ego-only (front_cam, num_images=2).
-# Adapter r16; inference.lora_rank 32 is the BASE placeholder.
-# The no-CCTV CONTROL for the cfv4 plain avgpool64+boost8 arm (kaitain) —
-# eval on the SAME gridES scenes.
+# Spatial task, ego-only baseline (no CCTV; front_cam, num_images=2): step_15000 of
+# 2026-07-11_baseline_egoonly_2x3cfv4_r16_fg50_cfwinboost8_15k_v0.
+# LoRA adapter is r16; inference.lora_rank 32 is the base-model placeholder.
 save_dir: "${recorder.runs_root}/${run.name}/policy"
 cur_image_cam_name: front_cam
 inference:

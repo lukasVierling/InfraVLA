@@ -1,7 +1,6 @@
 # @package _global_
-# HELD-OUT PATTERN arm on the full gridES 72 (shard 2/2, CAP=2).
-# 18 of the 72 cells use the held-out seals (9x cfE, 9x cfCF); the other 54 are
-# seen patterns and act as the in-distribution control within the same run.
+# Closed-loop eval of omnivla_holdout_E_CF_dagger_N30junction_step18000 (policy: spatial held-out patterns, stage 2)
+# on the 72-cell gridES grid (spatial task; 18 cells use the held-out cfE/cfCF patterns), shard 2/2.
 defaults:
   - override /policy: omnivla_holdout_E_CF_dagger_N30junction_step18000
   - override /task: pose
@@ -11,7 +10,7 @@ defaults:
   - override /env/astar: warehouse_2x3
   - override /controller: omnivla_default
   - override /recorder: default
-run: {name: "eval_hoE_dagN30_p2", notes: "held-out cfE+cfCF DAgger-N30junction arm, full 72, shard 2/2."}
+run: {name: "eval_hoE_dagN30_p2", notes: "spatial held-out patterns, stage 2, shard 2/2"}
 control_hz: 3.0
 record_hz: 3.0
 fine_grained: {enabled: true, control_hz: 30}

@@ -15,8 +15,6 @@ Training reuses the simulation trainer unchanged. `train_omnivla_real_cctv.py` l
 |---|---|---|
 | Fine-tuned OmniVLA (no CCTV) | `spot_egoonly_langsim_full.yaml` | On-board view only, 3k steps. Same trainer with an empty camera list. |
 | InfraVLA (stage 1) | `spot_cctv_cfboost.yaml`, then `spot_cctv_cfboost_3k.yaml` | Two CCTV views, counterfactual-snippet upsampling. The 3k config resumes the first at step 2000. |
-| Not in the paper | `spot_cctv_langsim_full{,_3k}.yaml` | CCTV without upsampling. |
-| Not in the paper | `spot_cctv_recovery.yaml` | Recovery from staged starting points, which hurt performance. |
 
 The configs expect the recorded data under `runs/data/real_world/` and write runs to
 `runs/training/real_world/`. The recorded data are not part of this repository.
@@ -29,8 +27,8 @@ python real_world/train/train_omnivla_real_cctv.py --config real_world/train/con
 python real_world/train/train_omnivla_real_cctv.py --config real_world/train/configs/spot_cctv_cfboost_3k.yaml --resume-step 2000
 ```
 
-Add `--smoke-test 3 --disable-wandb` for a quick check. `queue_all3k.sh` trains all stage-1 arms to
-3k steps and merges each one for serving.
+Add `--smoke-test 3 --disable-wandb` for a quick check. `queue_all3k.sh` trains both arms (InfraVLA
+and the ego-only baseline) to 3k steps and merges each one for serving.
 
 ## Merge before serving
 

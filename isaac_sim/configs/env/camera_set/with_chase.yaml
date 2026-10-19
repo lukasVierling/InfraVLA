@@ -1,5 +1,5 @@
 # @package env.cameras
-# Camera-set selector: policy view + third-person chase (the old server's pair).
+# Camera-set selector: policy view + third-person chase.
 # Result: env.cameras = {front_cam: ..., scene_cam: ...}
 
 defaults:

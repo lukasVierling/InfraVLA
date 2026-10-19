@@ -10,8 +10,8 @@ goal_graph_path: null
 goal_xy: null
 goal_heading_deg: 0.0
 
-# Timeout cap. Lowered 200 -> 100 on 2026-05-30: on the 10-seed test set every
-# successful rollout finished in <=61 steps, so 100 leaves a ~40-step margin while
-# roughly halving the wall time spent on hopeless (timeout) runs.
+# Timeout cap: successful short-range rollouts finish in <=61 steps, so 100
+# leaves a ~40-step margin while limiting wall time on hopeless runs. The 2x3
+# experiments override this per run.
 max_steps: 100
 success_dist: 0.3

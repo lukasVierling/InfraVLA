@@ -27,7 +27,7 @@ class Robot:
         self.initial_pos, self.initial_ori = initial
 
         # Single source of truth for the robot's stage path (read by camera
-        # auto-discovery, scouting obstacle exclusion, ...).
+        # auto-discovery, map obstacle exclusion, ...).
         self.prim_path = cfg.prim_path
 
         self.object = WheeledRobot(

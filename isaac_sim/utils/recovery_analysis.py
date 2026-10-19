@@ -2,8 +2,8 @@
 
 point_to_polyline_dist — min distance from points to a polyline
 find_derailment        — derailment verdict + onset + last-aligned index
-
-See the notes block at the end of this file.
+find_excursions        — all excursions of a rollout, with rejoin semantics
+parse_rec_dirname      — (source, t, spawn_k) from a stitched rec_* dirname
 """
 
 from __future__ import annotations
@@ -92,8 +92,8 @@ _REC_DIRNAME = _re.compile(r"^rec_(?P<src>.+)_t(?P<t>\d+)(?:_s(?P<k>\d+))?$")
 def parse_rec_dirname(name: str) -> tuple[str, int, int]:
     """(source_traj_dirname, sample_t, spawn_k) from a stitched rec_* dirname.
 
-    spawn_k is 0 for the legacy single-spawn naming (no _s suffix); extra
-    spawns of the same derailment (n_spawns > 1, 2026-07-17) carry _s1, _s2...
+    spawn_k is 0 for the first spawn (no _s suffix); extra spawns of the
+    same derailment (n_spawns > 1) carry _s1, _s2...
     Keep ALL consumers on this helper — the t-last convention breaks the
     moment someone parses with rsplit("_t") against an _s-suffixed name.
     """
@@ -105,9 +105,9 @@ def parse_rec_dirname(name: str) -> tuple[str, int, int]:
 
 def rejoin_index(rec_xy, plan_xy, *, eps_m: float) -> int | None:
     """First recovery-segment index within eps_m of the original plan
-    ("back on track"); None if never. ONE rule, no sustain window (Lukas
-    2026-07-17: simple rules — every extra parameter is one more thing to
-    tune and defend). Known trade, accepted: a transient path CROSSING
+    ("back on track"); None if never. One rule, no sustain window (every
+    extra parameter is one more thing to tune and defend). Known trade-off:
+    a transient path CROSSING
     during the corrective S-curve counts as rejoined and cuts the anchor
     span there.
     """
@@ -125,9 +125,7 @@ def find_excursions(xy, gt_polyline, *, dev_thresh_m: float,
     the rollout returns to within aligned_eps_m of the route (or the trace
     ends). A transient blip that rejoins is therefore its OWN excursion and
     cannot hijack the onset of a later, real failure — the first-crossing
-    semantics of find_derailment cannot distinguish the two (2026-08-23
-    analysis: 5/12 spawn-start rollouts had a spawn blip before the junction
-    failure).
+    semantics of find_derailment cannot distinguish the two.
 
     Returns, per excursion, in ROLLOUT indices:
       last_aligned_idx  last step before onset with deviation <= aligned_eps_m
@@ -138,14 +136,11 @@ def find_excursions(xy, gt_polyline, *, dev_thresh_m: float,
       end_idx           where the excursion closed (rejoin, or trace end)
       peak_dev_m        max deviation over [onset, end] — the SEVERITY of this
                         excursion, used to tell a real wrong-aisle commitment
-                        from tracking slop (2026-08-24: 5.31-5.43 m vs
-                        0.58-0.64 m on the BEfullrun probes).
+                        (several metres) from tracking slop (well under 1 m).
       rejoined          True iff it closed by RETURNING to the route rather
                         than by the trace running out — i.e. the policy
-                        self-corrected. Perfectly anti-correlated with
-                        peak_dev_m >= 2.5 on that probe (12 vs 5, 0 exceptions),
-                        which is what validates the threshold as non-arbitrary.
-                        NOT used as the filter itself: an excursion truncated
+                        self-corrected. Not used as the filter itself: an
+                        excursion truncated
                         by the rollout budget looks un-rejoined when it would
                         have self-corrected, whereas peak_dev_m is a property
                         of the excursion alone.

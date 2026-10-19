@@ -1,9 +1,9 @@
 """
-Shared infrastructure for procedural warehouse templates.
+Shared infrastructure for warehouse scene templates.
 
-Each template (templates/template1.py, template2.py, ...) imports from here:
+Templates (templates/warehouse_2x3.py) import from here:
   - PROP_CATALOG: spawnable Isaac assets, grouped by category (single catalog
-                  for obstacles AND goal props — unified 2026-07-19)
+                  for obstacles and goal props)
   - BaseTemplateConfig: dataclass each template extends with its own knobs
   - load_base_warehouse(): adds NVIDIA's full_warehouse.usd as a stage reference
   - scale_baked_lights(): walks UsdLux prims and multiplies their intensity
@@ -43,22 +43,15 @@ class PropSpec:
 
 
 # Obstacles / distractors — the things that go *between* robot and goal.
-# Footprint radii are eyeballed from asset bounds; tune if spawns overlap.
-# footprint_radius values are MEASURED via isaac_sim/utils/scene_prep/measure_prop_footprints.py
-# (2026-05-29) — the rotation-invariant disc radius derived from each USD's
-# world-space AABB at yaw=0:  r = sqrt(half_w**2 + half_d**2). This is the
-# smallest disc that contains the prop at ANY yaw, so a sampler that uses it
-# can't produce placements the env's grid-SDF will reject.
-#
-# Values are rounded UP to 2 dp so we're never less conservative than measured.
-# Pre-measurement guesses were uniform 0.4/0.7/etc. and underestimated by up
-# to +186% (rack_pile) — see the project's suspicion log 2026-05-29 entry.
+# footprint_radius values are measured (see utils/scene_prep/measured_footprints.json):
+# the rotation-invariant disc radius from each USD's world-space AABB at yaw=0,
+# r = sqrt(half_w**2 + half_d**2) — the smallest disc containing the prop at
+# any yaw, so a sampler using it can't produce placements the env's grid-SDF
+# will reject. Values are rounded up to 2 dp.
 #
 # Sign variants couldn't be measured (USD payload didn't resolve in the
-# stand-alone bbox script). They are KEPT in the catalog for templates that
-# explicitly opt in (template5 props), but DROPPED from random_open's
-# OBSTACLE_KINDS in isaac_sim/utils/scene_prep/datagen.py because we can't size
-# their clearance correctly.
+# stand-alone bbox script); they keep a 0.2 m guess and should not be used as
+# sampled obstacles.
 PROP_CATALOG: dict[str, list[PropSpec]] = {
     "box": [
         PropSpec("/Isaac/Environments/Simple_Warehouse/Props/SM_CardBoxA_01.usd", 0.44),
@@ -100,22 +93,15 @@ PROP_CATALOG: dict[str, list[PropSpec]] = {
         PropSpec("/Isaac/Environments/Simple_Warehouse/Props/SM_RackPile_06.usd", 1.72),
     ],
     "sign": [
-        # Unmeasured (USD payload didn't resolve in the bbox script).
-        # Kept at the original 0.2 m guess so templates that *explicitly*
-        # opt in to signs are unaffected — but signs are removed from
-        # random_open's OBSTACLE_KINDS so the inaccurate value can't trigger
-        # the sampler-vs-env clearance mismatch there.
+        # Unmeasured (USD payload didn't resolve in the bbox script); 0.2 m
+        # guess. Not suitable as a sampled obstacle.
         PropSpec("/Isaac/Environments/Simple_Warehouse/Props/SM_SignA.usd", 0.2),
         PropSpec("/Isaac/Environments/Simple_Warehouse/Props/SM_SignB.usd", 0.2),
     ],
-    # --- former GOAL_CATALOG kinds (catalogs unified 2026-07-19) -------------
-    # The goal/distractor split assumed goals and obstacles are different prop
-    # populations; the language task makes every object both (target in one
-    # scene, distractor in another), so the split was retired. `goal_kinds`
-    # (and place_goal_or_designate) still work — they now resolve from here.
-    # Kinds that existed in BOTH catalogs (box / pallet / forklift) kept their
-    # measured PROP_CATALOG entries; old goal_kinds=[box] configs now sample
-    # among these variants instead of the single hand-valued goal spec.
+    # --- goal-prop kinds ------------------------------------------------------
+    # One catalog for goals and obstacles: the language task makes every object
+    # both (target in one scene, distractor in another). `goal_kinds` (and
+    # place_goal_or_designate) resolve from here.
     "traffic_cone": [
         PropSpec("/Isaac/Environments/Simple_Warehouse/Props/S_TrafficCone.usd", 0.3),
     ],
@@ -149,7 +135,7 @@ def resolve_start_heading_rad(
     resolve_effective_start_and_goal_pose computes astar_heading_rad and
     delegates the mode choice here.
 
-      "astar"  -> astar_heading_rad (legacy: face along the planned path;
+      "astar"  -> astar_heading_rad (face along the planned path;
                   leaks the planner's answer into the first observation)
       "fixed"  -> radians(start_heading_deg) from the scene yaml (incl. any
                   config-time jitter the template already applied to it)
@@ -176,59 +162,41 @@ class BaseTemplateConfig:
 
     # Robot spawn — server reads initial_pos / initial_ori from these.
     # Default `None` is a *sentinel* meaning "not yet set":
-    #   - "Explicit-spawn" templates (T1/T2) require the JSON to set these,
-    #     and the template's __post_init__ asserts non-None via super().
-    #   - "Derived-spawn" templates (T3/T4/T5) compute them in __post_init__
-    #     from aisle_index/start_end/start_depth_m, and refuse a JSON-set
-    #     start_xy/start_heading_deg up front so a stale JSON value can't
-    #     silently shadow the computed pose. Previously the default was
-    #     (0.0, 0.0)/0.0, which made user-set-vs-default indistinguishable.
+    #   - "Explicit-spawn" templates require the config to set these, and
+    #     __post_init__ asserts non-None via super().
+    #   - "Derived-spawn" templates compute them in __post_init__ and should
+    #     refuse a config-set value so a stale one can't shadow the computed
+    #     pose.
     start_xy: tuple[float, float] | None = None
     start_heading_deg: float | None = None
 
     # How the SPAWN yaw is chosen (consumed by IsaacSimEnv's
     # resolve_effective_start_and_goal_pose; see resolve_start_heading_rad):
-    #   "astar"  — (default, legacy) face along the first K segments of the
-    #              A* plan. NOTE: this leaks the planner's answer into the
-    #              first observation — the robot starts pre-aligned with the
-    #              correct route. Kept as the default so every existing
-    #              template/eval reproduces byte-identically.
+    #   "astar"  — (default) face along the first K segments of the A* plan.
+    #              Note: this leaks the planner's answer into the first
+    #              observation — the robot starts pre-aligned with the
+    #              correct route.
     #   "fixed"  — face start_heading_deg from the scene yaml (plus any
-    #              config-time jitter the template applied to it, e.g.
-    #              wall_layout's start_jitter_heading_deg). Manual control.
+    #              config-time jitter the template applied to it).
     #   "random" — seeded uniform in [-pi, pi); RNG stream derived from
     #              cfg.seed but independent of other consumers.
     start_heading_mode: str = "astar"
 
     # Parking standoff — how far in front of the goal prop the robot should
-    # stop. Used by scouting.compute_effective_goal:
+    # stop:
     #   standoff_m = max(goal_radius_m + standoff_buffer_m, min_standoff_m)
-    # where goal_radius_m is the prop's AABB half-extent. Bump
-    # standoff_buffer_m when the buffer-on-top-of-AABB term dominates (big
-    # props like forklifts); bump min_standoff_m when the floor dominates
-    # (small props like cones). Defaults reproduce the previous module-level
-    # constants in oracle_scout.py.
+    # where goal_radius_m is the prop's AABB half-extent. (IsaacSimEnv reads
+    # the equivalent knobs from cfg.env.astar.)
     standoff_buffer_m: float = 0.3
     min_standoff_m: float = 0.5
 
-    # A* obstacle inflation — added to every prop's collision radius before
-    # planning, so the planned path stays at least this far from any
-    # obstacle's edge. Effectively "minimum clearance the robot keeps from
-    # non-goal props." Carter v1's chassis half-width is ~0.3 m; the default
-    # 0.4 m bakes in ~10 cm of safety margin for diff-drive tracking error.
-    # Bump for cautious driving (wider berth around obstacles); lower for
-    # squeezing through tight corridors. Going below ~0.32 m risks the
-    # planned path clipping obstacles. Going much above ~1.0 m on cluttered
-    # envs will make A* fail to find a path. Used by both scout() and
-    # scout_realtime() — they consume the same A* output.
+    # A* obstacle inflation: minimum clearance the planned path keeps from any
+    # obstacle's edge. Carter's chassis half-width is ~0.3 m; the default 0.4 m
+    # adds ~10 cm of margin for diff-drive tracking error. Below ~0.32 m the
+    # path can clip obstacles; much above ~1.0 m A* fails on cluttered envs.
     robot_inflation_m: float = 0.4
 
-    # Opt-in: also produce a closed-loop "realtime" goal graph for comparison
-    # against the static-arclength one. Drives Carter along the smoothed A*
-    # path at scout_realtime's `target_speed_mps` (default 0.5 m/s) and
-    # samples at `sample_hz` (default 1 Hz), mirroring the paper's training-
-    # data sampling regime. Output goes to <env>_realtime.json /
-    # <env>_realtime/ alongside the static one. Adds ~30-60 s to startup.
+    # Unused config field, kept so existing scene configs still parse.
     record_realtime_scout: bool = False
 
     def __post_init__(self) -> None:
@@ -263,7 +231,7 @@ class BaseTemplateConfig:
 
         Default `None` means scouting falls back to atan2(goal − start) — the
         straight-line approach assumption, correct for any template whose
-        trajectory really is a straight line (T1, open-area runs).
+        trajectory really is a straight line (open-area runs).
 
         Override on aisle-mode templates where A* takes a non-direct route
         and the final approach is along the corridor axis, not the spawn-to-
@@ -279,11 +247,9 @@ class BaseTemplateConfig:
         """Optional list of *alternative* approach headings to try.
 
         When the right approach direction depends on which side of an aisle
-        is shorter to enter (e.g. T5: aisle A → aisle B can go via south
-        OR north exits), the template returns multiple candidates here.
-        At server boot the scout runs a trial A* for each candidate and
-        picks the heading whose path is shortest. The chosen heading then
-        flows through `compute_effective_goal` and the actual scout.
+        is shorter to enter (e.g. aisle A → aisle B via the south or north
+        exit), a template may return multiple candidates here; the shortest
+        trial A* path decides.
 
         Default `None` → no selection step; use the single
         `approach_heading_rad` value. Returning a list of length 1 is
@@ -337,16 +303,13 @@ def scale_baked_lights(stage, factor: float) -> list[tuple[str, float, float]]:
 
 def hide_ceiling_lights(stage) -> int:
     """Hide the hanging ceiling-lamp FIXTURES (SM_LampCeilingA_*) — the visible
-    lamp OBJECTS the oblique cameras see (the 'long black bars'), which the
-    cam_to_map seg otherwise mis-maps. These are SEPARABLE mesh prims, so making
-    them invisible removes them from view WITHOUT darkening the scene: illumination
-    still comes from the DistantLight + RectLights (left untouched). Returns the
-    number hidden.
+    lamp objects the oblique cameras see as long black bars. These are separable
+    mesh prims, so making them invisible removes them from view without
+    darkening the scene: illumination still comes from the DistantLight +
+    RectLights (left untouched). Returns the number hidden.
 
-    Adopts the proven strip in cam_to_map/tools/render_cctv_array_isaac.py (the
-    same one used to render the 12-cam array map frames). Used only for the
-    cam_to_map BEV render — gated by HIDE_CEILING_LIGHTS in begin_build, so
-    training/eval scenes are unaffected.
+    Gated by the HIDE_CEILING_LIGHTS env var in begin_build; off by default,
+    so training/eval scenes are unaffected.
     """
     from pxr import UsdGeom
 
@@ -377,7 +340,7 @@ def place_prop(stage, assets_root: str, prim_path: str,
 # ---------------------------------------------------------------------------
 # Derived from inspecting the NVIDIA stock warehouse asset. If you ever swap
 # to a different base USD, re-derive these by listing the SM_RackShelf_*
-# translates (see assets/template1.usda for the format).
+# translates.
 
 WAREHOUSE_SHELF_X_POSITIONS: tuple[float, ...] = (
     4.41, -0.55, -5.50, -10.46, -15.41, -20.37, -25.32,
@@ -414,18 +377,15 @@ def aisle_xy(aisle_index: int, depth_m: float) -> tuple[float, float]:
 # Reshaped 2x3 "digital-8" warehouse — geometry for the procedural data
 # generator (run_builders/build_2x3.py).
 # ---------------------------------------------------------------------------
-# These describe the BAKED layout in
-# scenes/warehouse_layout/scenes/warehouse_2x3_base.usda. The reshape knobs below
-# MIRROR warehouse_2x3_env.py's module constants (it produced that USDA from
-# them). DRIFT RISK: env.py still declares
-# its own copies; a follow-up should make it import these. The USDA is frozen, so
-# the values are stable in the meantime.
+# These describe the baked layout in
+# scenes/warehouse_layout/scenes/warehouse_2x3_base.usda (the reshape knobs the
+# USDA was generated from). The USDA is frozen, so the values are stable.
 
 _2X3_FRONT_DY = -24.0          # front-row shelves shifted south (whole shelves)
 _2X3_GAP = 1.5                 # perimeter-wall <-> block gap on both E/W sides
 _2X3_BLOCK_SHIFT_X = -1.2      # whole shelf block nudged west
 _2X3_BACK_IDX = (0, 1, 2)      # stock shelf columns kept as the back row
-_2X3_RACK_HALF_DEPTH_X = 0.55  # rack half-extent along x (env.py block_west_edge: -0.55)
+_2X3_RACK_HALF_DEPTH_X = 0.55  # rack half-extent along x
 _2X3_EAST_WALL_INNER_X = 5.3   # fixed east perimeter wall, inner face
 _2X3_NORTH_WALL_Y = 30.3       # fixed north perimeter wall, inner face
 _2X3_BACK_ROW_Y = (8.8, 25.0)  # back-row rack span in y (stock south/north edges)
@@ -443,7 +403,7 @@ WAREHOUSE_2X3_AISLE_X: dict[str, float] = {
 }
 
 # Clear (rack-face-to-rack-face) aisle width = column spacing - 2*rack half-depth.
-# -> 4.955 - 1.10 = 3.855 m. The blocker-seal arithmetic in DESIGN §4 uses this.
+# -> 4.955 - 1.10 = 3.855 m. Used for the blocker-seal arithmetic.
 WAREHOUSE_2X3_AISLE_CLEAR_W: float = (
     abs(WAREHOUSE_2X3_COLUMN_XS[0] - WAREHOUSE_2X3_COLUMN_XS[1])
     - 2.0 * _2X3_RACK_HALF_DEPTH_X
@@ -545,8 +505,8 @@ def warehouse_2x3_rack_rects(seg_len: float = 4.0) -> list[tuple[float, float, f
 
     Each rack is the strip x in [col +/- rack_half_depth], y over its row's span,
     tiled into <= seg_len pieces (a 16 m row would exceed the planner's cap). This
-    is a DERIVED approximation of the baked racks; the Phase-0b agreement test
-    against the live MapBuilder is what validates it. This is the static occupancy
+    is a derived approximation of the baked racks (check it against the live
+    MapBuilder if the base USDA changes). This is the static occupancy
     the offline gate plans against (the gap behind the shelves is sealed by the A*
     navigable_bounds mask, not by rects).
     """
@@ -571,10 +531,9 @@ def warehouse_2x3_static_rects() -> list[tuple[float, float, float, float]]:
 
 
 # ---------------------------------------------------------------------------
-# Shared template infrastructure — used by every templates/templateN.py
+# Shared template infrastructure
 # ---------------------------------------------------------------------------
 
-# Lifted from per-template copy-paste. Adjust here, all templates see it.
 LIGHTING_SCALE: dict[str, float] = {
     "dark":   0.33,
     "normal": 1.0,
@@ -643,7 +602,7 @@ def place_goal_or_designate(stage, assets_root: str, config, rng,
 
     Empty `goal_kinds` is intentional: for image-mode tasks the goal scene
     often works better when it doesn't carry an "obstacle" visual prior
-    from training (see work-log 2026-05-10 §Goal-object choice).
+    from training.
     """
     gx, gy = goal_xy
     if config.goal_kinds:
@@ -753,10 +712,9 @@ def load_config(
     matching templates/<name>.py for dataclass construction.
 
     `seed_override` (if not None) replaces the JSON's `seed` field before
-    construction — used by the sweep harness to iterate seeds on a single
-    config file without writing N copies of the same JSON. The override
-    flows through __post_init__ so anything seeded from it (e.g. T1's
-    `_goal_bearing_offset_deg`) gets recomputed.
+    construction — iterate seeds on a single config file without writing N
+    copies of the same JSON. The override flows through __post_init__ so
+    anything seeded from it gets recomputed.
     """
     from .templates import REGISTRY  # local import to avoid circular at module load
 

@@ -5,19 +5,16 @@
 # 0/30 entry on the unseen forklift@B pairing). Does oracle recovery supervision fix the
 # in-distribution wedging, and does any of it transfer to the OOD pairing?
 #
-# Recipe = the spatial b20 campaign (scripts/_archive/train/recovery_b20_chain.sh): n_spawns=1,
-# budget_factor=2.0, fine_grained follower on. Two knobs MUST differ from spatial because
-# they are a training-side contract, not a preference -- the cf window definition has to
-# match the arm's cf_window_balance (nfB config lines 103-106): criterion=yaw (not
+# Recipe: n_spawns=1, budget_factor=2.0, fine_grained follower on. The cf window
+# definition must match the arm's cf_window_balance: criterion=yaw (not
 # distance) and window 3/0 (not 16/8).
 #
-# Mining source is nfB's TRAIN split only. Verified 2026-08-10 to have zero scene- and
-# zero family-level overlap with: nfB val, the held-out forklift@B set (the S2/S3 test),
-# and the parent test/val splits. Recovery data becomes TRAINING data, so this must hold.
+# Mining source is nfB's TRAIN split only, which has no scene- or family-level
+# overlap with nfB val, the held-out forklift@B set, or the parent test/val
+# splits. Recovery data becomes training data, so this must hold.
 #
-# Three-way sharding: the live recovery worker measured 23.6 GiB VRAM, so three
-# workers plus the persistent Isaac service use about 75 GiB on the 95.6 GiB
-# card. Four workers previously OOMed and remain forbidden.
+# Three-way sharding: one recovery worker uses ~23.6 GiB VRAM, so three workers
+# plus the persistent Isaac service fit in ~75 GiB of a 95.6 GiB GPU; four OOM.
 set -uo pipefail
 ROOT="${INFRAVLA_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"; export INFRAVLA_ROOT="$ROOT"
 GATE=$ROOT/runs/evaluation/EVAL_QUEUE_PAUSED

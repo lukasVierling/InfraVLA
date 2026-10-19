@@ -1,24 +1,21 @@
 """Isaac Sim trajectory dataset for OmniVLA fine-tuning.
 
-Mirrors `gnm_dataset.py` structurally so the existing
+Mirrors upstream OmniVLA's GNM dataset structurally so the existing
 `PaddedCollatorForActionPrediction_Nav_MMN` consumes our batches without
-modification. Key differences from paper's GNM dataset:
+modification. Key differences from the upstream GNM dataset:
 
   - Single-source (no negative mining across sub-datasets).
   - Raw expert actions only — no MBRA pathway (sim has ground-truth
     velocities; the controller's commanded path *is* the demonstration).
-  - Modality list locked to [4, 5, 6] = {pose-only, pose+image, image-only}.
-    Append 7 and 8 when language returns.
-  - Emits `cctv_pixel_values` in every batch — phase 6 hook. Trainer
-    ignores this field in iter 1 but it's there so we don't re-collect.
+  - Default modality list [4, 5, 6] = {pose-only, pose+image, image-only};
+    language (7) is enabled via lang_manifest + lang_pattern.
+  - Emits CCTV views (`cctv_pixel_values` / list) and a per-block
+    `block_present` mask for the CCTV attention path.
 
-Output dict per __getitem__ matches paper's gnm_dataset.py field-by-field
+Output dict per __getitem__ matches the upstream GNM dataset field-by-field
 where the collator reads it. MBRA-only fields (`cur_image`, `goal_image_8`,
 `temp_dist`) are emitted as small zero tensors of the right shape — the
 collator stacks them, our trainer doesn't read them.
-
-See: paper/root.tex §3.2 (training method), §4.1 (eval distances),
-gnm_dataset.py for the reference shape.
 """
 
 from __future__ import annotations
@@ -53,7 +50,7 @@ from isaac_sim.train.data_utils import list_successful_trajectories  # noqa: E40
 
 
 # ---------------------------------------------------------------------------
-# Local geometry helpers — same convention as frodobots_dataset.py:to_local_coords.
+# Local geometry helpers — same convention as upstream OmniVLA's to_local_coords.
 # Implemented inline so the dataset has no vint_train import dependency.
 # ---------------------------------------------------------------------------
 
@@ -68,7 +65,7 @@ def _to_local_xy(positions: np.ndarray, origin: np.ndarray, origin_yaw: float) -
     positions: (..., 2)  world-frame
     Returns:   (..., 2)  local-frame, same shape
 
-    Convention matches frodobots_dataset.py:84-101 — `(p - origin) @ R(yaw)`
+    Convention matches upstream OmniVLA — `(p - origin) @ R(yaw)`
     where R(yaw) is the standard 2x2 rotation. This is the *inverse*
     rotation (world → local) because (R^T)^T = R^T applied to a row-vector
     gives R^T @ p = R(-yaw) @ p.
@@ -96,7 +93,7 @@ def _chunk_abs_theta_deg(positions: np.ndarray, yaws: np.ndarray,
     pos = positions[t:end_idx]
     if pos.shape[0] < N + 1:                       # pad with terminal pose,
         pad_n = N + 1 - pos.shape[0]               # matches __getitem__ /
-        pos = np.concatenate(                      # gnm_dataset.py:242-244
+        pos = np.concatenate(                      # upstream OmniVLA
             [pos, np.tile(pos[-1:], (pad_n, 1))], axis=0)
     local = _to_local_xy(pos, pos[0], yaws[t])     # (N+1, 2), robot frame at t
     chord = local[-1]                              # local[0] is the origin
@@ -221,7 +218,7 @@ class _TrajectoryCache:
         self.traj_dir = Path(traj_dir)
         self.graph = GoalGraph.load(self.traj_dir / "frames.json")
         self.frames_dir = self.traj_dir / "frames"
-        # One or more CCTV view dirs: the legacy single "cctv" dir for 1-cam runs,
+        # One or more CCTV view dirs: a single "cctv" dir for 1-cam runs,
         # or the 4 wall_course-facing array cams (cctv_wall_w/e, cctv_corner_sw/se)
         # for the 4-CCTV runs. Order is load-bearing — it sets the image-slot order.
         self.cctv_dirs = [self.traj_dir / c for c in cctv_cam_names]
@@ -249,10 +246,9 @@ class IsaacSimDataset(Dataset):
     """Pose+image fine-tuning dataset over collected Isaac Sim trajectories.
 
     One sample = one (trajectory, observation-step `t`, goal-step `t+k`)
-    triple. `k` is resampled per __getitem__ call (paper convention,
-    gnm_dataset.py:177). Modality is also sampled per call from
-    `modality_list`, with image-only dropped beyond
-    `image_only_max_distance_steps` (paper convention, gnm_dataset.py:391).
+    triple. `k` is resampled per __getitem__ call (as in upstream OmniVLA).
+    Modality is also sampled per call from `modality_list`, with image-only
+    dropped beyond `image_only_max_distance_steps` (as in upstream OmniVLA).
 
     The index built by __init__ enumerates only the `t` (observation step);
     `k` and modality are random-per-call, so a single (traj, t) feeds many
@@ -276,10 +272,10 @@ class IsaacSimDataset(Dataset):
         num_actions_chunk: int = NUM_ACTIONS_CHUNK,
         modality_list: tuple[int, ...] = (4, 5, 6),
         # Optional per-modality sampling weights, parallel to modality_list.
-        # None = uniform (legacy). e.g. lang run: list (7,4,5,6) w (0.8,...).
+        # None = uniform. e.g. lang run: list (7,4,5,6) w (0.8,...).
         modality_weights: tuple[float, ...] | None = None,
         # Language modality (id 7): manifest with per-scene target phrases +
-        # the instruction pattern. Both None = id 7 unavailable (legacy).
+        # the instruction pattern. Both None = id 7 unavailable.
         lang_manifest: str | None = None,
         lang_pattern: str | None = None,   # e.g. "move toward the {x}"
         first_step_only: bool = False,     # t=0-only probe view (see below)
@@ -293,19 +289,18 @@ class IsaacSimDataset(Dataset):
         random_hflip: bool = True,
         goals_per_obs: int = 1,
         emit_cctv: bool = True,
-        # --- CCTV joint-training knobs (see thesis/methods_brief.md 6.5 'sampling
-        #     knobs'; the 2026-06-01 CHANGES handoff was removed 2026-09-07) ---
+        # --- CCTV joint-training knobs ---
         # perception_dropout = (p_both, p_ego_only, p_cctv_only); must sum to 1.0.
-        #   (1,0,0) = both observation views always present (Run 1/3).
+        #   (1,0,0) = both observation views always present.
         perception_dropout: tuple[float, float, float] = (1.0, 0.0, 0.0),
         # Diagnostic ablation: feed an all-black onboard frame (block stays
         # PRESENT, so the guard above is untouched) to force reliance on CCTV.
         ego_blackout: bool = False,
         # use_cctv_goal: when True, feed a CCTV goal image (a 4th image slot) and
         #   couple goal-image views to perceived views. When False, only the ego
-        #   goal image exists (3 image slots) — Runs 1/2.
+        #   goal image exists (3 image slots).
         use_cctv_goal: bool = False,
-        # --- 4-CCTV experiment knobs (default = legacy 1-cam behaviour) ---
+        # --- Multi-CCTV knobs (default = single-cam behaviour) ---
         # cctv_cam_names: per-view dir names recorded under each traj. ("cctv",)
         #   keeps the 1-cam runs unchanged; the 4 array-cam names give 4 cctv views.
         # no_goal_image: drop the ego-goal + cctv-goal IMAGE slots — goal is the
@@ -317,12 +312,11 @@ class IsaacSimDataset(Dataset):
         # off (use the coarse perception_dropout). Use 0.0 for val.
         cctv_cam_dropout: float = 0.0,
         # With this probability the goal is pinned to the trajectory's FINAL
-        # frame (n-1) instead of a uniformly sampled offset. Rationale (cf
-        # campaign, 2026-07-02): intermediate goals sit ON the oracle's detour
-        # path and leak the turn direction; a final-frame goal forces the model
-        # to explain the detour from perception (the forklift) alone. 0.0 =
-        # legacy behaviour, and the branch consumes NO rng draw at 0.0 so
-        # existing runs stay byte-reproducible.
+        # frame (n-1) instead of a uniformly sampled offset. Intermediate goals
+        # sit ON the oracle's detour path and leak the turn direction; a
+        # final-frame goal forces the model to explain the detour from
+        # perception (the forklift) alone. At 0.0 the branch consumes no rng
+        # draw, so the sample stream is unchanged.
         final_goal_prob: float = 0.0,
         # --- Counterfactual CCTV blockade-signal ablation (default off) ---
         # When True, every real CCTV frame is replaced by a solid black (the
@@ -345,7 +339,7 @@ class IsaacSimDataset(Dataset):
         # Crop each real CCTV frame to its camera's fixed responsibility box
         # (own aisle, entrance -> far rack-end) BEFORE the resize: virtual zoom
         # on far forklifts + cuts the through-the-D-gap view of the other row
-        # (top edge = projection-derived separating line; work-log 2026-07-06).
+        # (top edge = projection-derived separating line).
         # {cam: (x0, y0, x1, y1)} in pixels of a cctv_crop_ref_size-square
         # frame; scaled if stored frames differ.
         cctv_crop: dict | None = None,
@@ -359,7 +353,7 @@ class IsaacSimDataset(Dataset):
         # instead of the shared running RNG. Result: the sample set is a pure
         # function of the data + seed — byte-identical on every pass — so val
         # loss differences reflect the weights, not sampling luck. Train keeps
-        # the paper's per-call resampling (gnm_dataset.py:177), where one
+        # upstream OmniVLA's per-call resampling, where one
         # (traj, t) feeding many (goal, modality) variants is the point.
         deterministic_sampling: bool = False,
         # --- Step-set view over the index (default off; DatasetManager) ---
@@ -434,8 +428,8 @@ class IsaacSimDataset(Dataset):
                 "use_cctv_goal=True with multiple CCTV cameras is not supported "
                 "(slot order not aligned with the eval policy). Use a single cctv "
                 "cam, or set use_cctv_goal=False.")
-        # The onboard (ego) observation MUST always be present (never drop the
-        # onboard view, per Lukas). perception_dropout=(p_both, p_ego_only,
+        # The onboard (ego) observation must always be present.
+        # perception_dropout=(p_both, p_ego_only,
         # p_cctv_only); only the cctv_only branch drops the ego, so require
         # p_cctv_only == 0. Guards both train and val dropout tuples.
         if self.perception_dropout[2] != 0.0:
@@ -467,8 +461,8 @@ class IsaacSimDataset(Dataset):
                         "This mode targets the with_4cctv_2x3 corner cameras.")
                 self._cctv_aisle[cam] = _CCTV_CORNER_TO_AISLE_2X3[cam]
 
-        # --- Counterfactual onboard-bundle swap (opt-in; 2026-07-12) ---
-        # When onboard_swap_map is set (by counterfactual_dataset.
+        # --- Counterfactual onboard-bundle swap (opt-in) ---
+        # When onboard_swap_map is set (by dataset_utils.onboard_swap.
         # build_onboard_swap_map after init), an in-window sample (ti, t) may
         # read its ONBOARD bundle — ego obs image, ego goal image, goal_pose —
         # from a cf SIBLING trajectory at the same frame index, while the CCTV
@@ -482,8 +476,8 @@ class IsaacSimDataset(Dataset):
         # p=1.0 fully randomizes the bundle source on eligible draws.
         self.onboard_swap_map: dict | None = None
         self.onboard_swap_p: float = 0.0
-        # EXTRA-SAMPLE variant (Lukas 2026-07-12, replaces in-place swapping
-        # for the diagonal-invisible fine-tune): honest samples stay untouched;
+        # Extra-sample variant (used instead of in-place swapping for the
+        # diagonal-invisible fine-tune): honest samples stay untouched;
         # each eligible (traj, t) additionally appears ONCE as a forced-swap
         # duplicate [(traj_idx, t, sibling_idx), ...] appended after
         # samples_index. Deterministic — both versions seen every epoch.
@@ -559,7 +553,7 @@ class IsaacSimDataset(Dataset):
         #   - At least `min_goal_distance_steps` future steps for a valid goal.
         # We always need t+min_goal_distance_steps ≤ n_frames-1 → t ≤ n_frames-1-min_goal.
         # Lower bound on t: 0 (action chunk pads with last pose if trajectory
-        # ends early; this matches gnm_dataset.py's behavior at line 243-244).
+        # ends early, as in upstream OmniVLA).
         # We don't restrict t by context_size because the pretrained image
         # backbone uses only current+goal (context_size is a vestigial param).
         self.samples_index: list[tuple[int, int]] = []
@@ -571,15 +565,14 @@ class IsaacSimDataset(Dataset):
                 for _ in range(self.goals_per_obs):
                     self.samples_index.append((ti, t))
 
-        # --- First-frame-only probe view (2026-07-21, Lukas) ---
+        # --- First-frame-only probe view ---
         # Keep ONLY t=0 samples: the cold-start commitment probe. Tests whether
         # the optimizer can wire language->initiation when no later-step motion
-        # shortcut competes for gradient (the lang80 run left t=0 at the neutral
-        # prior while fitting everything else — see session log).
+        # shortcut competes for gradient.
         if first_step_only:
             self.samples_index = [(ti, t) for (ti, t) in self.samples_index if t == 0]
 
-        # --- Early-frame view (2026-07-22, Lukas) ---
+        # --- Early-frame view ---
         # Keep only t <= keep_steps_max. Generalises first_step_only (which is
         # keep_steps_max=0) to the first few frames. Motivation: only t=0 is a
         # genuinely counterfactual frame on langv2 (from t=1 the robot has begun
@@ -621,9 +614,9 @@ class IsaacSimDataset(Dataset):
 
     # ----------------------------------------------------------------------
     def __len__(self) -> int:
-        # onboard_swap_extra (2026-07-12): forced-swap DUPLICATES of eligible
-        # decision frames appended after the honest samples — see
-        # counterfactual_dataset.build_onboard_swap_extra.
+        # onboard_swap_extra: forced-swap duplicates of eligible decision
+        # frames appended after the honest samples — see
+        # dataset_utils.onboard_swap.build_onboard_swap_extra.
         return len(self.samples_index) + len(self.onboard_swap_extra)
 
     # ----------------------------------------------------------------------
@@ -661,10 +654,7 @@ class IsaacSimDataset(Dataset):
         probability p, bypassing max_goal_distance_steps by design (the point
         is the full remaining horizon; the index build guarantees
         n-1-t >= min_goal_distance_steps). The `> 0.0` guard means p=0 configs
-        consume NO extra rng draw -> legacy runs stay byte-reproducible.
-        NOTE: with p>0 the extra draw shifts the rng stream, which breaks the
-        _replay_goal_t() coupling in the inspect_* debug scripts (logged in
-        the project's suspicion log 2026-07-02).
+        consume no extra rng draw.
         """
         if self.final_goal_prob > 0.0 and self._rng.random() < self.final_goal_prob:
             return n - 1
@@ -697,15 +687,15 @@ class IsaacSimDataset(Dataset):
         # --- Choose goal step `k` and modality ---
         goal_t = self._sample_goal_t(t, n)
         k_offset = goal_t - t
-        # Distance in *steps* — matches the units gnm_dataset.py uses for
-        # the image-only threshold (see iter1_image_pose.yaml comments).
+        # Distance in *steps* — matches the units upstream OmniVLA uses for
+        # the image-only threshold.
         distance_steps = k_offset // self.waypoint_spacing
 
         if distance_steps <= self.image_only_max_distance_steps:
             allowed = self.modality_list
         else:
-            # Drop image-only at long goal distance — paper convention,
-            # gnm_dataset.py:394. Image goals beyond ~3 m are OOD for the
+            # Drop image-only at long goal distance (as in upstream OmniVLA).
+            # Image goals beyond ~3 m are OOD for the
             # vision backbone.
             # Filter by explicit ID (= 6 for image-only) rather than slice
             # index, so the behaviour is robust to the order of modality_list
@@ -770,7 +760,7 @@ class IsaacSimDataset(Dataset):
         # (1 - cctv_cam_dropout). Ego stays as the coarse flag (always True with
         # the [1,0,0] default + onboard-always guard). cctv_view_present is a
         # per-view list used in the multi-cctv block layout; None => fall back to
-        # the single coarse cctv_present for every view (legacy behaviour).
+        # the single coarse cctv_present for every view.
         if self.cctv_cam_dropout > 0.0:
             cctv_view_present = [self._rng.random() >= self.cctv_cam_dropout
                                  for _ in range(len(traj.cctv_dirs))]
@@ -783,8 +773,8 @@ class IsaacSimDataset(Dataset):
         positions = traj.positions[t:end_idx].copy()       # (n_avail, 2)
         yaws = traj.yaws[t:end_idx].copy()                 # (n_avail,)
 
-        # Pad with terminal pose if trajectory ends before t+N+1.
-        # Matches gnm_dataset.py:242-244.
+        # Pad with terminal pose if trajectory ends before t+N+1
+        # (as in upstream OmniVLA).
         if positions.shape[0] < N + 1:
             pad_n = N + 1 - positions.shape[0]
             positions = np.concatenate(
@@ -796,7 +786,7 @@ class IsaacSimDataset(Dataset):
         yaws_local = yaws[1:] - yaws[0]                                     # (N,)
 
         # Normalise positions: actions[:,:2] /= metric_waypoint_spacing * waypoint_spacing.
-        # Matches gnm_dataset.py:257.
+        # As in upstream OmniVLA.
         actions_dxy = waypoints_local[1:] / (self.metric_waypoint_spacing * self.waypoint_spacing)
         actions_3d = np.concatenate([actions_dxy, yaws_local[:, None]], axis=-1)  # (N, 3)
         actions = _actions_to_sincos(actions_3d)                                  # (N, 4)
@@ -808,8 +798,8 @@ class IsaacSimDataset(Dataset):
         goal_xy_world = src.positions[src_goal_t][None, :]                # (1, 2)
         goal_xy_local = _to_local_xy(goal_xy_world, src.positions[src_t], src.yaws[src_t])[0]
         goal_xy_local = goal_xy_local / (self.metric_waypoint_spacing * self.waypoint_spacing)
-        # DE-LEAK (2026-06-17): see isaac_sim_dataset.py — the goal-step recorded
-        # heading encodes the detour side and handed it to the policy at t≈0. Use
+        # De-leak: the goal-step recorded heading encodes the detour side and
+        # would hand it to the policy at t≈0. Use
         # the trajectory START heading so the goal pose carries no which-way info.
         goal_yaw_local = src.yaws[0] - src.yaws[src_t]
         goal_pose = np.array([
@@ -852,7 +842,7 @@ class IsaacSimDataset(Dataset):
                     shade = _blockade_shade(self._cctv_aisle[cam], traj.blocked_aisles)
                     cctv_pils.append(Image.new("RGB", self.image_size, (shade, shade, shade)))
             else:
-                # 1 (legacy) or N (4-CCTV) frames; traj.cctv_dirs is index-aligned
+                # 1 or N (multi-CCTV) frames; traj.cctv_dirs is index-aligned
                 # to self.cctv_cam_names (see _TrajectoryCache), so zipping keeps
                 # each crop box with its own camera's frame.
                 cctv_pils = []
@@ -864,7 +854,7 @@ class IsaacSimDataset(Dataset):
         else:
             cctv_pils = None
 
-        # CCTV goal frame (at the goal step). Legacy 1-cam path only; 4-CCTV runs
+        # CCTV goal frame (at the goal step). Single-cam path only; 4-CCTV runs
         # set no_goal_image/use_cctv_goal=False so there is no cctv-goal slot.
         if self.emit_cctv and traj.has_cctv and self.use_cctv_goal:
             cctv_goal_path = traj.cctv_dirs[0] / traj.graph.nodes[goal_t].image_filename
@@ -872,19 +862,15 @@ class IsaacSimDataset(Dataset):
         else:
             cctv_goal_pil = None
 
-        # Random horizontal flip. Matches gnm_dataset.py:369-385 — negates
+        # Random horizontal flip, as in upstream OmniVLA — negates
         # the lateral action and sin(dyaw) components, plus the goal_pose
         # lateral + sin components. Doubles effective left/right symmetry.
         #
         # Correctness note: when CCTV is enabled, the CCTV image MUST also
-        # be flipped to stay consistent with ego + actions. Otherwise the
-        # model gets contradictory signals (ego shows mirrored world, CCTV
-        # shows actual world, actions in robot frame are mirrored). Flipping
-        # CCTV is philosophically a "physically impossible" view (no real
-        # CCTV pose would produce that exact image), but the model only
-        # needs to extract situational info from it — it doesn't need to
-        # know the camera pose. All visual inputs in one sample must
-        # depict the same (possibly-mirrored) world.
+        # be flipped to stay consistent with ego + actions; otherwise the
+        # model gets contradictory signals. A flipped CCTV view is physically
+        # impossible, but all visual inputs in one sample must depict the
+        # same (possibly mirrored) world.
         if self.random_hflip and self._rng.random() > 0.5:
             cur_pil_resized = cur_pil_resized.transpose(Image.FLIP_LEFT_RIGHT)
             goal_pil_resized = goal_pil_resized.transpose(Image.FLIP_LEFT_RIGHT)
@@ -906,7 +892,7 @@ class IsaacSimDataset(Dataset):
             cctv_stack = [self.image_transform(p) for p in cctv_pils]     # len = #cctv views
         else:
             cctv_stack = [torch.zeros_like(pixel_values) for _ in traj.cctv_dirs]
-        cctv_pixel_values = cctv_stack[0]                                 # legacy single-cctv slot
+        cctv_pixel_values = cctv_stack[0]                                 # single-cctv slot
 
         if cctv_goal_pil is not None:
             cctv_pixel_values_goal = self.image_transform(cctv_goal_pil)
@@ -924,11 +910,9 @@ class IsaacSimDataset(Dataset):
         # Validity: a sample must carry at least one goal. If this (perception,
         # modality, use_cctv_goal) combo yields none (e.g. cctv-only obs +
         # image-goal task + cctv-goal disabled), fall back to a coordinate/pose
-        # goal — Lukas-confirmed rule ("just use coordinates for that").
-        # Language-only (id 7) carries its goal in the INSTRUCTION — no pose or
-        # image goal is not a defect. Without this clause the fallback silently
-        # rewrote every id-7 draw to id 4 (caught by the trainer's modality
-        # sanity check, 2026-07-21 — the 80% language mix arrived as 94% pose).
+        # goal. Language-only (id 7) carries its goal in the instruction, so
+        # having no pose or image goal is not a defect and must not trigger
+        # the fallback (it would silently rewrite every id-7 draw to id 4).
         modality_lang = (modality_id == 7) and bool(self.lang_pattern)
         if not (modality_pose or ego_goal_present or cctv_goal_present or modality_lang):
             modality_pose = True
@@ -942,7 +926,7 @@ class IsaacSimDataset(Dataset):
                       else [cctv_present] * len(cctv_stack))
 
         # Per-block presence flags, in the EXACT order the collate concatenates
-        # images (ORDER IS LOAD-BEARING — see potential_bugs.md 2026-06-01).
+        # images (the order is load-bearing).
         # 3-image run (use_cctv_goal=False): [ego_obs, ego_goal, cctv_obs, pose]
         # 4-image run (use_cctv_goal=True):  [ego_obs, ego_goal, cctv_obs, cctv_goal, pose]
         if self.no_goal_image:
@@ -967,7 +951,7 @@ class IsaacSimDataset(Dataset):
             block_flags.append(modality_pose)
         block_present = np.array(block_flags, dtype=np.float32)
 
-        # --- LLM prompt (mirror gnm_dataset.py:336-366) ---
+        # --- LLM prompt (as in upstream OmniVLA) ---
         actions_torch = torch.as_tensor(actions, dtype=torch.float32)
         current_action = actions_torch[0]
         future_actions = actions_torch[1:]
@@ -978,7 +962,7 @@ class IsaacSimDataset(Dataset):
 
         prompt_builder = self.prompt_builder_fn("openvla")
         if modality_id in (7, 8) and self.lang_pattern:
-            # LeLaN training format exactly (lelan_dataset.py:433-440):
+            # Upstream OmniVLA LeLaN training format:
             # "move toward {X}" wrapped in the fixed question, lowercased.
             scene = traj.traj_dir.name.split("__pose__")[0]
             if scene.startswith("rec_"):  # recovery dirs = rec_<scene>__pose__<ts>_t<k>;
@@ -1046,7 +1030,7 @@ class IsaacSimDataset(Dataset):
             sample["gimg_PIL"] = goal_pil_resized
             sample["cctv_pixel_values_list"] = cctv_stack
         else:
-            # Legacy single-cctv path: ego goal image (+ optional cctv goal).
+            # Single-cctv path: ego goal image (+ optional cctv goal).
             # Emitting cctv goal conditionally is what makes the collate build a
             # 3- vs 4-image tensor.
             sample["pixel_values_goal"] = pixel_values_goal
@@ -1059,10 +1043,8 @@ class IsaacSimDataset(Dataset):
 
 
 # ---------------------------------------------------------------------------
-# CLI sanity-check entrypoint: shows index stats + a sample's shapes.
-# Run with: `python -m prismatic.vla.datasets.isaac_sim_dataset <traj_root>`
-# Requires action_tokenizer / base_tokenizer / etc. to be available, so
-# this CLI is a stub — real smoke test lives in isaac_sim/train/smoke_*.py.
+# CLI stub: the dataset needs the trainer's tokenizers / transforms, so it
+# is exercised through the training script rather than standalone.
 # ---------------------------------------------------------------------------
 if __name__ == "__main__":
     import sys

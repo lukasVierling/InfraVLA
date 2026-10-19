@@ -2,12 +2,10 @@
 # Camera: static CCTV - top-down overhead
 # ============================================================================
 #
-# Placeholder for the thesis's "fixed infrastructure camera" modality. NOT
-# wired into the policy yet (phase 6) - emitting these frames so the dataset
-# has them ready when the policy code switches CCTV on.
+# A single fixed infrastructure camera with a wide overhead view.
 #
 # Unlike carter_front / carter_chase, there's no prim for this in any USD.
-# The env builder needs to SPAWN a new camera prim at prim_path with the
+# The env builder spawns a new camera prim at prim_path with the
 # given intrinsics + world-frame extrinsics.
 # ============================================================================
 
@@ -27,15 +25,13 @@ frequency: 10                       # CCTV is intentionally lower-rate than ego 
 
 logging: true
 
-# Intrinsics matched to isaac_sim/data_gen/collect_one_trajectory.py defaults
-# — wider lens than a standard 24 mm so the cam sees most of the warehouse.
+# Wider lens than a standard 24 mm so the cam sees most of the warehouse.
 intrinsics:
   focal_length_mm: 18.14756
   horizontal_aperture_mm: 20.955
   vertical_aperture_mm: 15.2908
 
-# World-frame pose copied from data_gen/collect_trajectories.sh — wall-mounted
-# CCTV in the SW corner, ~8.5 m high, tilted ~58° off vertical (security-cam
+# World-frame pose: wall-mounted CCTV in the SW corner, ~8.5 m high, tilted ~58° off vertical (security-cam
 # framing, not bird's-eye).
 extrinsics:
   world_translate_m: [-10.0, -22.0, 8.5]

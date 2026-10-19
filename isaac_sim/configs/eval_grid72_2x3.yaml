@@ -12,11 +12,11 @@
 # pushed inward by this margin. -> x = -6.25 / -1.745 / 2.76 (symmetric).
 edge_margin_m: 1.0
 
-# Spawn row in zone A: probe runway-v2 value (4.5 m runway to the central rack
-# so weak-commitment rollouts reveal their aisle choice before crashing).
+# Spawn row in zone A: 4.5 m runway to the central rack so weak-commitment
+# rollouts reveal their aisle choice before crashing.
 spawn_y: 29.5
 start_heading_deg: 270.0   # facing south for all spawns — uniform + leak-free
-# Goal y is derived in the builder: centre of zone G (= -17.85, as in the probes).
+# Goal y is derived in the builder: centre of zone G (= -17.85).
 
 lighting: normal
 seed: 7200                 # bookkeeping only — scenes are fully deterministic
@@ -25,8 +25,8 @@ seed: 7200                 # bookkeeping only — scenes are fully deterministic
 # 2 diagonals (route must zigzag through the cross-aisle D). All solvable.
 conditions: [B, C, E, F, BE, CF, BF, CE]
 
-# --- emitted eval experiments (probe_runway / cfv2fwdtest protocol) ----------
-max_steps: 300             # headroom over the probes' 200 so double-block
+# --- emitted eval experiments ----------------------------------------------
+max_steps: 300             # headroom so double-block
                            # detours finish; timeout then means stuck, not clock
 partition_size: 12         # 72 scenes -> 6 shards per model
 camera_set: with_4cctv_2x3

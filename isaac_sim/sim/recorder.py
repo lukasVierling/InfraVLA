@@ -11,7 +11,7 @@ from omegaconf import OmegaConf
 from PIL import Image
 
 # GoalGraph / GraphNode + planning_viz are imported inside methods, not at
-# module top, so the recorder imports without Isaac Sim. See notes at EOF.
+# module top, so the recorder imports without Isaac Sim.
 
 
 class RunRecorder:
@@ -46,7 +46,8 @@ class RunRecorder:
         print(f"[RunRecorder] run dir: {self.run_dir}")
 
         # Executed (x, y) trajectory in world metres; the subject of the path
-        # viz. Final breakpoint pose is NOT recorded — see notes at EOF.
+        # viz. Appended per record_step, so the final breakpoint pose (where the
+        # loop exits without recording) is not included.
         self.path = []
 
         # Path-viz inputs handed in as plain data via set_map / set_astar_path.
@@ -182,7 +183,7 @@ class RunRecorder:
         # Bottom-left panel shows the goal image, UNLESS this step has no goal
         # image (the policy then feeds cur_img as a placeholder, so the panel
         # would just duplicate top-left) — in that case show map + path-so-far.
-        # See notes at EOF for the mask → modality mapping.
+        # Mask ids index mask_texts below; 2, 3, 5, 6 include an image goal.
         _GOAL_IMAGE_MASKS = {2, 3, 5, 6}  # masks that carry a goal image
         pv = OmegaConf.select(self.run_cfg, "recorder.path_viz", default=None)
         use_map_panel = (
@@ -203,9 +204,8 @@ class RunRecorder:
             ax_goal.imshow(np.array(goal_img).astype(np.uint8))
             goal_panel_title = "Egocentric goal image"
 
-        # Right panel: predicted action chunk in the robot-local frame. Shared
-        # with the val-debug viz (inspect_val_disagreement); eval has no per-step
-        # GT so gt_xy is omitted. Goal-pose star only for pose-carrying masks.
+        # Right panel: predicted action chunk in the robot-local frame. Eval has
+        # no per-step GT so gt_xy is omitted. Goal-pose star only for pose-carrying masks.
         from isaac_sim.utils.action_viz import plot_action_chunk
         mask_type = int(mask_number[0])
         mask_texts = [
@@ -260,7 +260,9 @@ class DataGenRecorder(RunRecorder):
     """Data-gen recorder: writes a GoalGraph-compatible frames.json + image
     directory, persists the A* path, and adds reproducibility metadata.
 
-    Output layout is documented in the notes block at the end of this file.
+    Output layout per run dir: frames.json (GoalGraph manifest), frames/NNN.png
+    (goal-graph camera), <cam>/NNN.png (other logged cameras), astar_path.json,
+    log.jsonl, result.json, config.yaml.
     """
 
     def __init__(self, run_cfg, run_name):
@@ -268,7 +270,7 @@ class DataGenRecorder(RunRecorder):
 
         # Which camera becomes the GoalGraph node image. Owned by the TASK
         # config (a property of the task, not the recorder). Fallback covers
-        # data_gen runs where task != image_graph; see notes at EOF.
+        # data_gen runs whose task config does not set it.
         self.goal_graph_cam_name = getattr(
             run_cfg.task, "goal_graph_camera_name", "front_cam"
         )
@@ -300,8 +302,8 @@ class DataGenRecorder(RunRecorder):
         self._robot_inflation_m = float(run_cfg.env.astar.robot_inflation_m)
         # goal_radius_m / standoff_m left at GoalGraph's default — no consumer.
         self._target_speed_mps = float(run_cfg.controller.max_linear_vel_mps)
-        # Sample cadence is sim-time: env.step() advances 1/record_hz of sim
-        # time per call. See notes at EOF.
+        # Sample cadence is sim-time: one recorded frame per 1/record_hz of
+        # sim time.
         self._sample_hz = float(run_cfg.record_hz)
 
     # --- Hook overrides -------------------------------------------------------
@@ -355,7 +357,7 @@ class DataGenRecorder(RunRecorder):
             env_config_hash=self._env_config_hash,
             node_spacing_m=0.0,             # rollout mode: spacing varies — sentinel "n/a"
             robot_inflation_m=self._robot_inflation_m,
-            sampling_mode="policy_rollout",  # distinct from old "realtime"
+            sampling_mode="policy_rollout",
             target_speed_mps=self._target_speed_mps,
             sample_hz=self._sample_hz,
             nodes=self._graph_nodes,

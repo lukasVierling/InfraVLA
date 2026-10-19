@@ -50,7 +50,7 @@ class Camera:
                 print(f"    {m}")
             hits = [p for p in matches if any(k in p.lower() for k in ad.name_hints)]
             if not hits:
-                # Refuse to guess — see notes on the matches[0] collapse bug.
+                # Refuse to guess: silently taking matches[0] can bind the wrong camera.
                 raise RuntimeError(
                     f"[Camera {cfg.name!r}] none of the name_hints {list(ad.name_hints)} "
                     f"matched any camera prim under {ad.parent_prefix!r}. "

@@ -24,7 +24,7 @@ EXP_DIR = _NSC / "configs" / "experiment"
 BASE_USDA = str(_NSC / "scenes" / "warehouse_layout" / "scenes" / "warehouse_2x3_base.usda")
 FOOTPRINTS_JSON = _NSC / "utils" / "scene_prep" / "measured_footprints.json"
 
-# Experiment-yaml constants (same stack as the current forklift campaign).
+# Experiment-yaml constants (same stack as the forklift campaign in build_2x3.py).
 EXP_POLICY = "astar_oracle_nobrake"
 EXP_CAMERA_SET = "with_4cctv_2x3_bigcam"
 EXP_ASTAR = "warehouse_2x3"
@@ -146,7 +146,7 @@ class LangSceneGenerator:
         need = cross_half + cmargin
 
         if z.kind == "aisle":
-            # Sample x ACROSS the aisle too (2026-07-19, Lukas): objects may sit
+            # Sample x across the aisle too: objects may sit
             # anywhere between the rack faces — e.g. a box leaning against a
             # shelf. More realistic than pinning to the centreline, and transit
             # past the object gets easier (one side stays wide open; a hugging
@@ -159,7 +159,7 @@ class LangSceneGenerator:
             # D cross-aisle = closer to that aisle's bigcam (B/C cams on the
             # north wall, E/F cams on the south wall) -> north half of B/C,
             # south half of E/F. Far from D also means the object cannot leak
-            # into the onboard view from the spawn (Lukas 2026-07-22).
+            # into the onboard view from the spawn.
             if str(self.cfg.placement.get("aisle_band", "full")) == "outer_half":
                 y_mid = 0.5 * (z.y_range[0] + z.y_range[1])
                 d_center_y = WAREHOUSE_2X3_ZONES[self.cfg.spawn_zone].center[1]
@@ -289,7 +289,7 @@ class LangSceneGenerator:
         return out
 
     def sample_family_one_per_aisle(self, base_name: str, seed: int):
-        """v2 family (2026-07-22): shuffle the pool over object_zones so EVERY
+        """v2 family: shuffle the pool over object_zones so EVERY
         aisle holds exactly one object (kind permutation + exact positions =
         the family's identity), then emit one twin scene per placed object as
         the target (tA..tD, ordered by object_zones). All twins share every
@@ -318,7 +318,8 @@ class LangSceneGenerator:
         for suffix, tgt in zip(suffixes, objects):
             name = f"{base_name}_{suffix}"
             # Per-twin role assignment over the SHARED placements (same
-            # /World/Goal routing as v1: role=="target" never enters the A* map).
+            # /World/Goal routing as the two-twin family: role=="target" never
+            # enters the A* map).
             obstacles = [{"kind": o["kind"], "variant": o["variant"],
                           "x": o["x"], "y": o["y"], "yaw_deg": o["yaw_deg"],
                           "role": ("target" if o is tgt else "distractor")}
@@ -433,9 +434,7 @@ task:
   max_steps: {max_steps}
 # Data-gen REQUIRES the CCTV frames (they are the training input). Force the
 # logging flags here so a working-tree flip of the shared camera yamls (e.g.
-# an eval campaign saving disk) can never silently yield an ego-only dataset —
-# exactly what happened 2026-07-20 (bigcam yamls flipped to logging: false,
-# first 12-scene batch recorded no CCTV; see potential_bugs.md).
+# an eval campaign saving disk) can never silently yield an ego-only dataset.
 env:
   cameras:
     cctv_NE: {{logging: true}}
@@ -493,8 +492,7 @@ def main() -> int:
     _emit_experiments(names, parts, runs_root, int(cfg.max_steps),
                       label=f"{args.tag}_p")
     # Manifest keyed by --tag so a new campaign can never clobber an older
-    # manifest a training config still points at (default tag "lang" keeps the
-    # v1 filename byte-identical).
+    # manifest a training config still points at.
     manifest = EXP_DIR / f"datagen_2x3_{args.tag}_manifest.json"
     manifest.write_text(json.dumps({"scenes": metas}, indent=2))
 
@@ -511,6 +509,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-
-
-# ---------------------------------------------------------------------------

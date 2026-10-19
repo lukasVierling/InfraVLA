@@ -1,4 +1,4 @@
-"""DatasetManager — v2 of the counterfactual machinery (design: Lukas, 2026-07-14).
+"""DatasetManager — weighted mixture of IsaacSimDataset views for counterfactual training.
 
 One manager holds N ordinary IsaacSimDatasets, each with a sampling weight:
 
@@ -6,7 +6,7 @@ One manager holds N ordinary IsaacSimDatasets, each with a sampling weight:
     cf-windows  — the SAME trajectories, index cut to decision windows
                   (created from `normal` via create_counterfactual)
     recovery    — newly collected recovery trajectories (register_recovery;
-                  collection happens OFFLINE — see design notes at EOF)
+                  collected offline)
 
 Trainer contract:
     mgr = DatasetManager()
@@ -59,7 +59,7 @@ class DatasetManager:
                     dataset_kwargs: dict) -> None:
         """Add a dataset to the dataset dict"""
         self._check_new_name(name)
-        # weight 0.0 = DERIVATION-ONLY (2026-07-16): the entry is constructed
+        # weight 0.0 = derivation-only: the entry is constructed
         # and usable as a parent (create_counterfactual / register_recovery /
         # sanity checks) but contributes no samples to build(). Negative is
         # still an error.
@@ -176,18 +176,16 @@ class DatasetManager:
         #instantiate the new dataset
         rec_kwargs = dict(src["kwargs"])
         rec_kwargs["traj_root"] = traj_root
-        # anchor_after_handoff (Lukas 2026-07-17): full-route recovery trajs
+        # anchor_after_handoff: full-route recovery trajs
         # duplicate the source route after the corrective segment — restrict
         # sample ANCHORS to [0, handoff + t] (t ~ one cf-snippet length) so the
         # tail never generates its own samples. The tail STAYS in the files:
         # final_goal_prob=1.0 reads the goal from the final frame (= the
         # original goal), and label futures may extend past the anchor cut.
         if anchor_rejoin is not None:
-            # Adaptive cut (Lukas 2026-07-17): anchors run until the recovery
-            # is back within eps of the original plan (first touch — no sustain,
-            # frames themselves = verified lock-in); minimum ONE recovery
-            # anchor for spawns already on-path. No constant to defend — the
-            # span is data-defined per trajectory.
+            # Adaptive cut: anchors run until the recovery is back within eps
+            # of the original plan (first touch); minimum one recovery anchor
+            # for spawns already on-path. The span is data-defined per trajectory.
             from isaac_sim.planning.a_star.goal_graph import GoalGraph
             from isaac_sim.utils.recovery_analysis import rejoin_index
             eps = float(anchor_rejoin["eps_m"])
@@ -201,7 +199,7 @@ class DatasetManager:
                 k = rejoin_index(rec_xy, plan, eps_m=eps)
                 span = max(k if k is not None else 0, 1)
                 hi = min(n_fail + span, res["n_frames"] - 1)
-                # RECOVERY-ONLY anchors (Lukas 2026-07-17): prefix anchors'
+                # Recovery-only anchors: prefix anchors'
                 # label chunks reproduce the model's own drift — the prefix
                 # stays in the files as obs history only, never anchored.
                 allowed[d.name] = set(range(n_fail, hi + 1))

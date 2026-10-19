@@ -2,14 +2,12 @@
 # Controller knobs — data-generation (fast inner control loop)
 # ============================================================================
 #
-# Functionally identical to controller/omnivla_default.yaml. The CADENCE
+# Functionally identical to controller/omnivla_default.yaml. The cadence
 # differs: data_gen runs the A* policy at the top-level `control_hz` (30 Hz)
-# rather than eval's 3 Hz. dt_s is DERIVED in a_star_policy.py from
-# control_hz at construction time, so this yaml does not need to (and must
-# not) repeat it.
+# rather than eval's 3 Hz. dt_s is derived in a_star_policy.py from
+# control_hz at construction time, so this yaml does not repeat it.
 #
-# Rationale for the 30 Hz inner loop — see [[omnivla-paper-data-source]]:
-# the paper's training data is real-robot deployment, where the low-level
+# Rationale for the 30 Hz inner loop: OmniVLA's training data is real-robot deployment, where the low-level
 # controller runs at hundreds of Hz and integrates (v, w) continuously
 # between 3 Hz pose samples. A 3 Hz control loop in sim stair-steps motion
 # at the recording rate, which is out-of-distribution. Running the control

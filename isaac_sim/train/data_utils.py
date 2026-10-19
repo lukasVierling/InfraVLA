@@ -4,14 +4,12 @@ Consumed by prismatic/vla/datasets/cctv_isaac_sim_dataset.py (training).
 
 Per-trajectory layout (produced by isaac_sim/data_gen.py):
   <traj>/
-    config.json     — env config that produced the trajectory
-    meta.json       — outcome, n_frames, sample_hz, astar_path_length_m, ...
+    config.yaml     — full composed run config
+    result.json     — outcome, steps, n_frames, sample_hz, astar_path_length_m, ...
     astar_path.json — A* smoothed-path waypoints + total length
     frames.json     — GoalGraph: per-sample (xy, yaw, image_filename, cmd_v, cmd_w)
     frames/NNN.png  — robot egocentric POV
-    scene/NNN.png   — third-person chase cam (for videos only, not training)
-    cctv/NNN.png    — fixed infrastructure camera (phase 6 — emitted now, used later)
-    cctv.png        — single CCTV snapshot at trajectory start
+    <cam>/NNN.png   — other logged cameras (e.g. the CCTV views)
 
 This module deliberately does NOT touch images or tensors — that's the
 dataset class's job. We only parse the JSON sidecars and surface a clean
@@ -27,7 +25,7 @@ from pathlib import Path
 
 @dataclass(frozen=True)
 class TrajectoryMeta:
-    """Parsed meta.json. Subset of fields used downstream."""
+    """Parsed result.json. Subset of fields used downstream."""
     outcome: str                  # "reached" (success) | "stuck" | "path_deviation" | "off_floor" | "timeout"
     success: bool                 # convenience: outcome == "reached"
     n_frames: int                 # number of sample nodes in frames.json
@@ -84,7 +82,7 @@ def is_successful(traj_dir: Path) -> bool:
     velocity — the model would learn "command motion, do nothing").
     Filter them out.
 
-    Tolerant to missing/malformed meta.json — returns False rather than
+    Tolerant to missing/malformed result.json — returns False rather than
     raising, so a broken trajectory dir doesn't crash dataset construction.
     """
     try:
@@ -110,8 +108,7 @@ def list_successful_trajectories(
     root = Path(root)
     if not root.is_dir():
         raise FileNotFoundError(f"trajectory root not found: {root}")
-    # Skip per-config stdout files written by the old collect_trajectories.sh
-    # (removed 2026-06; legacy data dirs may still contain such files).
+    # Skip per-config *.stdout log dirs that some data roots contain.
     candidates = sorted(
         d for d in root.iterdir()
         if d.is_dir() and not d.name.endswith(".stdout")

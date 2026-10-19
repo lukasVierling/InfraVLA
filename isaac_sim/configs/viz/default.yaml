@@ -1,5 +1,5 @@
 # ============================================================================
-# Visualisation cosmetics — SINGLE SOURCE OF TRUTH
+# Visualisation cosmetics — single source of truth
 # ============================================================================
 #
 # Every tunable visual knob for the two viz utils lives here, so there are no
@@ -12,11 +12,11 @@
 # so eval + data-gen share one definition (override per-run on the CLI, e.g.
 # `viz.path_map.dpi=200` or swap the whole group with `viz=<variant>`).
 #
-# NOT here (these are behaviour, not cosmetics — they live in recorder.path_viz):
+# Not here (these are behaviour, not cosmetics — they live in recorder.path_viz):
 #   enabled              — whether finalize writes rollout_viz.png at all
 #   behavior_map_panel   — whether save_robot_behavior swaps in the map panel
 #
-# Also NOT here (structural drawing constants, not knobs): matplotlib zorder
+# Also not here (structural drawing constants, not knobs): matplotlib zorder
 # layering, marker shapes (o/*/X/s), colormap choice + vmin, quiver geometry.
 # ============================================================================
 
@@ -64,7 +64,6 @@ path_map:
 
 # ---- plot_action_chunk: robot-local action chunk (eval behaviour panel) ----
 # Defaults tuned for the big 34x16 behaviour figure (thick lines, large fonts).
-# The val-debugger passes its own smaller style (literal dict in that script).
 action_chunk:
   equal_aspect: false           # false → use xlim/ylim; true → ax.axis('equal')
   xlim: [-3.0, 3.0]
