@@ -143,7 +143,11 @@ For the real robot, see [real_world/train/README.md](real_world/train/README.md)
 @misc{vierling2026infravla,
   title         = {{InfraVLA}: Extending Vision-Language-Action Navigation with Infrastructure Cameras},
   author        = {Vierling, Lukas and Ramtoula, Benjamin and Robinson, Luke and Clark, Ronald and De Martini, Daniele},
-  year          = {2026}
+  year          = {2026},
+  eprint        = {2609.33647},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.RO},
+  url           = {https://arxiv.org/abs/2609.33647}
 }
 ```
 
