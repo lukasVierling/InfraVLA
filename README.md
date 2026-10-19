@@ -170,14 +170,7 @@ python recovery/recovery.py policy=omnivla_langv2_pre3_best fine_grained.enabled
     recovery.quota=48 recovery.n_shards=3 recovery.shard=0 recovery.seed=0
 ```
 
-That is the semantic-task campaign. Run one process per shard. The spatial campaigns drop the four
-`criterion`/`window` overrides, which makes them use the distance criterion, and mine 48 anchors from
-`omnivla_finetuned_cctv4_2x3cfv4_avgpool64_cfwinboost8_step15000`. The K = 6, 12 and 24 subsets are
-the first K anchors in collection order. The held-out spatial campaign mines from the spawn instead
-(`recovery.anchor_mode=spawn`) with the step-13000 stage-1 policy, and its K = 30 subset keeps the
-anchors that failed at a junction. `isaac_sim/launchers/launch_recovery_shards.sh` launches
-several shards at once. `scripts/train/langv2_recovery_nfB.sh` is the complete record of the
-held-out semantic campaign.
+Run one process per shard (`isaac_sim/launchers/launch_recovery_shards.sh` launches several at once).
 
 ### 5. Train stage 2
 
@@ -205,72 +198,18 @@ Results land in the experiment's `recorder.runs_root` under `runs/evaluation/`, 
 line per rollout. `run_builders/build_langv2_eval.py` and `run_builders/build_2x3_grid72_endseal.py`
 generate new semantic and spatial evaluation sets for other checkpoints.
 
-## Reproducing the paper
-
-Training configs are in `isaac_sim/train/configs/`. Evaluation configs are in
-`isaac_sim/configs/experiment/`, named by the prefix below plus a shard suffix.
-
-**Semantic task**
-
-| Paper row | Training config | Evaluation |
-|---|---|---|
-| Fine-tuned OmniVLA (no CCTV) | `2026-08-18_baseline_egoonly_langv2_lang80_15k` | `lv2t_ego_std` |
-| InfraVLA, no upsampling | `2026-07-27_cctv4_avgpool64_langv2_noupsample_cfval_15k` | `lv2t_E1` |
-| InfraVLA, upsampling (stage 1) | `2026-07-23_cctv4_avgpool64_langv2_yawcrux_pre3` | `lv2t_A0full` |
-| + recovery (stage 2) | `2026-08-11_langv2_A0_dmrecext2_N48_ft20k` | `lv2t_A0rec_std` |
-| Held-out forklift placement, stage 1 / stage 2 | `2026-07-27_..._noforkliftB_15k` / `2026-08-10_langv2_nfB_dmrecext2_N50_ft18k` | `lv2t_nfB_*` / `lv2t_nfBrec_*` |
-| Unseen instruction words | stage-2 policy | `lv2t_synfinal_*`, `lv2t_synbrain_*`, `lv2t_A0rec_syn_*` |
-
-`scripts/eval/langv2_paper_table.sh` and `scripts/eval/noforkliftB_generalization.sh` run these
-evaluations and print the tables.
-
-**Ablations (semantic task, stage 1)**
-
-| Paper row | Training config | Evaluation |
-|---|---|---|
-| 16 CCTV tokens per view | `2026-07-25_cctv4_avgpool16_langv2_yawcrux_pre3` | `langv2test_avgpool16` |
-| Shared CCTV encoder | `2026-07-27_cctv4_avgpool64_langv2_sharedenc_15k` | `lv2t_C1` |
-| CCTV tokens first | `2026-07-26_cctv4_avgpool64_langv2_yawcrux_pre3_cctvfirst_15k` | `lv2t_B1` |
-| Frozen on-board encoder | `2026-07-26_cctv4_sepproj_frozenvision_langv2_yawcrux_pre3_15k` | `lv2t_D2` |
-| Frozen on-board encoder and LLM | `2026-07-25_cctv4_sepproj_frozenvision_frozenllm_langv2_yawcrux_pre3_15k` | `langv2test_frozen` |
-
-**Spatial task** (72 systematic scenarios)
-
-| Paper row | Training config | Evaluation |
-|---|---|---|
-| Fine-tuned OmniVLA (no CCTV) | `2026-07-11_baseline_egoonly_2x3cfv4_r16_fg50_cfwinboost8_15k` | `eval_2x3_gridES_baseline_cfv4_cfwinboost8` |
-| InfraVLA, no upsampling | `2026-07-30_cctv4_sharedenc_2x3cfv4_egogoal_avgpool64_r16_fg50_noups_15k` | `eval_2x3_gridES_avgpool64_noups_full72` |
-| InfraVLA, upsampling (stage 1) | `2026-07-11_cctv4_sharedenc_2x3cfv4_egogoal_avgpool64_r16_fg50_cfwinboost8_15k` | `eval_2x3_gridES_avgpool_cfv4_cfwinboost8` |
-| + CF snippets only, no recovery | `2026-07-12_cctv4_sharedenc_2x3cfv4_egogoal_avgpool64_r16_fg100_cfwin_ft20k` | `eval_2x3_gridES_cfwin_ft19500_*` |
-| + recovery, K = 6 / 12 / 24 / 48 | `2026-08-17_..._b20ladder_N6_ft20k`, `2026-08-13_..._b20ladder_N{12,24,48}_ft20k` | `eval_b20L_N*`, `eval_b20ladder_N12_*` |
-| Held-out blocking patterns, stage 1 | `2026-08-02_cctv4_avgpool64_holdout_E_CF_15k` | `eval_2x3_gridES_holdout_E_CF_full72` |
-| Held-out blocking patterns, + recovery K = 30 | `2026-08-25_holdout_E_CF_dagger_N30junction_ft18k` | `eval_hoE_dagN30` |
-
-The held-out stage-2 run resumes the stage-1 checkpoint at step 13000 (its best validation step), not
-step 15000.
-
-**Real robot**
-
-| Paper row | Training config |
-|---|---|
-| Fine-tuned OmniVLA (no CCTV) | `real_world/train/configs/spot_egoonly_langsim_full.yaml` |
-| InfraVLA | `real_world/train/configs/spot_cctv_cfboost.yaml`, then `spot_cctv_cfboost_3k.yaml` resumed at step 2000 |
-
-See [real_world/train/README.md](real_world/train/README.md) for training and
-[real_world/live/README.md](real_world/live/README.md) for deployment.
-
-## What is not included
-
-- **Datasets and checkpoints.** The simulated datasets, the recorded Spot demonstrations and the
-  trained checkpoints are not part of this repository. Simulated data can be regenerated with the
-  pipeline above.
-- **Real-robot recording tools.** The ROS 2 recorder and the conversion from recordings to training
-  samples are not included. `real_world/train/spot_real_dataset.py` documents the expected sample
-  format.
-
 ## Citation
 
-The paper is currently under review. A BibTeX entry will be added on publication.
+```bibtex
+@misc{vierling2026infravla,
+  title         = {{InfraVLA}: Extending Vision-Language-Action Navigation with Infrastructure Cameras},
+  author        = {Vierling, Lukas and Ramtoula, Benjamin and Robinson, Luke and Clark, Ronald and De Martini, Daniele},
+  year          = {2026},
+  eprint        = {XXXX.XXXXX},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.RO}
+}
+```
 
 ## Acknowledgements
 
