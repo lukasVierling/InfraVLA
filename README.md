@@ -60,7 +60,6 @@ in place. InfraVLA code lives beside them.
 | `isaac_sim/` | Isaac Sim harness. `data_gen.py` (A\* demonstrations), `eval_policy.py` (closed-loop evaluation), `recovery/` (stage-2 miner), `run_builders/` (scene and experiment config generators), `configs/` (Hydra tree), `train/configs/` (one YAML per training run), `launchers/`. |
 | `real_world/` | Spot: `train/` (fine-tuning on recorded demonstrations, LoRA merge), `live/` (policy server and operator loop), `analysis/` (test-arrangement sampling). |
 | `scripts/` | The launch scripts used for the reported runs, kept as a record. |
-| `viz/` | Figure generators for the paper and thesis. |
 
 Generated data, checkpoints and run outputs go to `runs/`, which is git-ignored.
 
